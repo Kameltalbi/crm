@@ -1,0 +1,204 @@
+// Prisma schema pour Bilan CRM
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  USER — Utilisateur du CRM
+// ═══════════════════════════════════════════════════════════════
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("owner") // owner | partner
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  clientsCreated   Client[]
+  affairesCreated  Affaire[]
+  gmailTokens      GmailToken?
+
+  @@map("users")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CLIENT — Entreprises clientes
+// ═══════════════════════════════════════════════════════════════
+model Client {
+  id          String   @id @default(cuid())
+  name        String   // ex: "UBCI"
+  contactName String?  // ex: "Ahmed Ben Ali"
+  email       String?
+  phone       String?
+  address     String?
+  matricule   String?  // Matricule fiscal tunisien
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id])
+  affaires    Affaire[]
+
+  @@index([name])
+  @@map("clients")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AFFAIRE — Deal / Opportunité (cœur du CRM)
+// ═══════════════════════════════════════════════════════════════
+model Affaire {
+  id            String        @id @default(cuid())
+  clientId      String
+  client        Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Détails prestation
+  type          AffaireType
+  title         String        // ex: "Bilan Carbone UBCI 2026"
+  description   String?       @db.Text
+  montantHT     Decimal       @db.Decimal(12, 3) // DT, 3 décimales
+  
+  // Pipeline
+  statut        StatutAffaire @default(PROSPECTION)
+  probabilite   Int           @default(50) // 0-100 %
+  
+  // Planning
+  moisPrevu     Int           // 1-12
+  anneePrevue   Int           // 2026, 2027, 2028
+  dateClotureReelle DateTime?
+  
+  // Partenaire & commission
+  viaPartenaire Boolean       @default(false)
+  tauxCommission Decimal      @db.Decimal(5, 2) @default(40.00) // 40%
+  
+  // Liens vers Softfacture (quand devis/facture créés)
+  devisId       String?       // ID retourné par Softfacture API
+  devisNumero   String?
+  devisPdfUrl   String?
+  factureId     String?
+  factureNumero String?
+  facturePdfUrl String?
+  
+  // Méta
+  notes         String?       @db.Text
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  createdById   String?
+  createdBy     User?         @relation(fields: [createdById], references: [id])
+
+  // Relations
+  activites     Activite[]
+  emails        Email[]
+
+  @@index([statut, anneePrevue])
+  @@index([clientId])
+  @@map("affaires")
+}
+
+enum AffaireType {
+  BILAN_CARBONE
+  FORMATION
+}
+
+enum StatutAffaire {
+  PROSPECTION  // 🟡 Premier contact, négociation
+  PIPELINE     // 🔵 Offre envoyée, forte probabilité
+  REALISE      // ✅ Gagné, livré/en cours
+  PERDU        // ❌ Refusé ou abandonné
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ACTIVITE — Historique des actions sur une affaire
+// ═══════════════════════════════════════════════════════════════
+model Activite {
+  id        String        @id @default(cuid())
+  affaireId String
+  affaire   Affaire       @relation(fields: [affaireId], references: [id], onDelete: Cascade)
+  type      ActiviteType
+  title     String
+  content   String?       @db.Text
+  createdAt DateTime      @default(now())
+
+  @@index([affaireId, createdAt])
+  @@map("activites")
+}
+
+enum ActiviteType {
+  NOTE
+  APPEL
+  EMAIL_ENVOYE
+  EMAIL_RECU
+  RDV
+  CHANGEMENT_STATUT
+  DEVIS_CREE
+  FACTURE_CREEE
+  AUTRE
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EMAIL — Emails envoyés depuis le CRM via Gmail
+// ═══════════════════════════════════════════════════════════════
+model Email {
+  id          String   @id @default(cuid())
+  affaireId   String?
+  affaire     Affaire? @relation(fields: [affaireId], references: [id], onDelete: SetNull)
+  messageId   String?  // ID Gmail
+  fromEmail   String
+  toEmail     String
+  subject     String
+  body        String   @db.Text
+  sent        Boolean  @default(false)
+  sentAt      DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([affaireId])
+  @@map("emails")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GMAIL TOKEN — OAuth tokens pour envoi d'emails
+// ═══════════════════════════════════════════════════════════════
+model GmailToken {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken  String   @db.Text
+  refreshToken String   @db.Text
+  expiresAt    DateTime
+  scope        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("gmail_tokens")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PREVISIONNEL — Hypothèses mensuelles paramétrables
+// ═══════════════════════════════════════════════════════════════
+model PrevisionMois {
+  id               String  @id @default(cuid())
+  annee            Int
+  mois             Int     // 1-12
+  nbBilansPrevu    Int     @default(0)
+  prixMoyenBilan   Decimal @db.Decimal(12, 3) @default(0)
+  joursFormation   Int     @default(0)
+  tarifJourFormation Decimal @db.Decimal(12, 3) @default(0)
+  estEte           Boolean @default(false)
+  tauxPartenaire   Decimal @db.Decimal(5, 2) @default(0) // % d'affaires via partenaire
+  notes            String?
+  updatedAt        DateTime @updatedAt
+
+  @@unique([annee, mois])
+  @@map("prevision_mois")
+}

@@ -1,0 +1,71 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { prisma } from '../db/prisma.js';
+import { requireAuth, AuthRequest } from '../middleware/auth.js';
+
+export const clientsRoutes = Router();
+clientsRoutes.use(requireAuth);
+
+const clientSchema = z.object({
+  name: z.string().min(1),
+  contactName: z.string().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  matricule: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+clientsRoutes.get('/', async (_req, res, next) => {
+  try {
+    const clients = await prisma.client.findMany({
+      orderBy: { name: 'asc' },
+      include: { _count: { select: { affaires: true } } },
+    });
+    res.json(clients);
+  } catch (e) { next(e); }
+});
+
+clientsRoutes.get('/:id', async (req, res, next) => {
+  try {
+    const client = await prisma.client.findUnique({
+      where: { id: req.params.id },
+      include: {
+        affaires: {
+          include: { _count: { select: { activites: true } } },
+          orderBy: [{ anneePrevue: 'desc' }, { moisPrevu: 'desc' }],
+        },
+      },
+    });
+    if (!client) return res.status(404).json({ error: 'Client introuvable' });
+    res.json(client);
+  } catch (e) { next(e); }
+});
+
+clientsRoutes.post('/', async (req: AuthRequest, res, next) => {
+  try {
+    const data = clientSchema.parse(req.body);
+    const client = await prisma.client.create({
+      data: { ...data, createdById: req.userId },
+    });
+    res.status(201).json(client);
+  } catch (e) { next(e); }
+});
+
+clientsRoutes.put('/:id', async (req, res, next) => {
+  try {
+    const data = clientSchema.parse(req.body);
+    const client = await prisma.client.update({
+      where: { id: req.params.id },
+      data,
+    });
+    res.json(client);
+  } catch (e) { next(e); }
+});
+
+clientsRoutes.delete('/:id', async (req, res, next) => {
+  try {
+    await prisma.client.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (e) { next(e); }
+});

@@ -1,0 +1,19 @@
+{
+  "name": "bilan-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CRM Bilan Carbone & Formations — Tunisie",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "docker compose up",
+    "dev:down": "docker compose down",
+    "dev:logs": "docker compose logs -f",
+    "db:migrate": "docker compose exec backend npx prisma migrate dev",
+    "db:seed": "docker compose exec backend npx prisma db seed",
+    "db:studio": "docker compose exec backend npx prisma studio",
+    "deploy": "./scripts/deploy.sh"
+  }
+}

@@ -1,0 +1,51 @@
+import { Router } from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
+import { prisma } from '../db/prisma.js';
+
+export const authRoutes = Router();
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+authRoutes.post('/login', async (req, res, next) => {
+  try {
+    const { email, password } = loginSchema.parse(req.body);
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(401).json({ error: 'Identifiants invalides' });
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: '7d',
+    });
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+    });
+  } catch (e) {
+    next(e);
+  }
+});
+
+authRoutes.get('/me', async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token manquant' });
+  }
+  try {
+    const { userId } = jwt.verify(authHeader.substring(7), process.env.JWT_SECRET!) as { userId: string };
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, role: true },
+    });
+    if (!user) return res.status(404).json({ error: 'User introuvable' });
+    res.json({ user });
+  } catch (e) {
+    next(e);
+  }
+});

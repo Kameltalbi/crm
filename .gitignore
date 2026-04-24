@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+*/node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*/dist/
+*/build/
+.next/
+
+# Environment
+.env
+.env.local
+.env.production
+.env.*.local
+!.env.example
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma
+backend/prisma/migrations/dev.db*
+
+# Docker volumes
+postgres-data/
+caddy-data/
+caddy-config/
+
+# Coverage
+coverage/
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+
+# Tokens / secrets
+*.key
+*.pem
+credentials.json
+token.json

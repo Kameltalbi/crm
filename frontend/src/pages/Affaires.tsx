@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { StatutBadge } from './Dashboard';
-import type { Affaire, Client, AffaireType, StatutAffaire } from '@/types';
+import type { Affaire, Client, Product, AffaireType, StatutAffaire } from '@/types';
 
 type FormData = {
   id?: string;
   clientId: string;
+  productId: string;
   title: string;
   type: AffaireType;
   montantHT: string;
@@ -26,7 +27,7 @@ type FormData = {
 };
 
 const EMPTY: FormData = {
-  clientId: '', title: '', type: 'BILAN_CARBONE', montantHT: '',
+  clientId: '', productId: '', title: '', type: 'BILAN_CARBONE', montantHT: '',
   statut: 'PROSPECTION', probabilite: '50',
   moisPrevu: String(new Date().getMonth() + 1), anneePrevue: '2026',
   viaPartenaire: false, tauxCommission: '40', notes: '',
@@ -46,11 +47,16 @@ export function Affaires() {
     queryKey: ['clients'],
     queryFn: () => api.get('/clients').then((r) => r.data),
   });
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ['products'],
+    queryFn: () => api.get('/products').then((r) => r.data),
+  });
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
       const payload = {
         clientId: data.clientId,
+        productId: data.productId || undefined,
         title: data.title,
         type: data.type,
         montantHT: Number(data.montantHT),
@@ -62,9 +68,8 @@ export function Affaires() {
         tauxCommission: Number(data.tauxCommission),
         notes: data.notes,
       };
-      return data.id
-        ? api.put(`/affaires/${data.id}`, payload)
-        : api.post('/affaires', payload);
+      delete (payload as any).id;
+      return data.id ? api.put(`/affaires/${data.id}`, payload) : api.post('/affaires', payload);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['affaires'] });
@@ -95,6 +100,7 @@ export function Affaires() {
     setForm({
       id: a.id,
       clientId: a.clientId,
+      productId: a.productId || '',
       title: a.title,
       type: a.type,
       montantHT: String(a.montantHT),
@@ -238,7 +244,7 @@ export function Affaires() {
                   return (
                     <tr key={a.id} className={`border-b hover:bg-sage/50 ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`}>
                       <td className="p-2.5">
-                        <div className="font-semibold">{a.client.name}</div>
+                        <div className="font-semibold">{a.client?.name || 'N/A'}</div>
                         <div className="text-[10px] text-muted-foreground">{a.title}</div>
                       </td>
                       <td className="p-2.5">
@@ -307,6 +313,19 @@ export function Affaires() {
                 <SelectTrigger><SelectValue placeholder="Choisir un client" /></SelectTrigger>
                 <SelectContent>
                   {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Produit *</Label>
+              <Select value={form.productId} onValueChange={(v) => setForm({ ...form, productId: v })}>
+                <SelectTrigger><SelectValue placeholder="Choisir un produit" /></SelectTrigger>
+                <SelectContent>
+                  {products.filter(p => p.active).map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name} ({Number(p.price).toLocaleString('fr-TN')} DT)
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

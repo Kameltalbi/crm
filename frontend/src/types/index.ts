@@ -37,26 +37,30 @@ export interface Client {
 export interface Affaire {
   id: string;
   clientId: string;
-  client: Client;
+  productId: string | null;
   type: AffaireType;
   title: string;
-  description?: string | null;
-  montantHT: string | number;
+  description: string | null;
+  montantHT: number;
   statut: StatutAffaire;
   probabilite: number;
   moisPrevu: number;
   anneePrevue: number;
+  dateClotureReelle: string | null;
   viaPartenaire: boolean;
-  tauxCommission: string | number;
-  devisId?: string | null;
-  devisNumero?: string | null;
-  devisPdfUrl?: string | null;
-  factureId?: string | null;
-  factureNumero?: string | null;
-  facturePdfUrl?: string | null;
-  notes?: string | null;
+  tauxCommission: number;
+  devisId: string | null;
+  devisNumero: string | null;
+  devisPdfUrl: string | null;
+  factureId: string | null;
+  factureNumero: string | null;
+  facturePdfUrl: string | null;
+  notes: string | null;
   createdAt: string;
-  dateClotureReelle?: string | null;
+  updatedAt: string;
+  client?: Client;
+  product?: Product;
+  _count?: { activites: number };
 }
 
 export interface Activite {

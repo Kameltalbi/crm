@@ -68,6 +68,8 @@ model Affaire {
   client        Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   // Détails prestation
+  productId     String?
+  product       Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
   type          AffaireType
   title         String        // ex: "Bilan Carbone UBCI 2026"
   description   String?       @db.Text
@@ -107,6 +109,7 @@ model Affaire {
 
   @@index([statut, anneePrevue])
   @@index([clientId])
+  @@index([productId])
   @@map("affaires")
 }
 
@@ -220,6 +223,9 @@ model Product {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relations
+  affaires    Affaire[]
 
   @@index([active])
   @@map("products")

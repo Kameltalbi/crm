@@ -9,6 +9,7 @@ affairesRoutes.use(requireAuth);
 
 const affaireSchema = z.object({
   clientId: z.string(),
+  productId: z.string().optional(),
   title: z.string().min(1),
   description: z.string().optional(),
   type: z.nativeEnum(AffaireType),
@@ -34,7 +35,7 @@ affairesRoutes.get('/', async (req, res, next) => {
 
     const affaires = await prisma.affaire.findMany({
       where,
-      include: { client: true, _count: { select: { activites: true } } },
+      include: { client: true, product: true, _count: { select: { activites: true } } },
       orderBy: [{ anneePrevue: 'desc' }, { moisPrevu: 'desc' }, { createdAt: 'desc' }],
     });
     res.json(affaires);
@@ -48,6 +49,7 @@ affairesRoutes.get('/:id', async (req, res, next) => {
       where: { id: req.params.id },
       include: {
         client: true,
+        product: true,
         activites: { orderBy: { createdAt: 'desc' } },
         emails:    { orderBy: { createdAt: 'desc' } },
       },
@@ -63,7 +65,7 @@ affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
     const data = affaireSchema.parse(req.body);
     const affaire = await prisma.affaire.create({
       data: { ...data, createdById: req.userId },
-      include: { client: true },
+      include: { client: true, product: true },
     });
     // Log activité
     await prisma.activite.create({
@@ -88,7 +90,7 @@ affairesRoutes.put('/:id', async (req, res, next) => {
     const affaire = await prisma.affaire.update({
       where: { id: req.params.id },
       data,
-      include: { client: true },
+      include: { client: true, product: true },
     });
 
     // Log changement de statut

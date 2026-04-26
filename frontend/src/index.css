@@ -54,3 +54,9 @@ div[data-state="open"][role="dialog"] {
   background-color: white !important;
   color: black !important;
 }
+
+/* Force select dropdown to be visible */
+[data-radix-select-content] {
+  background-color: white !important;
+  color: black !important;
+}

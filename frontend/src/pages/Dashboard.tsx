@@ -121,15 +121,6 @@ export function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <ProfessionalKpiCard
-          title="Chiffre d'affaires réalisé"
-          value={fmtDT(kpis.caRealise)}
-          subtitle={`${kpis.counts.realise} affaires gagnées`}
-          icon={<DollarSign className="w-5 h-5" />}
-          trend="+12%"
-          trendUp={true}
-          color="emerald"
-        />
-        <ProfessionalKpiCard
           title="CA prévisionnel cumulé"
           value={fmtDT(totalCumulativeCA)}
           subtitle={`Année ${selectedYear}`}
@@ -137,6 +128,15 @@ export function Dashboard() {
           trend="+15%"
           trendUp={true}
           color="blue"
+        />
+        <ProfessionalKpiCard
+          title="Chiffre d'affaires réalisé"
+          value={fmtDT(kpis.caRealise)}
+          subtitle={`${kpis.counts.realise} affaires gagnées`}
+          icon={<DollarSign className="w-5 h-5" />}
+          trend="+12%"
+          trendUp={true}
+          color="emerald"
         />
         <ProfessionalKpiCard
           title="Prévision intelligente"

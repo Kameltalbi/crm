@@ -302,7 +302,11 @@ export function Dashboard() {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-              <Bar dataKey="value" fill="#22c55e" />
+              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                {statusDistributionData.map((entry: any, index: number) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

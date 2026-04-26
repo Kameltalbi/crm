@@ -25,14 +25,14 @@ export function Dashboard() {
     queryKey: ['previsionnel', selectedYear],
     queryFn: () => api.get(`/previsionnel/${selectedYear}`).then((r) => r.data),
   });
+  const { data: products } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => api.get('/products').then((r) => r.data),
+  });
 
   if (!kpis || !affaires) {
     return <div className="text-center py-20 text-muted-foreground">Chargement...</div>;
   }
-
-  // Calculate metrics by business type
-  const bilans = affaires.filter(a => a.type === 'BILAN_CARBONE');
-  const formations = affaires.filter(a => a.type === 'FORMATION');
 
   const calculateMetrics = (affairesList: Affaire[]) => {
     const realise = affairesList.filter(a => a.statut === 'REALISE');
@@ -53,8 +53,21 @@ export function Dashboard() {
     };
   };
 
-  const bilanMetrics = calculateMetrics(bilans);
-  const formationMetrics = calculateMetrics(formations);
+  // Calculate metrics by product
+  const productMetrics = products ? products.map((p: any) => {
+    const productAffaires = affaires.filter(a => a.productId === p.id);
+    const metrics = calculateMetrics(productAffaires);
+    return {
+      product: p,
+      ...metrics,
+    };
+  }) : [];
+
+  const typeDistributionData = productMetrics.map((pm: any, index: number) => ({
+    name: pm.product.name,
+    value: pm.caRealise + pm.caPipeline + pm.caProspection,
+    color: ['#22c55e', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'][index % 5],
+  }));
 
   // Calculate cumulative CA from previsionnel data
   const cumulativeData = previsionnel?.mois ? previsionnel.mois.map((m: any, index: number) => {
@@ -77,11 +90,6 @@ export function Dashboard() {
     prospect: Number(data.prospect),
     total: Number(data.realise) + Number(data.pipeline) + Number(data.prospect),
   }));
-
-  const typeDistributionData = [
-    { name: 'Bilan Carbone', value: bilanMetrics.caRealise + bilanMetrics.caPipeline + bilanMetrics.caProspection, color: '#22c55e' },
-    { name: 'Formation', value: formationMetrics.caRealise + formationMetrics.caPipeline + formationMetrics.caProspection, color: '#f59e0b' },
-  ];
 
   const statusDistributionData = [
     { name: 'Réalisé', value: kpis.caRealise, color: '#22c55e' },
@@ -169,71 +177,36 @@ export function Dashboard() {
 
       {/* Business Type Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="border-2 border-emerald-100">
-          <CardHeader>
-            <CardTitle className="text-base md:text-lg flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              Bilan Carbone
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">CA Total</p>
-                <p className="text-xl md:text-2xl font-bold text-emerald-600">{fmtDT(bilanMetrics.caRealise + bilanMetrics.caPipeline + bilanMetrics.caProspection)}</p>
+        {productMetrics.map((pm: any, index: number) => (
+          <Card key={pm.product.id} className="border-2" style={{ borderColor: pm.color }}>
+            <CardHeader>
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: pm.color }} />
+                {pm.product.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">CA Total</p>
+                  <p className="text-xl md:text-2xl font-bold" style={{ color: pm.color }}>{fmtDT(pm.caRealise + pm.caPipeline + pm.caProspection)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Nombre d'affaires</p>
+                  <p className="text-xl md:text-2xl font-bold">{pm.count}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Réalisé</p>
+                  <p className="text-lg font-semibold text-emerald-600">{fmtDT(pm.caRealise)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Pipeline</p>
+                  <p className="text-lg font-semibold text-blue-600">{fmtDT(pm.caPipeline)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Nombre d'affaires</p>
-                <p className="text-xl md:text-2xl font-bold">{bilanMetrics.count}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Panier moyen</p>
-                <p className="text-lg md:text-xl font-semibold">{fmtDT(bilanMetrics.avgMontant)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Taux de réussite</p>
-                <p className="text-lg md:text-xl font-semibold text-emerald-600">
-                  {bilanMetrics.countRealise + bilanMetrics.countPerdu > 0 
-                    ? Math.round((bilanMetrics.countRealise / (bilanMetrics.countRealise + bilanMetrics.countPerdu || 1)) * 100) 
-                    : 0}%
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-amber-100">
-          <CardHeader>
-            <CardTitle className="text-base md:text-lg flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-amber-500" />
-              Formations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">CA Total</p>
-                <p className="text-xl md:text-2xl font-bold text-amber-600">{fmtDT(formationMetrics.caRealise + formationMetrics.caPipeline + formationMetrics.caProspection)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Nombre d'affaires</p>
-                <p className="text-xl md:text-2xl font-bold">{formationMetrics.count}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Panier moyen</p>
-                <p className="text-lg md:text-xl font-semibold">{fmtDT(formationMetrics.avgMontant)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Taux de réussite</p>
-                <p className="text-lg md:text-xl font-semibold text-amber-600">
-                  {formationMetrics.countRealise + formationMetrics.countPerdu > 0 
-                    ? Math.round((formationMetrics.countRealise / (formationMetrics.countRealise + formationMetrics.countPerdu || 1)) * 100) 
-                    : 0}%
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Charts Row */}
@@ -277,7 +250,7 @@ export function Dashboard() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {typeDistributionData.map((entry, index) => (
+                  {typeDistributionData.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>

@@ -13,6 +13,7 @@ import { softfactureRoutes } from './routes/softfacture.js';
 import { gmailRoutes } from './routes/gmail.js';
 import { kpisRoutes } from './routes/kpis.js';
 import { usersRoutes } from './routes/users.js';
+import { productsRoutes } from './routes/products.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/softfacture', softfactureRoutes);
 app.use('/api/gmail', gmailRoutes);
 app.use('/api/kpis', kpisRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/products', productsRoutes);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

@@ -2,12 +2,24 @@ export type AffaireType = 'BILAN_CARBONE' | 'FORMATION';
 export type StatutAffaire = 'PROSPECTION' | 'PIPELINE' | 'REALISE' | 'PERDU';
 export type ActiviteType = 'NOTE' | 'APPEL' | 'EMAIL_ENVOYE' | 'EMAIL_RECU' | 'RDV' | 'CHANGEMENT_STATUT' | 'DEVIS_CREE' | 'FACTURE_CREEE' | 'AUTRE';
 export type UserRole = 'OWNER' | 'PARTNER';
+export type ProductType = 'SERVICE' | 'PRODUCT';
 
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  type: ProductType;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Client {

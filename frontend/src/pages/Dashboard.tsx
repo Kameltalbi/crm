@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Plus, DollarSign, Target, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -5,17 +6,24 @@ import { api } from '@/lib/api';
 import { fmtDT, MOIS_S } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/form-controls';
 import type { KPIs, Affaire } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
 
 export function Dashboard() {
+  const [selectedYear, setSelectedYear] = useState(2026);
+
   const { data: kpis } = useQuery<KPIs>({
-    queryKey: ['kpis', 2026],
-    queryFn: () => api.get('/kpis?annee=2026').then((r) => r.data),
+    queryKey: ['kpis', selectedYear],
+    queryFn: () => api.get(`/kpis?annee=${selectedYear}`).then((r) => r.data),
   });
   const { data: affaires } = useQuery<Affaire[]>({
-    queryKey: ['affaires', 'recent'],
-    queryFn: () => api.get('/affaires?annee=2026').then((r) => r.data),
+    queryKey: ['affaires', selectedYear],
+    queryFn: () => api.get(`/affaires?annee=${selectedYear}`).then((r) => r.data),
+  });
+  const { data: previsionnel } = useQuery({
+    queryKey: ['previsionnel', selectedYear],
+    queryFn: () => api.get(`/previsionnel/${selectedYear}`).then((r) => r.data),
   });
 
   if (!kpis || !affaires) {
@@ -48,6 +56,16 @@ export function Dashboard() {
   const bilanMetrics = calculateMetrics(bilans);
   const formationMetrics = calculateMetrics(formations);
 
+  // Calculate cumulative CA from previsionnel data
+  const cumulativeData = previsionnel?.mois ? previsionnel.mois.map((m: any, index: number) => {
+    const cumulative = previsionnel.mois.slice(0, index + 1).reduce((sum: number, month: any) => sum + month.caTotalPrevu, 0);
+    return {
+      month: MOIS_S[m.mois],
+      cumulative: cumulative,
+      monthly: m.caTotalPrevu,
+    };
+  }) : [];
+
   // Prepare chart data
   const monthlyData = Object.entries(kpis.parMois).map(([month, data]) => ({
     month: MOIS_S[parseInt(month)],
@@ -77,11 +95,24 @@ export function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-serif text-2xl md:text-3xl font-semibold">Tableau de bord</h1>
-          <p className="text-sm text-muted-foreground">Vue d'ensemble — 2026</p>
+          <p className="text-sm text-muted-foreground">Vue d'ensemble — {selectedYear}</p>
         </div>
-        <Link to="/affaires" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2025">2025</SelectItem>
+              <SelectItem value="2026">2026</SelectItem>
+              <SelectItem value="2027">2027</SelectItem>
+              <SelectItem value="2028">2028</SelectItem>
+            </SelectContent>
+          </Select>
+          <Link to="/affaires" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
+          </Link>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -268,17 +299,56 @@ export function Dashboard() {
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={statusDistributionData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" stroke="#6b7280" fontSize={10} />
-              <YAxis stroke="#6b7280" fontSize={10} tickFormatter={(value) => `${value / 1000}k`} />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
               <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                {statusDistributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
+              <Bar dataKey="value" fill="#22c55e" />
             </BarChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Cumulative CA Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm md:text-base">CA prévisionnel cumulé ({selectedYear})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={cumulativeData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
+              <Legend />
+              <Line type="monotone" dataKey="cumulative" stroke="#22c55e" strokeWidth={2} name="Cumulé" />
+              <Line type="monotone" dataKey="monthly" stroke="#0ea5e9" strokeWidth={2} name="Mensuel" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Recent Affaires */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm md:text-base">Affaires récentes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {affaires.slice(0, 5).map((a) => (
+              <div key={a.id} className="flex justify-between items-center p-2 rounded bg-muted/50">
+                <div>
+                  <div className="font-medium text-sm">{a.title}</div>
+                  <div className="text-xs text-muted-foreground">{a.client?.name || 'N/A'}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-sm">{fmtDT(Number(a.montantHT))}</div>
+                  <div className="text-xs text-muted-foreground">{MOIS_S[a.moisPrevu]}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

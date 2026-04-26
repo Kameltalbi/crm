@@ -122,22 +122,63 @@ export function Affaires() {
   const comm = form.viaPartenaire ? Math.round(ht * Number(form.tauxCommission) / 100) : 0;
   const net = ht - comm;
 
+  // Calculate summary KPIs
+  const totalCA = affaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const pipelineCA = affaires.filter(a => a.statut === 'PIPELINE').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const realiseCA = affaires.filter(a => a.statut === 'REALISE').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const prospectionCA = affaires.filter(a => a.statut === 'PROSPECTION').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const winRate = affaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length > 0
+    ? Math.round((affaires.filter(a => a.statut === 'REALISE').length / affaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length) * 100)
+    : 0;
+
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 px-2 md:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl">Affaires</h1>
+          <h1 className="font-serif text-2xl md:text-3xl">Affaires</h1>
           <p className="text-sm text-muted-foreground">Pipeline complet : prospection, confirmé, réalisé</p>
         </div>
-        <Button onClick={openNew}><Plus size={16} />Nouvelle affaire</Button>
+        <Button onClick={openNew} className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
+      </div>
+
+      {/* Summary KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="border-2">
+          <CardContent className="p-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">CA Total</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900 mt-1">{fmtDT(totalCA)}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{affaires.length} affaires</p>
+          </CardContent>
+        </Card>
+        <Card className="border-2 border-blue-200 bg-blue-50/30">
+          <CardContent className="p-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pipeline</p>
+            <p className="text-lg md:text-2xl font-bold text-blue-600 mt-1">{fmtDT(pipelineCA)}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{affaires.filter(a => a.statut === 'PIPELINE').length} en cours</p>
+          </CardContent>
+        </Card>
+        <Card className="border-2 border-emerald-200 bg-emerald-50/30">
+          <CardContent className="p-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Réalisé</p>
+            <p className="text-lg md:text-2xl font-bold text-emerald-600 mt-1">{fmtDT(realiseCA)}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{affaires.filter(a => a.statut === 'REALISE').length} gagnées</p>
+          </CardContent>
+        </Card>
+        <Card className="border-2 border-violet-200 bg-violet-50/30">
+          <CardContent className="p-3">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Taux conversion</p>
+            <p className="text-lg md:text-2xl font-bold text-violet-600 mt-1">{winRate}%</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{affaires.filter(a => a.statut === 'PERDU').length} perdues</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center gap-3 justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
           <CardTitle className="text-base">{affaires.length} affaires</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Select value={filters.statut || 'all'} onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-40 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous statuts</SelectItem>
                 <SelectItem value="PROSPECTION">🟡 Prospection</SelectItem>
@@ -147,7 +188,7 @@ export function Affaires() {
               </SelectContent>
             </Select>
             <Select value={filters.type || 'all'} onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous types</SelectItem>
                 <SelectItem value="BILAN_CARBONE">🌍 Bilan</SelectItem>
@@ -155,7 +196,7 @@ export function Affaires() {
               </SelectContent>
             </Select>
             <Select value={filters.viaPartenaire || 'all'} onValueChange={(v) => setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous apports</SelectItem>
                 <SelectItem value="true">🤝 Partenaire</SelectItem>
@@ -163,7 +204,7 @@ export function Affaires() {
               </SelectContent>
             </Select>
             <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
-              <SelectTrigger className="h-8 w-24 text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-8 w-20 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="2026">2026</SelectItem>
                 <SelectItem value="2027">2027</SelectItem>
@@ -172,49 +213,50 @@ export function Affaires() {
             </Select>
           </div>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b bg-sage">
-                <th className="text-left p-2.5 uppercase tracking-wider text-leaf font-semibold">Client / Titre</th>
-                <th className="text-left p-2.5 uppercase tracking-wider text-leaf font-semibold">Type</th>
-                <th className="text-right p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
-                <th className="text-right p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
-                <th className="text-left p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
-                <th className="text-left p-2.5 uppercase tracking-wider text-leaf font-semibold">Partenaire</th>
-                <th className="text-right p-2.5 uppercase tracking-wider text-leaf font-semibold">Commission</th>
-                <th className="text-right p-2.5 uppercase tracking-wider text-leaf font-semibold">Mon net</th>
-                <th className="text-left p-2.5 uppercase tracking-wider text-leaf font-semibold">Mois</th>
-                <th className="text-left p-2.5 uppercase tracking-wider text-leaf font-semibold">Devis/Fac</th>
-                <th className="text-right p-2.5 uppercase tracking-wider text-leaf font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {affaires.map((a) => {
-                const ht = Number(a.montantHT);
-                const c = a.viaPartenaire ? Math.round(ht * Number(a.tauxCommission) / 100) : 0;
-                return (
-                  <tr key={a.id} className={`border-b hover:bg-sage/50 ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`}>
-                    <td className="p-2.5">
-                      <div className="font-semibold">{a.client.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{a.title}</div>
-                    </td>
-                    <td className="p-2.5">
-                      {a.type === 'BILAN_CARBONE'
-                        ? <Badge variant="secondary">🌍</Badge>
-                        : <Badge className="bg-gold-light text-gold">📚</Badge>}
-                    </td>
-                    <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>
-                    <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
-                    <td className="p-2.5"><StatutBadge statut={a.statut} /></td>
-                    <td className="p-2.5">{a.viaPartenaire ? <Badge className="bg-purple text-white">🤝</Badge> : <span className="text-muted-foreground">—</span>}</td>
-                    <td className="p-2.5 text-right font-mono text-purple">{a.viaPartenaire ? fmtDT(c) : '—'}</td>
-                    <td className="p-2.5 text-right font-mono font-semibold text-leaf">{fmtDT(ht - c)}</td>
-                    <td className="p-2.5 text-muted-foreground">{MOIS[a.moisPrevu]}</td>
-                    <td className="p-2.5">
-                      <div className="flex gap-1 text-[10px]">
-                        {a.devisNumero && <Badge variant="outline">D {a.devisNumero}</Badge>}
-                        {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs min-w-[800px]">
+              <thead>
+                <tr className="border-b bg-sage">
+                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Client / Titre</th>
+                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Type</th>
+                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
+                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
+                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
+                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Partenaire</th>
+                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Commission</th>
+                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mon net</th>
+                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mois</th>
+                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Devis/Fac</th>
+                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {affaires.map((a) => {
+                  const ht = Number(a.montantHT);
+                  const c = a.viaPartenaire ? Math.round(ht * Number(a.tauxCommission) / 100) : 0;
+                  return (
+                    <tr key={a.id} className={`border-b hover:bg-sage/50 ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`}>
+                      <td className="p-2.5">
+                        <div className="font-semibold">{a.client.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{a.title}</div>
+                      </td>
+                      <td className="p-2.5">
+                        {a.type === 'BILAN_CARBONE'
+                          ? <Badge variant="secondary">🌍</Badge>
+                          : <Badge className="bg-gold-light text-gold">📚</Badge>}
+                      </td>
+                      <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>
+                      <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
+                      <td className="p-2.5"><StatutBadge statut={a.statut} /></td>
+                      <td className="p-2.5">{a.viaPartenaire ? <Badge className="bg-purple text-white">🤝</Badge> : <span className="text-muted-foreground">—</span>}</td>
+                      <td className="p-2.5 text-right font-mono text-purple">{a.viaPartenaire ? fmtDT(c) : '—'}</td>
+                      <td className="p-2.5 text-right font-mono font-semibold text-leaf">{fmtDT(ht - c)}</td>
+                      <td className="p-2.5 text-muted-foreground">{MOIS[a.moisPrevu]}</td>
+                      <td className="p-2.5">
+                        <div className="flex gap-1 text-[10px]">
+                          {a.devisNumero && <Badge variant="outline">D {a.devisNumero}</Badge>}
+                          {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
                       </div>
                     </td>
                     <td className="p-2.5 text-right">
@@ -247,6 +289,7 @@ export function Affaires() {
               })}
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
 

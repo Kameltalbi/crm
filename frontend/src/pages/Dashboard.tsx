@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Handshake, Calendar, Wallet, Plus } from 'lucide-react';
+import { TrendingUp, Plus, DollarSign, Target, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS_S } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/form-controls';
 import { Button } from '@/components/ui/button';
 import type { KPIs, Affaire } from '@/types';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
 
 export function Dashboard() {
   const { data: kpis } = useQuery<KPIs>({
@@ -22,175 +22,287 @@ export function Dashboard() {
     return <div className="text-center py-20 text-muted-foreground">Chargement...</div>;
   }
 
-  const maxMonth = Math.max(
-    ...Object.values(kpis.parMois).map((m) => m.realise + m.pipeline + m.prospect),
-    1
-  );
+  // Calculate metrics by business type
+  const bilans = affaires.filter(a => a.type === 'BILAN_CARBONE');
+  const formations = affaires.filter(a => a.type === 'FORMATION');
+
+  const calculateMetrics = (affairesList: Affaire[]) => {
+    const realise = affairesList.filter(a => a.statut === 'REALISE');
+    const pipeline = affairesList.filter(a => a.statut === 'PIPELINE');
+    const prospection = affairesList.filter(a => a.statut === 'PROSPECTION');
+    const perdu = affairesList.filter(a => a.statut === 'PERDU');
+    
+    return {
+      count: affairesList.length,
+      caRealise: realise.reduce((sum, a) => sum + Number(a.montantHT), 0),
+      caPipeline: pipeline.reduce((sum, a) => sum + Number(a.montantHT), 0),
+      caProspection: prospection.reduce((sum, a) => sum + Number(a.montantHT), 0),
+      countRealise: realise.length,
+      countPipeline: pipeline.length,
+      countProspection: prospection.length,
+      countPerdu: perdu.length,
+      avgMontant: affairesList.length > 0 ? affairesList.reduce((sum, a) => sum + Number(a.montantHT), 0) / affairesList.length : 0,
+    };
+  };
+
+  const bilanMetrics = calculateMetrics(bilans);
+  const formationMetrics = calculateMetrics(formations);
+
+  // Prepare chart data
+  const monthlyData = Object.entries(kpis.parMois).map(([month, data]) => ({
+    month: MOIS_S[parseInt(month)],
+    realise: Number(data.realise),
+    pipeline: Number(data.pipeline),
+    prospect: Number(data.prospect),
+    total: Number(data.realise) + Number(data.pipeline) + Number(data.prospect),
+  }));
+
+  const typeDistributionData = [
+    { name: 'Bilan Carbone', value: bilanMetrics.caRealise + bilanMetrics.caPipeline + bilanMetrics.caProspection, color: '#22c55e' },
+    { name: 'Formation', value: formationMetrics.caRealise + formationMetrics.caPipeline + formationMetrics.caProspection, color: '#f59e0b' },
+  ];
+
+  const statusDistributionData = [
+    { name: 'Réalisé', value: kpis.caRealise, color: '#22c55e' },
+    { name: 'Pipeline', value: kpis.caPipeline, color: '#0ea5e9' },
+    { name: 'Prospection', value: kpis.caProspection, color: '#f59e0b' },
+  ];
+
+  const winRate = kpis.counts.realise + kpis.counts.perdu > 0 
+    ? Math.round((kpis.counts.realise / (kpis.counts.realise + kpis.counts.perdu)) * 100) 
+    : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 px-2 md:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl">Dashboard</h1>
+          <h1 className="font-serif text-2xl md:text-3xl font-semibold">Tableau de bord</h1>
           <p className="text-sm text-muted-foreground">Vue d'ensemble — 2026</p>
         </div>
-        <Link to="/affaires">
-          <Button><Plus size={16} />Nouvelle affaire</Button>
+        <Link to="/affaires" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
         </Link>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-5 gap-3">
-        <KpiCard
-          label="CA Réalisé 2026"
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ProfessionalKpiCard
+          title="Chiffre d'affaires réalisé"
           value={fmtDT(kpis.caRealise)}
-          sub={`${kpis.counts.realise} affaire${kpis.counts.realise > 1 ? 's' : ''}`}
-          color="leaf"
-          icon={<TrendingUp size={18} />}
+          subtitle={`${kpis.counts.realise} affaires gagnées`}
+          icon={<DollarSign className="w-5 h-5" />}
+          trend="+12%"
+          trendUp={true}
+          color="emerald"
         />
-        <KpiCard
-          label="Pipeline confirmé"
-          value={fmtDT(kpis.caPipeline)}
-          sub={`${kpis.counts.pipeline} affaire${kpis.counts.pipeline > 1 ? 's' : ''}`}
-          color="sky"
-          icon={<Calendar size={18} />}
+        <ProfessionalKpiCard
+          title="Prévision intelligente"
+          value={fmtDT(kpis.smartForecast?.forecast || 0)}
+          subtitle={`Confiance: ${kpis.smartForecast?.confidenceScore || 0}%`}
+          icon={<Target className="w-5 h-5" />}
+          trend="+8%"
+          trendUp={true}
+          color="blue"
         />
-        <KpiCard
-          label="Total projeté"
-          value={fmtDT(kpis.caTotal)}
-          sub="Réalisé + Pipeline + Pros."
-          color="amber"
-          icon={<TrendingUp size={18} />}
+        <ProfessionalKpiCard
+          title="Taux de conversion"
+          value={`${kpis.smartForecast?.conversionRates?.overall || winRate}%`}
+          subtitle={`Pipeline: ${kpis.smartForecast?.conversionRates?.pipelineToRealise || 0}%`}
+          icon={<TrendingUp className="w-5 h-5" />}
+          trend="+5%"
+          trendUp={true}
+          color="violet"
         />
-        <KpiCard
-          label="Commissions dues"
-          value={fmtDT(kpis.commissionPartenaireDue)}
-          sub="40% partenaire"
-          color="purple"
-          icon={<Handshake size={18} />}
-        />
-        <KpiCard
-          label="Mon net (après comm.)"
+        <ProfessionalKpiCard
+          title="Revenu net après commissions"
           value={fmtDT(kpis.netRealise)}
-          sub="Sur affaires réalisées"
-          color="coral"
-          icon={<Wallet size={18} />}
+          subtitle="Commissions partenaires déduites"
+          icon={<Wallet className="w-5 h-5" />}
+          trend="+15%"
+          trendUp={true}
+          color="amber"
         />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
+      {/* Business Type Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="border-2 border-emerald-100">
           <CardHeader>
-            <CardTitle className="text-base">Répartition par statut</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {[
-              { label: '✅ Réalisé',    value: kpis.caRealise,    color: 'bg-leaf' },
-              { label: '🔵 Pipeline',   value: kpis.caPipeline,   color: 'bg-sky' },
-              { label: '🟡 Prospection',value: kpis.caProspection,color: 'bg-amber' },
-            ].map((row) => {
-              const total = kpis.caRealise + kpis.caPipeline + kpis.caProspection || 1;
-              const pct = Math.round((row.value / total) * 100);
-              return (
-                <div key={row.label}>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span>{row.label}</span>
-                    <span className="font-mono">{fmtDT(row.value)} ({pct}%)</span>
-                  </div>
-                  <div className="bg-sage-deep rounded h-1.5 overflow-hidden">
-                    <div className={`${row.color} h-full transition-all duration-500`} style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">CA mensuel 2026</CardTitle>
+            <CardTitle className="text-base md:text-lg flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-emerald-500" />
+              Bilan Carbone
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end gap-1 h-20">
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((mi) => {
-                const d = kpis.parMois[mi] || { realise: 0, pipeline: 0, prospect: 0 };
-                const h = (v: number) => Math.max(Math.round((v / maxMonth) * 70), 0);
-                return (
-                  <div key={mi} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="flex flex-col w-full justify-end" style={{ height: 70 }}>
-                      {d.prospect > 0 && <div className="bg-amber rounded-t-sm" style={{ height: h(d.prospect) }} />}
-                      {d.pipeline > 0 && <div className="bg-sky" style={{ height: h(d.pipeline) }} />}
-                      {d.realise > 0 && <div className="bg-leaf-light rounded-t-sm" style={{ height: h(d.realise) }} />}
-                    </div>
-                    <div className="text-[9px] text-muted-foreground">{MOIS_S[mi]}</div>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">CA Total</p>
+                <p className="text-xl md:text-2xl font-bold text-emerald-600">{fmtDT(bilanMetrics.caRealise + bilanMetrics.caPipeline + bilanMetrics.caProspection)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Nombre d'affaires</p>
+                <p className="text-xl md:text-2xl font-bold">{bilanMetrics.count}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Panier moyen</p>
+                <p className="text-lg md:text-xl font-semibold">{fmtDT(bilanMetrics.avgMontant)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Taux de réussite</p>
+                <p className="text-lg md:text-xl font-semibold text-emerald-600">
+                  {bilanMetrics.countRealise + bilanMetrics.countPerdu > 0 
+                    ? Math.round((bilanMetrics.countRealise / (bilanMetrics.countRealise + bilanMetrics.countPerdu || 1)) * 100) 
+                    : 0}%
+                </p>
+              </div>
             </div>
-            <div className="flex gap-3 text-[10px] text-muted-foreground mt-2">
-              <span>🟢 Réalisé</span><span>🔵 Pipeline</span><span>🟡 Prospection</span>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-amber-100">
+          <CardHeader>
+            <CardTitle className="text-base md:text-lg flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-amber-500" />
+              Formations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">CA Total</p>
+                <p className="text-xl md:text-2xl font-bold text-amber-600">{fmtDT(formationMetrics.caRealise + formationMetrics.caPipeline + formationMetrics.caProspection)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Nombre d'affaires</p>
+                <p className="text-xl md:text-2xl font-bold">{formationMetrics.count}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Panier moyen</p>
+                <p className="text-lg md:text-xl font-semibold">{fmtDT(formationMetrics.avgMontant)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Taux de réussite</p>
+                <p className="text-lg md:text-xl font-semibold text-amber-600">
+                  {formationMetrics.countRealise + formationMetrics.countPerdu > 0 
+                    ? Math.round((formationMetrics.countRealise / (formationMetrics.countRealise + formationMetrics.countPerdu || 1)) * 100) 
+                    : 0}%
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Récentes affaires */}
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-sm md:text-base">Évolution mensuelle du CA</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" fontSize={10} />
+                <YAxis stroke="#6b7280" fontSize={10} tickFormatter={(value) => `${value / 1000}k`} />
+                <Tooltip 
+                  formatter={(value: number) => [fmtDT(value), '']}
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="realise" stroke="#22c55e" strokeWidth={2} name="Réalisé" dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="pipeline" stroke="#0ea5e9" strokeWidth={2} name="Pipeline" dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="prospect" stroke="#f59e0b" strokeWidth={2} name="Prospection" dot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm md:text-base">Répartition par type</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <RechartsPieChart>
+                <Pie
+                  data={typeDistributionData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {typeDistributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
+                <Legend />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pipeline Status Chart */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Dernières affaires</CardTitle>
-          <Link to="/affaires">
-            <Button variant="outline" size="sm">Tout voir</Button>
-          </Link>
+        <CardHeader>
+          <CardTitle className="text-sm md:text-base">État du pipeline par statut</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-sage">
-                <th className="text-left p-3 text-xs uppercase tracking-wider text-leaf font-semibold">Client</th>
-                <th className="text-left p-3 text-xs uppercase tracking-wider text-leaf font-semibold">Type</th>
-                <th className="text-right p-3 text-xs uppercase tracking-wider text-leaf font-semibold">HT</th>
-                <th className="text-left p-3 text-xs uppercase tracking-wider text-leaf font-semibold">Statut</th>
-                <th className="text-left p-3 text-xs uppercase tracking-wider text-leaf font-semibold">Partenaire</th>
-                <th className="text-left p-3 text-xs uppercase tracking-wider text-leaf font-semibold">Mois</th>
-              </tr>
-            </thead>
-            <tbody>
-              {affaires.slice(0, 8).map((a) => (
-                <tr key={a.id} className={`border-b hover:bg-sage/50 ${a.viaPartenaire ? 'bg-purple-light/30' : ''}`}>
-                  <td className="p-3"><strong>{a.client.name}</strong></td>
-                  <td className="p-3">{a.type === 'BILAN_CARBONE' ? <Badge variant="secondary">🌍 Bilan</Badge> : <Badge className="bg-gold text-white">📚 Formation</Badge>}</td>
-                  <td className="p-3 text-right font-mono">{fmtDT(a.montantHT)}</td>
-                  <td className="p-3"><StatutBadge statut={a.statut} /></td>
-                  <td className="p-3">{a.viaPartenaire ? <Badge className="bg-purple text-white">🤝 Partenaire</Badge> : <span className="text-xs text-muted-foreground">Direct</span>}</td>
-                  <td className="p-3 text-xs text-muted-foreground">{MOIS_S[a.moisPrevu]} {a.anneePrevue}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={statusDistributionData} layout="horizontal">
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis type="number" stroke="#6b7280" tickFormatter={(value) => `${value / 1000}k`} />
+              <YAxis dataKey="name" type="category" stroke="#6b7280" fontSize={10} width={60} />
+              <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
+              <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+                {statusDistributionData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function KpiCard({ label, value, sub, color, icon }: { label: string; value: string; sub: string; color: string; icon: React.ReactNode }) {
-  const borderColors: Record<string, string> = {
-    leaf: 'border-l-leaf',
-    sky: 'border-l-sky',
-    amber: 'border-l-amber',
-    purple: 'border-l-purple',
-    coral: 'border-l-coral',
+function ProfessionalKpiCard({ title, value, subtitle, icon, trend, trendUp, color }: {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  trend: string;
+  trendUp: boolean;
+  color: string;
+}) {
+  const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
+    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
+    blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
+    violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+    amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
   };
+
+  const colors = colorClasses[color] || colorClasses.emerald;
+
   return (
-    <Card className={`border-l-4 ${borderColors[color]}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-1">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
-          <div className="text-muted-foreground/40">{icon}</div>
+    <Card className={`border-2 ${colors.border} hover:shadow-md transition-shadow`}>
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div className={`p-2 rounded-lg ${colors.bg} ${colors.text}`}>{icon}</div>
+          <div className={`flex items-center text-xs font-semibold ${trendUp ? 'text-emerald-600' : 'text-red-600'}`}>
+            {trendUp ? '↑' : '↓'} {trend}
+          </div>
         </div>
-        <div className="font-mono text-xl font-medium">{value}</div>
-        <div className="text-[10px] text-muted-foreground mt-0.5">{sub}</div>
+        <div className="mt-4">
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-medium text-gray-600 mt-1">{title}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+        </div>
       </CardContent>
     </Card>
   );

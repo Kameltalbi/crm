@@ -1,19 +1,26 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Mail, CheckCircle2, XCircle } from 'lucide-react';
+import { Mail, CheckCircle2, XCircle, Users } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import type { User } from '@/types';
 
 export function Settings() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [params] = useSearchParams();
   const [toast, setToast] = useState<string | null>(null);
 
   const { data: gmailStatus } = useQuery({
     queryKey: ['gmail-status'],
     queryFn: () => api.get('/gmail/status').then((r) => r.data),
+  });
+
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ['me'],
+    queryFn: () => api.get('/auth/me').then((r) => r.data.user),
   });
 
   useEffect(() => {
@@ -30,9 +37,9 @@ export function Settings() {
   };
 
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5 max-w-3xl px-2 md:px-0">
       <div>
-        <h1 className="font-serif text-3xl">Paramètres</h1>
+        <h1 className="font-serif text-2xl md:text-3xl">Paramètres</h1>
         <p className="text-sm text-muted-foreground">Intégrations et configuration</p>
       </div>
 
@@ -42,7 +49,7 @@ export function Settings() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
               <Mail className="text-red-600" size={20} />
             </div>
@@ -68,14 +75,14 @@ export function Settings() {
                 <span className="text-muted-foreground">Compte : </span>
                 <span className="font-medium">{gmailStatus.email}</span>
               </div>
-              <Button variant="outline" onClick={connectGmail}>Changer de compte</Button>
+              <Button variant="outline" onClick={connectGmail} className="w-full sm:w-auto">Changer de compte</Button>
             </div>
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 Connectez votre compte Gmail pour envoyer vos documents Softfacture par email en un clic.
               </p>
-              <Button onClick={connectGmail}>Connecter Gmail</Button>
+              <Button onClick={connectGmail} className="w-full sm:w-auto">Connecter Gmail</Button>
             </div>
           )}
         </CardContent>
@@ -94,6 +101,27 @@ export function Settings() {
           </p>
         </CardContent>
       </Card>
+
+      {currentUser?.role === 'OWNER' && (
+        <Card className="border-purple-200 bg-purple-50/30">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                <Users className="text-purple-600" size={20} />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-lg">Gestion des utilisateurs</CardTitle>
+                <CardDescription>Créer et gérer les utilisateurs et leurs rôles</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate('/users')} className="w-full sm:w-auto">
+              Gérer les utilisateurs
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

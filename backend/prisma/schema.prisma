@@ -18,7 +18,7 @@ model User {
   email        String   @unique
   passwordHash String
   name         String
-  role         String   @default("owner") // owner | partner
+  role         UserRole @default(OWNER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -28,6 +28,11 @@ model User {
   gmailTokens      GmailToken?
 
   @@map("users")
+}
+
+enum UserRole {
+  OWNER   // Accès complet, gestion des utilisateurs
+  PARTNER // Accès limité, lecture seule sur les données
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Leaf, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/form-controls';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export function Login() {
+export function Register() {
   const navigate = useNavigate();
-  const login = useAuth((s) => s.login);
-  const [email, setEmail] = useState('admin@bilan-crm.tn');
-  const [password, setPassword] = useState('changeme123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,10 +20,12 @@ export function Login() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      const { data } = await api.post('/auth/register', { email, password, name });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur de connexion');
+      setError(err.response?.data?.error || 'Erreur lors de l\'inscription');
     } finally {
       setLoading(false);
     }
@@ -38,17 +40,21 @@ export function Login() {
           </div>
           <div>
             <CardTitle>Bilan CRM</CardTitle>
-            <CardDescription>Connexion à votre espace</CardDescription>
+            <CardDescription>Créer un compte</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
+              <Label htmlFor="name">Nom</Label>
+              <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">Mot de passe (min. 6 caractères)</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -69,10 +75,10 @@ export function Login() {
             </div>
             {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Connexion...' : 'Se connecter'}
+              {loading ? 'Inscription...' : 'S\'inscrire'}
             </Button>
             <p className="text-sm text-center text-muted-foreground">
-              Pas de compte ? <Link to="/register" className="text-leaf hover:underline">S'inscrire</Link>
+              Déjà un compte ? <Link to="/login" className="text-leaf hover:underline">Se connecter</Link>
             </p>
           </form>
         </CardContent>

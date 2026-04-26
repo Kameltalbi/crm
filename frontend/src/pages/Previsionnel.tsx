@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import type { Previsionnel } from '@/types';
 
 export function Previsionnel() {
@@ -16,12 +17,21 @@ export function Previsionnel() {
   if (!data) return <div className="text-center py-20 text-muted-foreground">Chargement...</div>;
 
   const maxV = Math.max(...data.mois.map((m) => m.caTotalPrevu), 1);
+  
+  // Prepare chart data
+  const chartData = data.mois.map((m) => ({
+    month: MOIS[m.mois],
+    prevu: Number(m.caTotalPrevu),
+    reel: Number(m.caReelRealise),
+    bilans: Number(m.caBilansPrevu),
+    formations: Number(m.caFormationsPrevu),
+  }));
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 px-2 md:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl">Prévisionnel</h1>
+          <h1 className="font-serif text-2xl md:text-3xl">Prévisionnel</h1>
           <p className="text-sm text-muted-foreground">Prévisions mensuelles sur 3 ans</p>
         </div>
         <div className="flex gap-2">
@@ -39,15 +49,37 @@ export function Previsionnel() {
       </div>
 
       {/* Net banner */}
-      <div className="rounded-xl bg-gradient-to-br from-leaf to-leaf-mid text-white p-5 grid grid-cols-4 gap-5">
+      <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-4 md:p-5 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
         <NetItem label="CA Brut HT" value={fmtDT(data.totaux.caBrutHT)} />
         <NetItem label="Commissions partenaire" value={fmtDT(data.totaux.commissionEstimee)} sub="40% sur apports partenaire" />
         <NetItem label="TVA à reverser" value={fmtDT(data.totaux.tvaCollectee)} />
         <NetItem label="MON NET (après comm.)" value={fmtDT(data.totaux.netHT)} highlight />
       </div>
 
+      {/* Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm md:text-base">Évolution mensuelle CA (Prévu vs Réalisé)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="month" stroke="#6b7280" fontSize={10} />
+              <YAxis stroke="#6b7280" fontSize={10} tickFormatter={(value) => `${value / 1000}k`} />
+              <Tooltip 
+                formatter={(value: number) => [fmtDT(value), '']}
+                contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }}
+              />
+              <Line type="monotone" dataKey="prevu" stroke="#22c55e" strokeWidth={2} name="Prévu" dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="reel" stroke="#3b82f6" strokeWidth={2} name="Réalisé" dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
       {/* Mois grid */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {data.mois.map((m) => {
           const pct = Math.round((m.caTotalPrevu / maxV) * 100);
           const chargeColor =

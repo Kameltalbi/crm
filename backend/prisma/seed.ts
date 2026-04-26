@@ -1,4 +1,4 @@
-import { PrismaClient, AffaireType, StatutAffaire } from '@prisma/client';
+import { PrismaClient, AffaireType, StatutAffaire, UserRole } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -15,7 +15,7 @@ async function main() {
       email: 'admin@bilan-crm.tn',
       passwordHash,
       name: 'Admin',
-      role: 'owner',
+      role: UserRole.OWNER,
     },
   });
   console.log(`✅ User: ${user.email} (password: changeme123)`);

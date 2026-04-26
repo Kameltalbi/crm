@@ -1,12 +1,13 @@
 export type AffaireType = 'BILAN_CARBONE' | 'FORMATION';
 export type StatutAffaire = 'PROSPECTION' | 'PIPELINE' | 'REALISE' | 'PERDU';
 export type ActiviteType = 'NOTE' | 'APPEL' | 'EMAIL_ENVOYE' | 'EMAIL_RECU' | 'RDV' | 'CHANGEMENT_STATUT' | 'DEVIS_CREE' | 'FACTURE_CREEE' | 'AUTRE';
+export type UserRole = 'OWNER' | 'PARTNER';
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: string;
+  role: UserRole;
 }
 
 export interface Client {
@@ -55,6 +56,23 @@ export interface Activite {
   createdAt: string;
 }
 
+export interface SmartForecast {
+  forecast: number;
+  lowerBound: number;
+  upperBound: number;
+  confidenceScore: number;
+  conversionRates: {
+    overall: number;
+    prospectToPipeline: number;
+    pipelineToRealise: number;
+  };
+  breakdown: {
+    realise: number;
+    adjustedPipeline: number;
+    adjustedProspect: number;
+  };
+}
+
 export interface KPIs {
   annee: number;
   caRealise: number;
@@ -68,6 +86,7 @@ export interface KPIs {
   caFormations: number;
   counts: { realise: number; pipeline: number; prospect: number; perdu: number };
   parMois: Record<number, { realise: number; pipeline: number; prospect: number }>;
+  smartForecast?: SmartForecast;
 }
 
 export interface PrevisionMois {

@@ -123,7 +123,7 @@ export function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <ProfessionalKpiCard
           title="CA prévisionnel cumulé"
           value={fmtDT(totalCumulativeCA)}
@@ -159,15 +159,6 @@ export function Dashboard() {
           trend="+5%"
           trendUp={true}
           color="purple"
-        />
-        <ProfessionalKpiCard
-          title="Revenu net après commissions"
-          value={fmtDT(kpis.netRealise)}
-          subtitle="Commissions partenaires déduites"
-          icon={<Wallet className="w-5 h-5" />}
-          trend="+15%"
-          trendUp={true}
-          color="amber"
         />
       </div>
 

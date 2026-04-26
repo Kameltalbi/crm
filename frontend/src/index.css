@@ -42,3 +42,15 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.3); }
+
+/* Force dialog background to be white */
+[data-radix-dialog-content] {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Alternative selector for Radix UI */
+div[data-state="open"][role="dialog"] {
+  background-color: white !important;
+  color: black !important;
+}

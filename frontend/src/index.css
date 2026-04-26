@@ -9,7 +9,7 @@
     --card: 0 0% 100%;
     --card-foreground: 148 40% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 148 40% 8%;
+    --popover-foreground: 0 0% 0%;
     --primary: 148 58% 23%;
     --primary-foreground: 0 0% 100%;
     --secondary: 145 30% 95%;
@@ -57,6 +57,28 @@ div[data-state="open"][role="dialog"] {
 
 /* Force select dropdown to be visible */
 [data-radix-select-content] {
-  background-color: white !important;
-  color: black !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* More specific selector for select content */
+[data-radix-select-content][data-state="open"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Force select items to be visible */
+[data-radix-select-item] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-radix-select-item]:hover {
+  background-color: #f3f4f6 !important;
+}
+
+/* Force select viewport */
+[data-radix-select-viewport] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }

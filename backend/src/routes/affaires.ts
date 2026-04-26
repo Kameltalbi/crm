@@ -36,7 +36,7 @@ affairesRoutes.get('/', async (req, res, next) => {
     const affaires = await prisma.affaire.findMany({
       where,
       include: { client: true, product: true, _count: { select: { activites: true } } },
-      orderBy: [{ anneePrevue: 'desc' }, { moisPrevu: 'desc' }, { createdAt: 'desc' }],
+      orderBy: { createdAt: 'desc' },
     });
     res.json(affaires);
   } catch (e) { next(e); }

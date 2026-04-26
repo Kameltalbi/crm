@@ -1,7 +1,8 @@
 import * as React from 'react';
 import * as LabelPrimitive from '@radix-ui/react-label';
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { Check, ChevronDown } from 'lucide-react';
+import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
+import { Check, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ─── Input ──────────────────────────────────────────────
@@ -130,3 +131,44 @@ export const SelectItem = React.forwardRef<
   </SelectPrimitive.Item>
 ));
 SelectItem.displayName = SelectPrimitive.Item.displayName;
+
+// ─── Dropdown Menu (shadcn/radix) ─────────────────────
+export const DropdownMenu = DropdownMenuPrimitive.Root;
+export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
+export const DropdownMenuContent = DropdownMenuPrimitive.Content;
+export const DropdownMenuItem = DropdownMenuPrimitive.Item;
+
+export const DropdownMenuTriggerButton = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      'flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+      className
+    )}
+    {...props}
+  >
+    <MoreHorizontal size={16} />
+  </DropdownMenuPrimitive.Trigger>
+));
+DropdownMenuTriggerButton.displayName = DropdownMenuPrimitive.Trigger.displayName;
+
+export const DropdownMenuContentWrapper = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.Portal>
+    <DropdownMenuPrimitive.Content
+      ref={ref}
+      className={cn(
+        'relative z-[10000] min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md',
+        className
+      )}
+      style={{ backgroundColor: 'white', color: 'black' } as React.CSSProperties}
+      {...props}
+    />
+  </DropdownMenuPrimitive.Portal>
+));
+DropdownMenuContentWrapper.displayName = DropdownMenuPrimitive.Content.displayName;

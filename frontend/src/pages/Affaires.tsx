@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge } from '@/components/ui/form-controls';
+import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItem } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { StatutBadge } from './Dashboard';
 import type { Affaire, Client, Product, AffaireType, StatutAffaire } from '@/types';
@@ -266,29 +266,32 @@ export function Affaires() {
                       </div>
                     </td>
                     <td className="p-2.5 text-right">
-                      <div className="flex gap-1 justify-end">
-                        {!a.devisId && (
-                          <Button size="sm" variant="outline" onClick={() => createDevisMutation.mutate(a.id)} title="Créer devis">
-                            <FileText size={12} />
-                          </Button>
-                        )}
-                        {!a.factureId && (
-                          <Button size="sm" variant="outline" onClick={() => createFactureMutation.mutate(a.id)} title="Créer facture">
-                            <Receipt size={12} />
-                          </Button>
-                        )}
-                        {(a.devisPdfUrl || a.facturePdfUrl) && (
-                          <Button size="sm" variant="outline" title="Envoyer par email">
-                            <Mail size={12} />
-                          </Button>
-                        )}
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(a)}>
-                          <Pencil size={12} />
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleDelete(a.id)}>
-                          <Trash2 size={12} />
-                        </Button>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTriggerButton />
+                        <DropdownMenuContentWrapper>
+                          {!a.devisId && (
+                            <DropdownMenuItem onClick={() => createDevisMutation.mutate(a.id)}>
+                              <FileText size={14} className="mr-2" /> Créer devis
+                            </DropdownMenuItem>
+                          )}
+                          {!a.factureId && (
+                            <DropdownMenuItem onClick={() => createFactureMutation.mutate(a.id)}>
+                              <Receipt size={14} className="mr-2" /> Créer facture
+                            </DropdownMenuItem>
+                          )}
+                          {(a.devisPdfUrl || a.facturePdfUrl) && (
+                            <DropdownMenuItem>
+                              <Mail size={14} className="mr-2" /> Envoyer par email
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => handleEdit(a)}>
+                            <Pencil size={14} className="mr-2" /> Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(a.id)} className="text-destructive">
+                            <Trash2 size={14} className="mr-2" /> Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContentWrapper>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 );

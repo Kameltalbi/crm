@@ -252,13 +252,27 @@ export function Dashboard() {
           <CardTitle className="text-sm md:text-base">État du pipeline par statut</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={statusDistributionData} layout="horizontal">
+          <div className="space-y-3 mb-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Réalisé</span>
+              <span className="font-semibold text-emerald-600">{fmtDT(kpis.caRealise)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Pipeline</span>
+              <span className="font-semibold text-blue-600">{fmtDT(kpis.caPipeline)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Prospection</span>
+              <span className="font-semibold text-amber-600">{fmtDT(kpis.caProspection)}</span>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={statusDistributionData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis type="number" stroke="#6b7280" tickFormatter={(value) => `${value / 1000}k`} />
-              <YAxis dataKey="name" type="category" stroke="#6b7280" fontSize={10} width={60} />
+              <XAxis dataKey="name" stroke="#6b7280" fontSize={10} />
+              <YAxis stroke="#6b7280" fontSize={10} tickFormatter={(value) => `${value / 1000}k`} />
               <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-              <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                 {statusDistributionData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}

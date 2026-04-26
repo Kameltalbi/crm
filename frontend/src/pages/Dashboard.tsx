@@ -66,6 +66,9 @@ export function Dashboard() {
     };
   }) : [];
 
+  // Total cumulative CA for the year
+  const totalCumulativeCA = cumulativeData.length > 0 ? cumulativeData[cumulativeData.length - 1].cumulative : 0;
+
   // Prepare chart data
   const monthlyData = Object.entries(kpis.parMois).map(([month, data]) => ({
     month: MOIS_S[parseInt(month)],
@@ -127,6 +130,15 @@ export function Dashboard() {
           color="emerald"
         />
         <ProfessionalKpiCard
+          title="CA prévisionnel cumulé"
+          value={fmtDT(totalCumulativeCA)}
+          subtitle={`Année ${selectedYear}`}
+          icon={<Wallet className="w-5 h-5" />}
+          trend="+15%"
+          trendUp={true}
+          color="blue"
+        />
+        <ProfessionalKpiCard
           title="Prévision intelligente"
           value={fmtDT(kpis.smartForecast?.forecast || 0)}
           subtitle={`Confiance: ${kpis.smartForecast?.confidenceScore || 0}%`}
@@ -142,7 +154,7 @@ export function Dashboard() {
           icon={<TrendingUp className="w-5 h-5" />}
           trend="+5%"
           trendUp={true}
-          color="violet"
+          color="purple"
         />
         <ProfessionalKpiCard
           title="Revenu net après commissions"

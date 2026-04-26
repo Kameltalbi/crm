@@ -15,7 +15,7 @@ export function Products() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
-  const { data: products = [] } = useQuery<Product[]>({
+  const { data: products = [], error, isLoading } = useQuery<Product[]>({
     queryKey: ['products'],
     queryFn: () => api.get('/products').then((r) => r.data),
   });
@@ -29,6 +29,10 @@ export function Products() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['products'] });
       setOpen(false);
+    },
+    onError: (err) => {
+      console.error('Error saving product:', err);
+      alert('Erreur lors de la sauvegarde');
     },
   });
 
@@ -63,6 +67,9 @@ export function Products() {
         </Button>
       </div>
 
+      {isLoading && <p className="text-muted-foreground">Chargement...</p>}
+      {error && <p className="text-destructive">Erreur: {String(error)}</p>}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {products.map((p) => (
           <Card key={p.id} className={`hover:shadow-md transition-shadow ${!p.active ? 'opacity-60' : ''}`}>
@@ -94,6 +101,10 @@ export function Products() {
           </Card>
         ))}
       </div>
+
+      {!isLoading && products.length === 0 && (
+        <p className="text-muted-foreground text-center py-8">Aucun produit créé</p>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl">

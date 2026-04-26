@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, FileText, Receipt, Mail } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +36,7 @@ const EMPTY: FormData = {
 
 export function Affaires() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', viaPartenaire: '' });
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -269,6 +271,9 @@ export function Affaires() {
                       <DropdownMenu>
                         <DropdownMenuTriggerButton />
                         <DropdownMenuContentWrapper>
+                          <DropdownMenuItem onClick={() => navigate(`/affaires/${a.id}`)}>
+                            <Eye size={14} className="mr-2" /> Voir détails
+                          </DropdownMenuItem>
                           {!a.devisId && (
                             <DropdownMenuItem onClick={() => createDevisMutation.mutate(a.id)}>
                               <FileText size={14} className="mr-2" /> Créer devis

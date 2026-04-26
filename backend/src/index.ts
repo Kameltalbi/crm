@@ -14,6 +14,7 @@ import { gmailRoutes } from './routes/gmail.js';
 import { kpisRoutes } from './routes/kpis.js';
 import { usersRoutes } from './routes/users.js';
 import { productsRoutes } from './routes/products.js';
+import { activitesRoutes } from './routes/activites.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -51,6 +52,7 @@ app.use('/api/gmail', gmailRoutes);
 app.use('/api/kpis', kpisRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/products', productsRoutes);
+app.use('/api/activites', activitesRoutes);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

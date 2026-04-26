@@ -60,6 +60,7 @@ export interface Affaire {
   updatedAt: string;
   client?: Client;
   product?: Product;
+  activites?: Activite[];
   _count?: { activites: number };
 }
 

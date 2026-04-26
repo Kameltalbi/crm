@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -8,6 +8,7 @@ const nav = [
   { to: '/',             label: 'Dashboard',     icon: LayoutDashboard },
   { to: '/affaires',     label: 'Affaires',      icon: Briefcase       },
   { to: '/clients',      label: 'Clients',       icon: Users           },
+  { to: '/activites',    label: 'Activités',     icon: FileText        },
   { to: '/previsionnel', label: 'Prévisionnel',  icon: Calendar        },
   { to: '/settings',     label: 'Paramètres',    icon: Settings        },
 ];

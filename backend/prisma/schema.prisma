@@ -1,4 +1,4 @@
-// Prisma schema pour Bilan CRM
+// Prisma schema pour kt-Optima
 // Docs: https://pris.ly/d/prisma-schema
 
 generator client {

@@ -37,7 +37,7 @@ export function Login() {
             <Leaf className="text-white" size={22} />
           </div>
           <div>
-            <CardTitle>Bilan CRM</CardTitle>
+            <CardTitle>kt-Optima</CardTitle>
             <CardDescription>Connexion à votre espace</CardDescription>
           </div>
         </CardHeader>

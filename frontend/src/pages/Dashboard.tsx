@@ -98,8 +98,8 @@ export function Dashboard() {
     : 0;
 
   return (
-    <div className="space-y-6 px-2 md:px-0">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-serif text-2xl md:text-3xl font-semibold">Tableau de bord</h1>
           <p className="text-sm text-muted-foreground">Vue d'ensemble — {selectedYear}</p>

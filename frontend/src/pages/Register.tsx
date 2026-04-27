@@ -40,7 +40,7 @@ export function Register() {
             <Leaf className="text-white" size={22} />
           </div>
           <div>
-            <CardTitle>Bilan CRM</CardTitle>
+            <CardTitle>kt-Optima</CardTitle>
             <CardDescription>Créer votre organisation et compte</CardDescription>
           </div>
         </CardHeader>

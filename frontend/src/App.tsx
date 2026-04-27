@@ -14,6 +14,7 @@ import { Users } from './pages/Users';
 import { Products } from './pages/Products';
 import { Activites } from './pages/Activites';
 import { Organizations } from './pages/Organizations';
+import { Landing } from './pages/Landing';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuth((s) => s.token);
@@ -29,6 +30,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route

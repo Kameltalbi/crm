@@ -16,6 +16,7 @@ import { usersRoutes } from './routes/users.js';
 import { productsRoutes } from './routes/products.js';
 import { activitesRoutes } from './routes/activites.js';
 import { organizationsRoutes } from './routes/organizations.js';
+import { uploadRoutes } from './routes/upload.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/activites', activitesRoutes);
 app.use('/api/organizations', organizationsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

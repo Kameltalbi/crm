@@ -16,11 +16,12 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(1),
+  organizationName: z.string().min(1),
 });
 
 authRoutes.post('/register', async (req, res, next) => {
   try {
-    const { email, password, name } = registerSchema.parse(req.body);
+    const { email, password, name, organizationName } = registerSchema.parse(req.body);
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -29,12 +30,22 @@ authRoutes.post('/register', async (req, res, next) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // Create organization first
+    const organization = await prisma.organization.create({
+      data: {
+        name: organizationName,
+        email: email,
+      },
+    });
+
+    // Create user with organization
     const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
         name,
-        role: UserRole.PARTNER,
+        role: UserRole.OWNER,
+        organizationId: organization.id,
       },
     });
 
@@ -44,7 +55,13 @@ authRoutes.post('/register', async (req, res, next) => {
 
     res.status(201).json({
       token,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        name: user.name, 
+        role: user.role,
+        organizationId: user.organizationId,
+      },
     });
   } catch (e) {
     next(e);
@@ -81,7 +98,13 @@ authRoutes.get('/me', async (req, res, next) => {
     const { userId } = jwt.verify(authHeader.substring(7), process.env.JWT_SECRET!) as { userId: string };
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, role: true },
+      select: { 
+        id: true, 
+        email: true, 
+        name: true, 
+        role: true,
+        organizationId: true,
+      },
     });
     if (!user) return res.status(404).json({ error: 'User introuvable' });
     res.json({ user });

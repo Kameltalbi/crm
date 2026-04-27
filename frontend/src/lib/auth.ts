@@ -21,6 +21,7 @@ export const useAuth = create<AuthState>((set) => ({
     try {
       const { data } = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
       set({ user: data.user, token: data.token, loading: false });
     } catch (e) {
       set({ loading: false });

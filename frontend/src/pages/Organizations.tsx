@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,25 +31,57 @@ export function Organizations() {
     queryFn: () => api.get('/organizations').then((r) => r.data),
   });
 
+  // Show only the user's organization
+  const userOrganization = organizations.length > 0 ? organizations[0] : null;
+
   const createMutation = useMutation({
-    mutationFn: (data: FormData) => api.post('/organizations', data).then((r) => r.data),
+    mutationFn: async (data: FormData) => {
+      let finalData = { ...data };
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('file', logoFile);
+        const uploadRes = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        finalData.logoUrl = uploadRes.data.url;
+        console.log('Upload response:', uploadRes.data);
+      }
+      return api.post('/organizations', finalData).then((r) => r.data);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['organizations'] });
       setOpen(false);
       setForm(EMPTY);
       setLogoFile(null);
     },
+    onError: (error) => {
+      console.error('Create error:', error);
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: FormData }) =>
-      api.put(`/organizations/${id}`, data).then((r) => r.data),
+    mutationFn: async ({ id, data }: { id: string; data: FormData }) => {
+      let finalData = { ...data };
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('file', logoFile);
+        const uploadRes = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        finalData.logoUrl = uploadRes.data.url;
+        console.log('Upload response:', uploadRes.data);
+      }
+      return api.put(`/organizations/${id}`, finalData).then((r) => r.data);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['organizations'] });
       setOpen(false);
       setForm(EMPTY);
       setEditingId(null);
       setLogoFile(null);
+    },
+    onError: (error) => {
+      console.error('Update error:', error);
     },
   });
 
@@ -58,25 +90,8 @@ export function Organizations() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['organizations'] }),
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    let data = { ...form };
-
-    // Upload logo if file selected
-    if (logoFile) {
-      const formData = new FormData();
-      formData.append('file', logoFile);
-      const uploadRes = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      data.logoUrl = uploadRes.data.url;
-    }
-
-    if (editingId) {
-      updateMutation.mutate({ id: editingId, data });
-    } else {
-      createMutation.mutate(data);
-    }
   };
 
   const openEdit = (org: Organization) => {
@@ -92,12 +107,6 @@ export function Organizations() {
     setOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette organisation ?')) {
-      deleteMutation.mutate(id);
-    }
-  };
-
   const openCreate = () => {
     setForm(EMPTY);
     setEditingId(null);
@@ -107,57 +116,53 @@ export function Organizations() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Organisations</h1>
-          <p className="text-muted-foreground">Gérez vos organisations</p>
-        </div>
-        <Button onClick={openCreate}>
-          <Plus size={16} className="mr-2" /> Nouvelle organisation
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold">Mon Organisation</h1>
+        <p className="text-muted-foreground">Gérez les informations de votre organisation</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {organizations.map((org) => (
-          <Card key={org.id}>
+      <div className="max-w-2xl">
+        {userOrganization ? (
+          <Card>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  {org.logoUrl ? (
-                    <img src={org.logoUrl} alt={org.name} className="w-12 h-12 rounded-lg object-cover" />
+                <div className="flex items-center gap-4">
+                  {userOrganization.logoUrl ? (
+                    <img src={userOrganization.logoUrl} alt={userOrganization.name} className="w-24 h-24 rounded-lg object-contain" />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                      <Building2 size={24} className="text-muted-foreground" />
+                    <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center">
+                      <Building2 size={48} className="text-muted-foreground" />
                     </div>
                   )}
                   <div>
-                    <CardTitle className="text-base">{org.name}</CardTitle>
-                    {org.email && <p className="text-xs text-muted-foreground">{org.email}</p>}
+                    <CardTitle className="text-xl">{userOrganization.name}</CardTitle>
+                    {userOrganization.email && <p className="text-sm text-muted-foreground">{userOrganization.email}</p>}
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(org)}>
-                    <Pencil size={14} />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDelete(org.id)} className="text-destructive">
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
+                <Button size="sm" variant="ghost" onClick={() => openEdit(userOrganization)}>
+                  <Pencil size={16} />
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {org.phone && <p className="text-muted-foreground">📞 {org.phone}</p>}
-              {org.address && <p className="text-muted-foreground">📍 {org.address}</p>}
-              {org.tva && <p className="text-muted-foreground">🧾 TVA: {org.tva}</p>}
+            <CardContent className="space-y-3 text-sm">
+              {userOrganization.phone && <p className="text-muted-foreground">📞 {userOrganization.phone}</p>}
+              {userOrganization.address && <p className="text-muted-foreground">📍 {userOrganization.address}</p>}
+              {userOrganization.tva && <p className="text-muted-foreground">🧾 TVA: {userOrganization.tva}</p>}
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Aucune organisation trouvée
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Modifier' : 'Nouvelle'} organisation</DialogTitle>
+            <DialogTitle>Modifier mon organisation</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

@@ -11,6 +11,7 @@ export function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ export function Register() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', { email, password, name });
+      const { data } = await api.post('/auth/register', { email, password, name, organizationName });
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/');
@@ -40,21 +41,25 @@ export function Register() {
           </div>
           <div>
             <CardTitle>Bilan CRM</CardTitle>
-            <CardDescription>Créer un compte</CardDescription>
+            <CardDescription>Créer votre organisation et compte</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Nom</Label>
+              <Label htmlFor="organizationName">Nom de l'organisation *</Label>
+              <Input id="organizationName" type="text" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="name">Votre nom *</Label>
               <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Mot de passe (min. 6 caractères)</Label>
+              <Label htmlFor="password">Mot de passe (min. 6 caractères) *</Label>
               <div className="relative">
                 <Input
                   id="password"

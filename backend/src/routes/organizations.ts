@@ -12,7 +12,7 @@ const organizationSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   tva: z.string().optional(),
-  logoUrl: z.string().url().optional(),
+  logoUrl: z.string().optional(),
 });
 
 // GET /api/organizations - List all organizations (owner only)

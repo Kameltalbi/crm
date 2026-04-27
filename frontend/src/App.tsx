@@ -13,6 +13,7 @@ import { Settings } from './pages/Settings';
 import { Users } from './pages/Users';
 import { Products } from './pages/Products';
 import { Activites } from './pages/Activites';
+import { Organizations } from './pages/Organizations';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuth((s) => s.token);
@@ -42,6 +43,7 @@ export default function App() {
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/previsionnel" element={<Previsionnel />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/settings/organizations" element={<Organizations />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/activites" element={<Activites />} />

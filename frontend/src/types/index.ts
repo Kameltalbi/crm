@@ -10,6 +10,8 @@ export interface Organization {
   email: string | null;
   phone: string | null;
   address: string | null;
+  tva: string | null;
+  logoUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }

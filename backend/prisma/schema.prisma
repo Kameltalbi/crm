@@ -19,6 +19,8 @@ model Organization {
   email       String?  // Email de contact de l'organisation
   phone       String?
   address     String?
+  tva         String?  // Numéro TVA
+  logoUrl     String?  // URL du logo
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

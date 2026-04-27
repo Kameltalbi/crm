@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText, Building2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -14,7 +14,8 @@ const nav = [
 ];
 
 const adminNav = [
-  { to: '/users',        label: 'Utilisateurs',  icon: Users           },
+  { to: '/users',               label: 'Utilisateurs',   icon: Users       },
+  { to: '/settings/organizations', label: 'Organisations', icon: Building2 },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

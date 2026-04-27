@@ -1,22 +1,22 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, AuthRequest } from '../middleware/auth.js';
 
 export const previsionnelRoutes = Router();
 previsionnelRoutes.use(requireAuth);
 
-previsionnelRoutes.get('/:annee', async (req, res, next) => {
+previsionnelRoutes.get('/:annee', async (req: AuthRequest, res, next) => {
   try {
     const annee = Number(req.params.annee);
     const mois = await prisma.previsionMois.findMany({
-      where: { annee },
+      where: { annee, organizationId: req.organizationId },
       orderBy: { mois: 'asc' },
     });
 
     // Agrégats + croisement avec affaires réalisées
     const affairesReelles = await prisma.affaire.findMany({
-      where: { anneePrevue: annee, statut: 'REALISE' },
+      where: { anneePrevue: annee, statut: 'REALISE', organizationId: req.organizationId },
     });
     const reelParMois: Record<number, number> = {};
     for (const a of affairesReelles) {
@@ -67,7 +67,7 @@ previsionnelRoutes.get('/:annee', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-previsionnelRoutes.put('/:annee/:mois', async (req, res, next) => {
+previsionnelRoutes.put('/:annee/:mois', async (req: AuthRequest, res, next) => {
   try {
     const { annee, mois } = req.params;
     const schema = z.object({
@@ -81,9 +81,20 @@ previsionnelRoutes.put('/:annee/:mois', async (req, res, next) => {
     const data = schema.parse(req.body);
 
     const updated = await prisma.previsionMois.upsert({
-      where:  { annee_mois: { annee: Number(annee), mois: Number(mois) } },
+      where:  { 
+        organizationId_annee_mois: { 
+          organizationId: req.organizationId!, 
+          annee: Number(annee), 
+          mois: Number(mois) 
+        } 
+      },
       update: data,
-      create: { annee: Number(annee), mois: Number(mois), ...data },
+      create: { 
+        organizationId: req.organizationId!,
+        annee: Number(annee), 
+        mois: Number(mois), 
+        ...data 
+      },
     });
     res.json(updated);
   } catch (e) { next(e); }

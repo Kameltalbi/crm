@@ -16,9 +16,10 @@ const clientSchema = z.object({
   notes: z.string().optional(),
 });
 
-clientsRoutes.get('/', async (_req, res, next) => {
+clientsRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
     const clients = await prisma.client.findMany({
+      where: { organizationId: req.organizationId },
       orderBy: { name: 'asc' },
       include: { _count: { select: { affaires: true } } },
     });
@@ -26,10 +27,13 @@ clientsRoutes.get('/', async (_req, res, next) => {
   } catch (e) { next(e); }
 });
 
-clientsRoutes.get('/:id', async (req, res, next) => {
+clientsRoutes.get('/:id', async (req: AuthRequest, res, next) => {
   try {
-    const client = await prisma.client.findUnique({
-      where: { id: req.params.id },
+    const client = await prisma.client.findFirst({
+      where: { 
+        id: req.params.id as string,
+        organizationId: req.organizationId!,
+      },
       include: {
         affaires: {
           include: { _count: { select: { activites: true } } },
@@ -46,7 +50,7 @@ clientsRoutes.post('/', async (req: AuthRequest, res, next) => {
   try {
     const data = clientSchema.parse(req.body);
     const client = await prisma.client.create({
-      data: { ...data, createdById: req.userId },
+      data: { ...data, createdById: req.userId, organizationId: req.organizationId! },
     });
     res.status(201).json(client);
   } catch (e) { next(e); }

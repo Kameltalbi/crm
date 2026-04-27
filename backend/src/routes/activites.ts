@@ -15,9 +15,10 @@ const activiteSchema = z.object({
 });
 
 // ─── LIST ─────────────────────────────────────────────────────
-activitesRoutes.get('/', async (req, res, next) => {
+activitesRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
     const activites = await prisma.activite.findMany({
+      where: { organizationId: req.organizationId },
       include: { affaire: { include: { client: true } } },
       orderBy: { createdAt: 'desc' },
     });
@@ -26,10 +27,13 @@ activitesRoutes.get('/', async (req, res, next) => {
 });
 
 // ─── GET single ───────────────────────────────────────────────
-activitesRoutes.get('/:id', async (req, res, next) => {
+activitesRoutes.get('/:id', async (req: AuthRequest, res, next) => {
   try {
-    const activite = await prisma.activite.findUnique({
-      where: { id: req.params.id },
+    const activite = await prisma.activite.findFirst({
+      where: { 
+        id: req.params.id as string,
+        organizationId: req.organizationId,
+      },
       include: { affaire: { include: { client: true } } },
     });
     if (!activite) return res.status(404).json({ error: 'Activité introuvable' });
@@ -42,7 +46,7 @@ activitesRoutes.post('/', async (req: AuthRequest, res, next) => {
   try {
     const data = activiteSchema.parse(req.body);
     const activite = await prisma.activite.create({
-      data,
+      data: { ...data, organizationId: req.organizationId! },
       include: { affaire: { include: { client: true } } },
     });
     res.status(201).json(activite);
@@ -54,7 +58,7 @@ activitesRoutes.put('/:id', async (req, res, next) => {
   try {
     const data = activiteSchema.partial().parse(req.body);
     const activite = await prisma.activite.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data,
       include: { affaire: { include: { client: true } } },
     });
@@ -65,7 +69,7 @@ activitesRoutes.put('/:id', async (req, res, next) => {
 // ─── DELETE ───────────────────────────────────────────────────
 activitesRoutes.delete('/:id', async (req, res, next) => {
   try {
-    await prisma.activite.delete({ where: { id: req.params.id } });
+    await prisma.activite.delete({ where: { id: req.params.id as string } });
     res.status(204).send();
   } catch (e) { next(e); }
 });

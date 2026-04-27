@@ -24,10 +24,10 @@ const affaireSchema = z.object({
 });
 
 // ─── LIST avec filtres ──────────────────────────────────────────
-affairesRoutes.get('/', async (req, res, next) => {
+affairesRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
     const { statut, type, annee, viaPartenaire } = req.query;
-    const where: any = {};
+    const where: any = { organizationId: req.organizationId };
     if (statut)        where.statut = statut;
     if (type)          where.type = type;
     if (annee)         where.anneePrevue = Number(annee);
@@ -43,10 +43,13 @@ affairesRoutes.get('/', async (req, res, next) => {
 });
 
 // ─── GET single avec activités ──────────────────────────────────
-affairesRoutes.get('/:id', async (req, res, next) => {
+affairesRoutes.get('/:id', async (req: AuthRequest, res, next) => {
   try {
-    const affaire = await prisma.affaire.findUnique({
-      where: { id: req.params.id },
+    const affaire = await prisma.affaire.findFirst({
+      where: { 
+        id: req.params.id as string,
+        organizationId: req.organizationId,
+      },
       include: {
         client: true,
         product: true,
@@ -64,13 +67,14 @@ affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
   try {
     const data = affaireSchema.parse(req.body);
     const affaire = await prisma.affaire.create({
-      data: { ...data, createdById: req.userId },
+      data: { ...data, createdById: req.userId, organizationId: req.organizationId! },
       include: { client: true, product: true },
     });
     // Log activité
     await prisma.activite.create({
       data: {
         affaireId: affaire.id,
+        organizationId: req.organizationId!,
         type: 'AUTRE',
         title: 'Affaire créée',
         content: `Nouvelle affaire : ${affaire.title}`,
@@ -81,14 +85,19 @@ affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
 });
 
 // ─── UPDATE ──────────────────────────────────────────────────────
-affairesRoutes.put('/:id', async (req, res, next) => {
+affairesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   try {
     const data = affaireSchema.partial().parse(req.body);
-    const existing = await prisma.affaire.findUnique({ where: { id: req.params.id } });
+    const existing = await prisma.affaire.findFirst({ 
+      where: { 
+        id: req.params.id as string,
+        organizationId: req.organizationId,
+      } 
+    });
     if (!existing) return res.status(404).json({ error: 'Affaire introuvable' });
 
     const affaire = await prisma.affaire.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data,
       include: { client: true, product: true },
     });
@@ -98,6 +107,7 @@ affairesRoutes.put('/:id', async (req, res, next) => {
       await prisma.activite.create({
         data: {
           affaireId: affaire.id,
+          organizationId: req.organizationId!,
           type: 'CHANGEMENT_STATUT',
           title: `Statut : ${existing.statut} → ${data.statut}`,
           content: `Montant : ${affaire.montantHT} DT`,
@@ -123,7 +133,7 @@ affairesRoutes.delete('/:id', async (req, res, next) => {
 });
 
 // ─── ADD ACTIVITY ────────────────────────────────────────────────
-affairesRoutes.post('/:id/activites', async (req, res, next) => {
+affairesRoutes.post('/:id/activites', async (req: AuthRequest, res, next) => {
   try {
     const schema = z.object({
       type: z.enum(['NOTE', 'APPEL', 'EMAIL_ENVOYE', 'EMAIL_RECU', 'RDV', 'AUTRE']),
@@ -132,7 +142,7 @@ affairesRoutes.post('/:id/activites', async (req, res, next) => {
     });
     const data = schema.parse(req.body);
     const activite = await prisma.activite.create({
-      data: { ...data, affaireId: req.params.id },
+      data: { ...data, affaireId: req.params.id as string, organizationId: req.organizationId! },
     });
     res.status(201).json(activite);
   } catch (e) { next(e); }

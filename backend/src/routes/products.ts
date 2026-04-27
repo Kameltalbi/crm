@@ -19,6 +19,7 @@ const productSchema = z.object({
 productsRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
     const products = await prisma.product.findMany({
+      where: { organizationId: req.organizationId },
       orderBy: { createdAt: 'desc' },
     });
     res.json(products);
@@ -29,7 +30,7 @@ productsRoutes.get('/', async (req: AuthRequest, res, next) => {
 productsRoutes.get('/active', async (req: AuthRequest, res, next) => {
   try {
     const products = await prisma.product.findMany({
-      where: { active: true },
+      where: { active: true, organizationId: req.organizationId },
       orderBy: { name: 'asc' },
     });
     res.json(products);
@@ -47,6 +48,7 @@ productsRoutes.post('/', async (req: AuthRequest, res, next) => {
         price: data.price,
         type: data.type || 'SERVICE',
         active: data.active !== undefined ? data.active : true,
+        organizationId: req.organizationId!,
       },
     });
     res.status(201).json(product);
@@ -58,7 +60,7 @@ productsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   try {
     const data = productSchema.partial().parse(req.body);
     const product = await prisma.product.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data,
     });
     res.json(product);
@@ -69,7 +71,7 @@ productsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 productsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
     await prisma.product.delete({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
     });
     res.json({ success: true });
   } catch (e) { next(e); }

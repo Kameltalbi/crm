@@ -27,6 +27,7 @@ usersRoutes.get('/', async (req: AuthRequest, res, next) => {
     }
 
     const users = await prisma.user.findMany({
+      where: { organizationId: req.organizationId },
       select: {
         id: true,
         email: true,
@@ -67,6 +68,7 @@ usersRoutes.post('/', async (req: AuthRequest, res, next) => {
         passwordHash,
         name: data.name,
         role: data.role || 'PARTNER',
+        organizationId: req.organizationId!,
       },
       select: {
         id: true,
@@ -93,7 +95,7 @@ usersRoutes.put('/:id', async (req: AuthRequest, res, next) => {
       return res.status(401).json({ error: 'Non authentifié' });
     }
 
-    const targetUserId = req.params.id;
+    const targetUserId = req.params.id as string;
     const isSelf = targetUserId === req.userId;
     const isOwner = currentUser.role === 'OWNER';
 
@@ -116,7 +118,7 @@ usersRoutes.put('/:id', async (req: AuthRequest, res, next) => {
     }
 
     const user = await prisma.user.update({
-      where: { id: targetUserId },
+      where: { id: targetUserId as string },
       data: updateData,
       select: {
         id: true,
@@ -143,7 +145,7 @@ usersRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
-    const targetUserId = req.params.id;
+    const targetUserId = req.params.id as string;
 
     // Prevent deleting yourself
     if (targetUserId === req.userId) {

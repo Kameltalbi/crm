@@ -11,10 +11,36 @@ datasource db {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  ORGANIZATION — Tenant/Client pour le multitenant
+// ═══════════════════════════════════════════════════════════════
+model Organization {
+  id          String   @id @default(cuid())
+  name        String   // ex: "Bilan Tunisie"
+  email       String?  // Email de contact de l'organisation
+  phone       String?
+  address     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  clients     Client[]
+  affaires    Affaire[]
+  products    Product[]
+  activites   Activite[]
+  emails      Email[]
+  gmailTokens GmailToken[]
+  previsionnels PrevisionMois[]
+
+  @@map("organizations")
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  USER — Utilisateur du CRM
 // ═══════════════════════════════════════════════════════════════
 model User {
   id           String   @id @default(cuid())
+  organizationId String
   email        String   @unique
   passwordHash String
   name         String
@@ -23,10 +49,12 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   clientsCreated   Client[]
   affairesCreated  Affaire[]
   gmailTokens      GmailToken?
 
+  @@index([organizationId])
   @@map("users")
 }
 
@@ -40,6 +68,7 @@ enum UserRole {
 // ═══════════════════════════════════════════════════════════════
 model Client {
   id          String   @id @default(cuid())
+  organizationId String
   name        String   // ex: "UBCI"
   contactName String?  // ex: "Ahmed Ben Ali"
   email       String?
@@ -51,10 +80,12 @@ model Client {
   updatedAt   DateTime @updatedAt
 
   // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdById String?
   createdBy   User?     @relation(fields: [createdById], references: [id])
   affaires    Affaire[]
 
+  @@index([organizationId])
   @@index([name])
   @@map("clients")
 }
@@ -64,6 +95,7 @@ model Client {
 // ═══════════════════════════════════════════════════════════════
 model Affaire {
   id            String        @id @default(cuid())
+  organizationId String
   clientId      String
   client        Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
@@ -104,9 +136,11 @@ model Affaire {
   createdBy     User?         @relation(fields: [createdById], references: [id])
 
   // Relations
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   activites     Activite[]
   emails        Email[]
 
+  @@index([organizationId])
   @@index([statut, anneePrevue])
   @@index([clientId])
   @@index([productId])
@@ -130,6 +164,7 @@ enum StatutAffaire {
 // ═══════════════════════════════════════════════════════════════
 model Activite {
   id        String        @id @default(cuid())
+  organizationId String
   affaireId String
   affaire   Affaire       @relation(fields: [affaireId], references: [id], onDelete: Cascade)
   type      ActiviteType
@@ -137,6 +172,9 @@ model Activite {
   content   String?       @db.Text
   createdAt DateTime      @default(now())
 
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
   @@index([affaireId, createdAt])
   @@map("activites")
 }
@@ -158,6 +196,7 @@ enum ActiviteType {
 // ═══════════════════════════════════════════════════════════════
 model Email {
   id          String   @id @default(cuid())
+  organizationId String
   affaireId   String?
   affaire     Affaire? @relation(fields: [affaireId], references: [id], onDelete: SetNull)
   messageId   String?  // ID Gmail
@@ -170,6 +209,9 @@ model Email {
   error       String?
   createdAt   DateTime @default(now())
 
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
   @@index([affaireId])
   @@map("emails")
 }
@@ -179,6 +221,7 @@ model Email {
 // ═══════════════════════════════════════════════════════════════
 model GmailToken {
   id           String   @id @default(cuid())
+  organizationId String
   userId       String   @unique
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken  String   @db.Text
@@ -188,6 +231,9 @@ model GmailToken {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
   @@map("gmail_tokens")
 }
 
@@ -196,6 +242,7 @@ model GmailToken {
 // ═══════════════════════════════════════════════════════════════
 model PrevisionMois {
   id               String  @id @default(cuid())
+  organizationId    String
   annee            Int
   mois             Int     // 1-12
   nbBilansPrevu    Int     @default(0)
@@ -207,7 +254,10 @@ model PrevisionMois {
   notes            String?
   updatedAt        DateTime @updatedAt
 
-  @@unique([annee, mois])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@unique([organizationId, annee, mois])
   @@map("prevision_mois")
 }
 
@@ -216,6 +266,7 @@ model PrevisionMois {
 // ═══════════════════════════════════════════════════════════════
 model Product {
   id          String   @id @default(cuid())
+  organizationId String
   name        String   // ex: "Bilan Carbone Standard"
   description String?  @db.Text
   price       Decimal  @db.Decimal(12, 3) // Prix unitaire DT
@@ -225,8 +276,10 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   affaires    Affaire[]
 
+  @@index([organizationId])
   @@index([active])
   @@map("products")
 }

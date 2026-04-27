@@ -61,11 +61,11 @@ function calculateSmartForecast(
 }
 
 // GET /api/kpis?annee=2026
-kpisRoutes.get('/', async (req, res, next) => {
+kpisRoutes.get('/', async (req: any, res, next) => {
   try {
     const annee = Number(req.query.annee) || new Date().getFullYear();
     const affaires = await prisma.affaire.findMany({
-      where: { anneePrevue: annee },
+      where: { anneePrevue: annee, organizationId: req.organizationId },
       include: { client: true },
     });
 

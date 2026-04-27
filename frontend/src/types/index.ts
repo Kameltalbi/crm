@@ -4,11 +4,22 @@ export type ActiviteType = 'NOTE' | 'APPEL' | 'EMAIL_ENVOYE' | 'EMAIL_RECU' | 'R
 export type UserRole = 'OWNER' | 'PARTNER';
 export type ProductType = 'SERVICE' | 'PRODUCT';
 
+export interface Organization {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
+  organizationId: string;
 }
 
 export interface Product {
@@ -18,6 +29,7 @@ export interface Product {
   price: number;
   type: ProductType;
   active: boolean;
+  organizationId: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,6 +43,7 @@ export interface Client {
   address?: string | null;
   matricule?: string | null;
   notes?: string | null;
+  organizationId: string;
   _count?: { affaires: number };
 }
 
@@ -56,6 +69,7 @@ export interface Affaire {
   factureNumero: string | null;
   facturePdfUrl: string | null;
   notes: string | null;
+  organizationId: string;
   createdAt: string;
   updatedAt: string;
   client?: Client;
@@ -70,6 +84,7 @@ export interface Activite {
   type: ActiviteType;
   title: string;
   content?: string | null;
+  organizationId: string;
   createdAt: string;
 }
 

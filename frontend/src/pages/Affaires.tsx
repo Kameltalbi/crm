@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
@@ -294,36 +294,70 @@ export function Affaires() {
                           {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
                       </div>
                     </td>
-                    <td className="p-2.5 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTriggerButton />
-                        <DropdownMenuContentWrapper>
-                          <DropdownMenuItem onClick={() => navigate(`/affaires/${a.id}`)}>
-                            <Eye size={14} className="mr-2" /> Voir détails
-                          </DropdownMenuItem>
+                    <td className="p-2.5">
+                        <div className="flex gap-1 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+                            onClick={() => navigate(`/affaires/${a.id}`)}
+                            title="Voir détails"
+                          >
+                            <Eye size={16} />
+                          </Button>
                           {!a.devisId && (
-                            <DropdownMenuItem onClick={() => createDevisMutation.mutate(a.id)}>
-                              <FileText size={14} className="mr-2" /> Créer devis
-                            </DropdownMenuItem>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-emerald-50 hover:text-emerald-600"
+                              onClick={() => createDevisMutation.mutate(a.id)}
+                              title="Créer devis"
+                              disabled={createDevisMutation.isPending}
+                            >
+                              <FileText size={16} />
+                            </Button>
                           )}
                           {!a.factureId && (
-                            <DropdownMenuItem onClick={() => createFactureMutation.mutate(a.id)}>
-                              <Receipt size={14} className="mr-2" /> Créer facture
-                            </DropdownMenuItem>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-purple-50 hover:text-purple-600"
+                              onClick={() => createFactureMutation.mutate(a.id)}
+                              title="Créer facture"
+                              disabled={createFactureMutation.isPending}
+                            >
+                              <Receipt size={16} />
+                            </Button>
                           )}
-                          {(a.devisPdfUrl || a.facturePdfUrl) && (
-                            <DropdownMenuItem>
-                              <Mail size={14} className="mr-2" /> Envoyer par email
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => handleEdit(a)}>
-                            <Pencil size={14} className="mr-2" /> Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(a.id)} className="text-destructive">
-                            <Trash2 size={14} className="mr-2" /> Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContentWrapper>
-                      </DropdownMenu>
+                          <DropdownMenu>
+                            <DropdownMenuTriggerButton asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-gray-100"
+                                title="Plus d'actions"
+                              >
+                                <MoreVertical size={16} />
+                              </Button>
+                            </DropdownMenuTriggerButton>
+                            <DropdownMenuContentWrapper align="end">
+                              {(a.devisPdfUrl || a.facturePdfUrl) && (
+                                <DropdownMenuItem onClick={() => {
+                                  const url = a.devisPdfUrl || a.facturePdfUrl;
+                                  if (url) window.open(url, '_blank');
+                                }}>
+                                  <Mail size={14} className="mr-2" /> Voir PDF
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => handleEdit(a)}>
+                                <Pencil size={14} className="mr-2" /> Modifier
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDelete(a.id)} className="text-destructive">
+                                <Trash2 size={14} className="mr-2" /> Supprimer
+                              </DropdownMenuItem>
+                            </DropdownMenuContentWrapper>
+                          </DropdownMenu>
+                        </div>
                     </td>
                   </tr>
                 );

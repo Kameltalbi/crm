@@ -47,48 +47,7 @@ export function Previsionnel() {
         </div>
       </div>
 
-      {/* Net banner */}
-      <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white p-4 md:p-5 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
-        <NetItem label="CA Brut HT" value={fmtDT(data.totaux.caBrutHT)} />
-        <NetItem label="Commissions partenaire" value={fmtDT(data.totaux.commissionEstimee)} sub="40% sur apports partenaire" />
-        <NetItem label="TVA à reverser" value={fmtDT(data.totaux.tvaCollectee)} />
-        <NetItem label="MON NET (après comm.)" value={fmtDT(data.totaux.netHT)} highlight />
-      </div>
-
-      {/* CA Prédit au 31 décembre */}
-      <div className="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 md:p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div className="text-xs uppercase tracking-wider opacity-75">Atterrissage Annuel</div>
-            <div className="text-2xl md:text-3xl font-mono font-bold">{fmtDT(data.totaux.caTotalAnnuel)}</div>
-          </div>
-          <div className="text-xs opacity-75 text-right">
-            Réalisé: {fmtDT(data.totaux.caRealiseAnnuel)} + Prévu: {fmtDT(data.totaux.caPrevuAnnuel)}
-          </div>
-        </div>
-      </div>
-
-      {/* Stats additionnelles */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-lg bg-sage/20 p-3">
-          <div className="text-xs text-muted-foreground">Moyenne mensuelle</div>
-          <div className="text-lg font-mono font-semibold">{fmtDT(data.totaux.moyenneMensuelle)}</div>
-        </div>
-        <div className="rounded-lg bg-sage/20 p-3">
-          <div className="text-xs text-muted-foreground">CA Projeté</div>
-          <div className="text-lg font-mono font-semibold">{fmtDT(data.totaux.caProjete)}</div>
-        </div>
-        <div className="rounded-lg bg-sage/20 p-3">
-          <div className="text-xs text-muted-foreground">Mois courant</div>
-          <div className="text-lg font-mono font-semibold">{MOIS[data.totaux.moisCourant]}</div>
-        </div>
-        <div className="rounded-lg bg-sage/20 p-3">
-          <div className="text-xs text-muted-foreground">Projection</div>
-          <div className="text-lg font-mono font-semibold">Auto</div>
-        </div>
-      </div>
-
-      {/* Chart */}
+      {/* Chart - visible immediately */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm md:text-base">Évolution mensuelle CA (Réalisé + Prévisionnel)</CardTitle>
@@ -110,57 +69,103 @@ export function Previsionnel() {
         </CardContent>
       </Card>
 
-      {/* Mois grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {data.mois.map((m) => {
-          const pct = Math.round((m.caTotalPrevu / maxV) * 100);
-          const chargeColor =
-            m.chargeJours > 16 ? 'text-coral' :
-            m.chargeJours > 12 ? 'text-amber' : 'text-leaf';
-          return (
-            <Card key={m.id} className={m.estEte ? 'border-coral/30 bg-coral-light/20' : ''}>
-              <CardHeader className="pb-2">
-                <CardTitle className={`text-sm ${m.estEte ? 'text-coral' : ''}`}>
-                  {m.estEte ? '🌞 ' : ''}{MOIS[m.mois]}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1.5 text-xs">
-                {m.estEte ? (
-                  <div className="text-coral text-center py-2">Creux estival</div>
-                ) : (
-                  <>
-                    <Row label={`🌍 Bilans (${m.nbBilansPrevu})`} value={m.caBilansPrevu ? fmtDT(m.caBilansPrevu) : '–'} />
-                    <Row label={`📚 Form. (${m.joursFormation}j)`} value={m.caFormationsPrevu ? fmtDT(m.caFormationsPrevu) : '–'} />
-                    {m.caReelRealise > 0 && (
-                      <Row label="✅ Réel" value={fmtDT(m.caReelRealise)} color="text-leaf font-semibold" />
-                    )}
-                    {m.commissionEstimee > 0 && (
-                      <Row label="🤝 Commission" value={`-${fmtDT(m.commissionEstimee)}`} color="text-purple" />
-                    )}
-                    <div className="flex justify-between pt-1 mt-1 border-t">
-                      <span className={chargeColor}>⚙️ {m.chargeJours}j</span>
-                      <span className="font-mono font-semibold text-leaf">{fmtDT(m.caTotalPrevu)}</span>
-                    </div>
-                    <div className="bg-sage-deep rounded h-1 overflow-hidden">
-                      <div className="bg-leaf-light h-full transition-all duration-500" style={{ width: `${pct}%` }} />
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+      {/* Key metrics cards - 6 cards max, 3 per row on desktop, 2 per row on mobile */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">Atterrissage Annuel</div>
+            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caTotalAnnuel)}</div>
+            <div className="text-xs opacity-75 mt-1">Réalisé: {fmtDT(data.totaux.caRealiseAnnuel)} + Prévu: {fmtDT(data.totaux.caPrevuAnnuel)}</div>
+          </CardContent>
+        </Card>
 
-function NetItem({ label, value, sub, highlight }: { label: string; value: string; sub?: string; highlight?: boolean }) {
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-wider opacity-75 mb-1">{label}</div>
-      <div className={`font-mono ${highlight ? 'text-[26px] text-white font-bold' : 'text-lg'}`}>{value}</div>
-      {sub && <div className="text-[10px] opacity-60 mt-0.5">{sub}</div>}
+        <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">CA Brut HT</div>
+            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caBrutHT)}</div>
+            <div className="text-xs opacity-75 mt-1">Prévisions manuelles</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">MON NET</div>
+            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.netHT)}</div>
+            <div className="text-xs opacity-75 mt-1">Après commissions</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Moyenne mensuelle</div>
+            <div className="text-2xl font-mono font-semibold">{fmtDT(data.totaux.moyenneMensuelle)}</div>
+            <div className="text-xs text-muted-foreground mt-1">Basé sur réalisé</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">CA Projeté</div>
+            <div className="text-2xl font-mono font-semibold">{fmtDT(data.totaux.caProjete)}</div>
+            <div className="text-xs text-muted-foreground mt-1">Projection auto</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Mois courant</div>
+            <div className="text-2xl font-mono font-semibold">{MOIS[data.totaux.moisCourant]}</div>
+            <div className="text-xs text-muted-foreground mt-1">{data.totaux.anneeCourante}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mois grid - collapsible/secondary */}
+      <details className="group">
+        <summary className="cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground mb-3">
+          Voir le détail par mois ▼
+        </summary>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {data.mois.map((m) => {
+            const pct = Math.round((m.caTotalPrevu / maxV) * 100);
+            const chargeColor =
+              m.chargeJours > 16 ? 'text-coral' :
+              m.chargeJours > 12 ? 'text-amber' : 'text-leaf';
+            return (
+              <Card key={m.id} className={m.estEte ? 'border-coral/30 bg-coral-light/20' : ''}>
+                <CardHeader className="pb-2">
+                  <CardTitle className={`text-sm ${m.estEte ? 'text-coral' : ''}`}>
+                    {m.estEte ? '🌞 ' : ''}{MOIS[m.mois]}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1.5 text-xs">
+                  {m.estEte ? (
+                    <div className="text-coral text-center py-2">Creux estival</div>
+                  ) : (
+                    <>
+                      <Row label={`🌍 Bilans (${m.nbBilansPrevu})`} value={m.caBilansPrevu ? fmtDT(m.caBilansPrevu) : '–'} />
+                      <Row label={`📚 Form. (${m.joursFormation}j)`} value={m.caFormationsPrevu ? fmtDT(m.caFormationsPrevu) : '–'} />
+                      {m.caReelRealise > 0 && (
+                        <Row label="✅ Réel" value={fmtDT(m.caReelRealise)} color="text-leaf font-semibold" />
+                      )}
+                      {m.commissionEstimee > 0 && (
+                        <Row label="🤝 Commission" value={`-${fmtDT(m.commissionEstimee)}`} color="text-purple" />
+                      )}
+                      <div className="flex justify-between pt-1 mt-1 border-t">
+                        <span className={chargeColor}>⚙️ {m.chargeJours}j</span>
+                        <span className="font-mono font-semibold text-leaf">{fmtDT(m.caTotalPrevu)}</span>
+                      </div>
+                      <div className="bg-sage-deep rounded h-1 overflow-hidden">
+                        <div className="bg-leaf-light h-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </details>
     </div>
   );
 }

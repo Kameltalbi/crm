@@ -367,7 +367,7 @@ export function Affaires() {
                 <SelectContent>
                   {products.filter(p => p.active).map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.name} ({Number(p.price).toLocaleString('fr-TN')} DT)
+                      {p.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

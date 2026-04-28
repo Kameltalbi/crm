@@ -188,10 +188,36 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
     for (const sheetName of workbook.SheetNames) {
       const worksheet = workbook.Sheets[sheetName];
       console.log(`Sheet ${sheetName} range:`, worksheet['!ref']);
-      const sheetData = xlsx.utils.sheet_to_json(worksheet);
-      console.log(`Sheet ${sheetName} has ${sheetData.length} rows`);
-      if (sheetData.length > 0) {
-        data = sheetData;
+      
+      // Try with header option
+      const sheetData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+      console.log(`Sheet ${sheetName} raw rows: ${sheetData.length}`);
+      
+      // If only header row exists, try without header option
+      if (sheetData.length === 1) {
+        console.log(`Only header row found, trying with header: 0`);
+        const sheetDataNoHeader = xlsx.utils.sheet_to_json(worksheet, { header: 0 });
+        console.log(`Sheet ${sheetName} rows with header:0: ${sheetDataNoHeader.length}`);
+        if (sheetDataNoHeader.length > 0) {
+          // Convert array to objects using first row as header
+          if (sheetDataNoHeader.length > 1) {
+            const headers = sheetDataNoHeader[0] as string[];
+            const rows = sheetDataNoHeader.slice(1).map((row: any) => {
+              const obj: any = {};
+              headers.forEach((header: string, index: number) => {
+                obj[header] = row[index];
+              });
+              return obj;
+            });
+            data = rows;
+            console.log(`Using sheet: ${sheetName} with ${data.length} data rows`);
+            break;
+          }
+        }
+      } else if (sheetData.length > 1) {
+        // Normal case with header and data rows
+        data = xlsx.utils.sheet_to_json(worksheet);
+        console.log(`Sheet ${sheetName} has ${data.length} rows`);
         console.log(`Using sheet: ${sheetName}`);
         break;
       }

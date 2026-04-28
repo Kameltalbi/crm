@@ -186,6 +186,11 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
     const data = xlsx.utils.sheet_to_json(worksheet);
 
     console.log('Excel data parsed, rows:', data.length);
+    console.log('First row sample:', JSON.stringify(data[0] || 'No rows'));
+    if (data.length === 0) {
+      console.log('No data found in Excel file');
+      return res.json({ created: 0, updated: 0, errors: ['Aucune donnée trouvée dans le fichier Excel'] });
+    }
 
     const results = {
       created: 0,

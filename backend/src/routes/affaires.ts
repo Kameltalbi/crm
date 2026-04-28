@@ -181,9 +181,20 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
 
     // Read Excel file
     const workbook = xlsx.readFile(req.file.path);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const data = xlsx.utils.sheet_to_json(worksheet);
+    console.log('Sheet names:', workbook.SheetNames);
+    
+    // Try to find a sheet with data
+    let data: any[] = [];
+    for (const sheetName of workbook.SheetNames) {
+      const worksheet = workbook.Sheets[sheetName];
+      const sheetData = xlsx.utils.sheet_to_json(worksheet);
+      console.log(`Sheet ${sheetName} has ${sheetData.length} rows`);
+      if (sheetData.length > 0) {
+        data = sheetData;
+        console.log(`Using sheet: ${sheetName}`);
+        break;
+      }
+    }
 
     console.log('Excel data parsed, rows:', data.length);
     console.log('First row sample:', JSON.stringify(data[0] || 'No rows'));

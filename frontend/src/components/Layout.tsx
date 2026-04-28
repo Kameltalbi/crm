@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import type { Organization } from '@/types';
+import { Notifications } from './Notifications';
 
 const nav = [
   { to: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
@@ -65,6 +66,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Notifications />
           <div className="border-l pl-2 flex items-center gap-3">
             <div className="hidden sm:block text-right">
               <div className="text-sm font-medium">{user?.name}</div>

@@ -33,6 +33,7 @@ model Organization {
   emails      Email[]
   gmailTokens GmailToken[]
   previsionnels PrevisionMois[]
+  notifications Notification[]
 
   @@map("organizations")
 }
@@ -55,6 +56,7 @@ model User {
   clientsCreated   Client[]
   affairesCreated  Affaire[]
   gmailTokens      GmailToken?
+  notifications    Notification[]
 
   @@index([organizationId])
   @@map("users")
@@ -284,6 +286,38 @@ model Product {
   @@index([organizationId])
   @@index([active])
   @@map("products")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NOTIFICATION — Notifications pour les utilisateurs
+// ═══════════════════════════════════════════════════════════════
+model Notification {
+  id            String   @id @default(cuid())
+  organizationId String
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          NotificationType
+  title         String
+  content       String?  @db.Text
+  link          String?  // URL to navigate to when clicked
+  read          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  AFFAIRE_SANS_ACTIVITE  // Affaire sans activité depuis X jours
+  TASK_OVERDUE           // Tâche en retard
+  AFFAIRE_PERDUE         // Affaire perdue
+  AFFAIRE_GAGNEE         // Affaire gagnée
+  DEVIS_CREE             // Devis créé
+  FACTURE_CREEE          // Facture créée
+  RAPPEL                 // Rappel personnalisé
 }
 
 enum ProductType {

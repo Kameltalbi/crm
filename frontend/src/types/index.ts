@@ -3,6 +3,7 @@ export type StatutAffaire = 'PROSPECTION' | 'PIPELINE' | 'REALISE' | 'PERDU';
 export type ActiviteType = 'NOTE' | 'APPEL' | 'EMAIL_ENVOYE' | 'EMAIL_RECU' | 'RDV' | 'CHANGEMENT_STATUT' | 'DEVIS_CREE' | 'FACTURE_CREEE' | 'AUTRE';
 export type UserRole = 'OWNER' | 'PARTNER';
 export type ProductType = 'SERVICE' | 'PRODUCT';
+export type NotificationType = 'AFFAIRE_SANS_ACTIVITE' | 'TASK_OVERDUE' | 'AFFAIRE_PERDUE' | 'AFFAIRE_GAGNEE' | 'DEVIS_CREE' | 'FACTURE_CREEE' | 'RAPPEL';
 
 export interface Organization {
   id: string;
@@ -165,4 +166,16 @@ export interface Previsionnel {
     anneeCourante: number;
   };
   caParMois?: Record<number, { realise: number; previsionnel: number }>;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  organizationId: string;
+  type: NotificationType;
+  title: string;
+  content: string | null;
+  link: string | null;
+  read: boolean;
+  createdAt: string;
 }

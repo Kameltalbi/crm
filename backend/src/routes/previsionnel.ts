@@ -23,6 +23,16 @@ previsionnelRoutes.get('/:annee', async (req: AuthRequest, res, next) => {
       reelParMois[a.moisPrevu] = (reelParMois[a.moisPrevu] || 0) + Number(a.montantHT);
     }
 
+    // Prédiction du CA au 31 décembre basée sur les affaires avec % de réalisation
+    const toutesAffaires = await prisma.affaire.findMany({
+      where: { anneePrevue: annee, organizationId: req.organizationId },
+    });
+    
+    let caPredit31Decembre = 0;
+    for (const a of toutesAffaires) {
+      caPredit31Decembre += Number(a.montantHT) * (a.probabilite / 100);
+    }
+
     const data = mois.map(m => {
       const caBilans = Number(m.prixMoyenBilan) * m.nbBilansPrevu;
       const caForm = Number(m.tarifJourFormation) * m.joursFormation;
@@ -62,6 +72,7 @@ previsionnelRoutes.get('/:annee', async (req: AuthRequest, res, next) => {
         netHT:           totalNet,
         caTTC:           Math.round(totalHT * 1.19),
         caReelRealise:   totalReel,
+        caPredit31Decembre: Math.round(caPredit31Decembre),
       },
     });
   } catch (e) { next(e); }

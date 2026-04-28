@@ -56,6 +56,19 @@ export function Previsionnel() {
         <NetItem label="MON NET (après comm.)" value={fmtDT(data.totaux.netHT)} highlight />
       </div>
 
+      {/* CA Prédit au 31 décembre */}
+      <div className="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 md:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="text-xs uppercase tracking-wider opacity-75">CA Prédit au 31 décembre</div>
+            <div className="text-2xl md:text-3xl font-mono font-bold">{fmtDT(data.totaux.caPredit31Decembre)}</div>
+          </div>
+          <div className="text-xs opacity-75 text-right">
+            Basé sur les affaires avec % de réalisation
+          </div>
+        </div>
+      </div>
+
       {/* Chart */}
       <Card>
         <CardHeader>

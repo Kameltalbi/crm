@@ -155,5 +155,6 @@ export interface Previsionnel {
     netHT: number;
     caTTC: number;
     caReelRealise: number;
+    caPredit31Decembre: number;
   };
 }

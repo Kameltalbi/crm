@@ -480,20 +480,21 @@ export function Affaires() {
               />
             </div>
             <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-              <p className="font-semibold mb-2">Colonnes attendues :</p>
+              <p className="font-semibold mb-2">Colonnes acceptées (toutes optionnelles) :</p>
               <ul className="list-disc pl-4 space-y-1">
-                <li>clientName / Nom du client</li>
-                <li>clientEmail / Email client</li>
-                <li>clientPhone / Téléphone client</li>
-                <li>productName / Produit</li>
-                <li>title / Titre</li>
-                <li>type / Type (BILAN_CARBONE, FORMATION, etc.)</li>
-                <li>montantHT / Montant HT</li>
-                <li>statut / Statut (PROSPECTION, PIPELINE, REALISE, etc.)</li>
+                <li>clientName / Nom du client / Client</li>
+                <li>clientEmail / Email client / Email</li>
+                <li>clientPhone / Téléphone client / Téléphone</li>
+                <li>productName / Produit / Product</li>
+                <li>title / Titre / Affaire</li>
+                <li>type / Type</li>
+                <li>montantHT / Montant HT / Montant / Prix</li>
+                <li>statut / Statut</li>
                 <li>probabilite / Probabilité</li>
-                <li>moisPrevu / Mois prévu</li>
-                <li>anneePrevue / Année prévue</li>
+                <li>moisPrevu / Mois prévu / Mois</li>
+                <li>anneePrevue / Année prévue / Année</li>
               </ul>
+              <p className="mt-2 text-xs">Des valeurs par défaut seront utilisées si les colonnes sont manquantes.</p>
             </div>
           </div>
           <DialogFooter>

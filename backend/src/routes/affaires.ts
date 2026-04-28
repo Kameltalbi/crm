@@ -190,18 +190,18 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
 
     for (const row of data as any[]) {
       try {
-        // Expected columns: clientName, clientEmail, clientPhone, productName, title, type, montantHT, statut, probabilite, moisPrevu, anneePrevue
-        const clientName = row.clientName || row['Nom du client'];
-        const clientEmail = row.clientEmail || row['Email client'];
-        const clientPhone = row.clientPhone || row['Téléphone client'];
-        const productName = row.productName || row['Produit'];
-        const title = row.title || row['Titre'];
+        // Expected columns (all optional, with defaults)
+        const clientName = row.clientName || row['Nom du client'] || row['Client'] || 'Client inconnu';
+        const clientEmail = row.clientEmail || row['Email client'] || row['Email'] || '';
+        const clientPhone = row.clientPhone || row['Téléphone client'] || row['Téléphone'] || '';
+        const productName = row.productName || row['Produit'] || row['Product'] || '';
+        const title = row.title || row['Titre'] || row['Affaire'] || `${clientName}`;
         const typeStr = row.type || row['Type'] || 'BILAN_CARBONE';
-        const montantHT = Number(row.montantHT || row['Montant HT'] || 0);
+        const montantHT = Number(row.montantHT || row['Montant HT'] || row['Montant'] || row['Prix'] || 0);
         const statutStr = row.statut || row['Statut'] || 'PROSPECTION';
         const probabilite = Number(row.probabilite || row['Probabilité'] || 50);
-        const moisPrevu = Number(row.moisPrevu || row['Mois prévu'] || 1);
-        const anneePrevue = Number(row.anneePrevue || row['Année prévue'] || new Date().getFullYear());
+        const moisPrevu = Number(row.moisPrevu || row['Mois prévu'] || row['Mois'] || new Date().getMonth() + 1);
+        const anneePrevue = Number(row.anneePrevue || row['Année prévue'] || row['Année'] || new Date().getFullYear());
 
         // Create or find client
         let client = await prisma.client.findFirst({
@@ -215,8 +215,8 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
           client = await prisma.client.create({
             data: {
               name: clientName,
-              email: clientEmail,
-              phone: clientPhone,
+              email: clientEmail || null,
+              phone: clientPhone || null,
               organizationId: req.organizationId!,
             },
           });
@@ -252,7 +252,7 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
           data: {
             clientId: client.id,
             productId: product?.id,
-            title: title || `${clientName} - ${productName || 'Affaire'}`,
+            title: title || `${clientName}${productName ? ' - ' + productName : ''}`,
             type: typeStr as AffaireType,
             montantHT,
             statut: statutStr as StatutAffaire,

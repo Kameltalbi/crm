@@ -73,7 +73,7 @@ export function Previsionnel() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">Atterrissage Annuel</div>
+            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">CA Total Annuel</div>
             <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caTotalAnnuel)}</div>
             <div className="text-xs opacity-75 mt-1">Réalisé: {fmtDT(data.totaux.caRealiseAnnuel)} + Prévu: {fmtDT(data.totaux.caPrevuAnnuel)}</div>
           </CardContent>
@@ -83,15 +83,15 @@ export function Previsionnel() {
           <CardContent className="p-4">
             <div className="text-xs uppercase tracking-wider opacity-75 mb-1">CA Brut HT</div>
             <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caBrutHT)}</div>
-            <div className="text-xs opacity-75 mt-1">Prévisions manuelles</div>
+            <div className="text-xs opacity-75 mt-1">Prévisions des affaires</div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
           <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">MON NET</div>
+            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">Revenu Net HT</div>
             <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.netHT)}</div>
-            <div className="text-xs opacity-75 mt-1">Après commissions</div>
+            <div className="text-xs opacity-75 mt-1">Après commissions tiers</div>
           </CardContent>
         </Card>
 
@@ -99,7 +99,7 @@ export function Previsionnel() {
           <CardContent className="p-4">
             <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Moyenne mensuelle</div>
             <div className="text-2xl font-mono font-semibold">{fmtDT(data.totaux.moyenneMensuelle)}</div>
-            <div className="text-xs text-muted-foreground mt-1">Basé sur réalisé</div>
+            <div className="text-xs text-muted-foreground mt-1">Basé sur CA réalisé</div>
           </CardContent>
         </Card>
 
@@ -107,13 +107,13 @@ export function Previsionnel() {
           <CardContent className="p-4">
             <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">CA Projeté</div>
             <div className="text-2xl font-mono font-semibold">{fmtDT(data.totaux.caProjete)}</div>
-            <div className="text-xs text-muted-foreground mt-1">Projection auto</div>
+            <div className="text-xs text-muted-foreground mt-1">Projection automatique</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Mois courant</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Mois en cours</div>
             <div className="text-2xl font-mono font-semibold">{MOIS[data.totaux.moisCourant]}</div>
             <div className="text-xs text-muted-foreground mt-1">{data.totaux.anneeCourante}</div>
           </CardContent>
@@ -144,15 +144,15 @@ export function Previsionnel() {
                   ) : (
                     <>
                       <Row label={`🌍 Bilans (${m.nbBilansPrevu})`} value={m.caBilansPrevu ? fmtDT(m.caBilansPrevu) : '–'} />
-                      <Row label={`📚 Form. (${m.joursFormation}j)`} value={m.caFormationsPrevu ? fmtDT(m.caFormationsPrevu) : '–'} />
+                      <Row label={`📚 Formations (${m.joursFormation}j)`} value={m.caFormationsPrevu ? fmtDT(m.caFormationsPrevu) : '–'} />
                       {m.caReelRealise > 0 && (
-                        <Row label="✅ Réel" value={fmtDT(m.caReelRealise)} color="text-leaf font-semibold" />
+                        <Row label="✅ CA Réalisé" value={fmtDT(m.caReelRealise)} color="text-leaf font-semibold" />
                       )}
                       {m.commissionEstimee > 0 && (
-                        <Row label="🤝 Commission" value={`-${fmtDT(m.commissionEstimee)}`} color="text-purple" />
+                        <Row label="🤝 Commission tiers" value={`-${fmtDT(m.commissionEstimee)}`} color="text-purple" />
                       )}
                       <div className="flex justify-between pt-1 mt-1 border-t">
-                        <span className={chargeColor}>⚙️ {m.chargeJours}j</span>
+                        <span className={chargeColor}>📅 {m.chargeJours} jours de travail</span>
                         <span className="font-mono font-semibold text-leaf">{fmtDT(m.caTotalPrevu)}</span>
                       </div>
                       <div className="bg-sage-deep rounded h-1 overflow-hidden">

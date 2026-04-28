@@ -57,6 +57,7 @@ export function Affaires() {
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
+      console.log('Saving affaire with data:', data);
       const payload = {
         clientId: data.clientId,
         productId: data.productId || undefined,
@@ -77,6 +78,10 @@ export function Affaires() {
       qc.invalidateQueries({ queryKey: ['affaires'] });
       qc.invalidateQueries({ queryKey: ['kpis'] });
       setOpen(false);
+    },
+    onError: (error: any) => {
+      console.error('Save error:', error);
+      alert(`Erreur: ${error.response?.data?.error || error.message || 'Erreur inconnue'}`);
     },
   });
 

@@ -71,9 +71,14 @@ export function Login() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Connexion...' : 'Se connecter'}
             </Button>
-            <p className="text-sm text-center text-muted-foreground">
-              Pas de compte ? <Link to="/register" className="text-leaf hover:underline">S'inscrire</Link>
-            </p>
+            <div className="flex justify-between text-sm text-center">
+              <Link to="/" className="text-muted-foreground hover:text-foreground">
+                ← Retour à l'accueil
+              </Link>
+              <Link to="/register" className="text-leaf hover:underline">
+                Pas de compte ? S'inscrire
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Mail, Users, Package, FileText } from 'lucide-react';
+import { Mail, Users, Package, FileText, Building2 } from 'lucide-react';
 import { GmailSettings } from '@/components/settings/GmailSettings';
 import { SoftfactureSettings } from '@/components/settings/SoftfactureSettings';
 import { UsersSettings } from '@/components/settings/UsersSettings';
 import { ProductsSettings } from '@/components/settings/ProductsSettings';
+import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 
-type Tab = 'gmail' | 'softfacture' | 'users' | 'products';
+type Tab = 'organization' | 'gmail' | 'softfacture' | 'users' | 'products';
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
+  { id: 'organization', label: 'Organisation', icon: Building2 },
   { id: 'gmail', label: 'Gmail', icon: Mail },
   { id: 'softfacture', label: 'Softfacture', icon: FileText },
   { id: 'users', label: 'Utilisateurs', icon: Users },
@@ -15,7 +17,7 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
 ];
 
 export function Settings() {
-  const [activeTab, setActiveTab] = useState<Tab>('gmail');
+  const [activeTab, setActiveTab] = useState<Tab>('organization');
 
   return (
     <div className="space-y-6 px-2 md:px-0">
@@ -47,6 +49,7 @@ export function Settings() {
 
       {/* Tab Content */}
       <div className="pt-4">
+        {activeTab === 'organization' && <OrganizationSettings />}
         {activeTab === 'gmail' && <GmailSettings />}
         {activeTab === 'softfacture' && <SoftfactureSettings />}
         {activeTab === 'users' && <UsersSettings />}

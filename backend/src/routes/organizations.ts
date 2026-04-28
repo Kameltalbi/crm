@@ -2,9 +2,29 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 export const organizationsRoutes = Router();
 organizationsRoutes.use(requireAuth);
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), '../frontend/public/uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'logo-' + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage });
 
 const organizationSchema = z.object({
   name: z.string().min(1),
@@ -151,5 +171,31 @@ organizationsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
     });
 
     res.json({ success: true });
+  } catch (e) { next(e); }
+});
+
+// POST /api/organizations/:id/logo - Upload organization logo (owner only)
+organizationsRoutes.post('/:id/logo', upload.single('logo'), async (req: AuthRequest, res, next) => {
+  try {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: req.userId },
+    });
+
+    if (!currentUser || currentUser.role !== 'OWNER') {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Aucun fichier fourni' });
+    }
+
+    const logoUrl = `/uploads/${req.file.filename}`;
+
+    const organization = await prisma.organization.update({
+      where: { id: req.params.id as string },
+      data: { logoUrl },
+    });
+
+    res.json({ logoUrl, organization });
   } catch (e) { next(e); }
 });

@@ -13,7 +13,6 @@ const nav = [
   { to: '/clients',      label: 'Clients',       icon: Users           },
   { to: '/activites',    label: 'Activités',     icon: FileText        },
   { to: '/previsionnel', label: 'Prévisionnel',  icon: Calendar        },
-  { to: '/settings',     label: 'Paramètres',    icon: Settings        },
 ];
 
 const adminNav = [

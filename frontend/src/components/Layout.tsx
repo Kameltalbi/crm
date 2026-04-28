@@ -67,10 +67,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex text-sm font-mono text-muted-foreground">
+        <div className="hidden md:flex flex-1 justify-center">
+          <div className="text-sm font-mono text-muted-foreground">
             {currentTime.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} {currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>
+        </div>
+        <div className="flex items-center gap-2">
           <Notifications />
           <div className="border-l pl-2 flex items-center gap-3">
             <div className="hidden sm:block text-right">

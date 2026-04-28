@@ -50,20 +50,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="kt-Optima" className="h-8 w-auto" />
+            {organization && organization.logoUrl ? (
+              <img src={organization.logoUrl} alt={organization.name} className="h-10 w-auto max-w-[200px] object-contain" />
+            ) : organization ? (
+              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                <Building2 size={20} className="text-muted-foreground" />
+              </div>
+            ) : (
+              <img src="/logo.png" alt="kt-Optima" className="h-8 w-auto" />
+            )}
           </div>
-          {organization && (
-            <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l">
-              {organization.logoUrl ? (
-                <img src={organization.logoUrl} alt={organization.name} className="w-8 h-8 rounded-lg object-contain" />
-              ) : (
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                  <Building2 size={16} className="text-muted-foreground" />
-                </div>
-              )}
-              <div className="text-sm font-medium">{organization.name}</div>
-            </div>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <Notifications />

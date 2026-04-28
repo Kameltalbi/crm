@@ -31,7 +31,7 @@ const upload = multer({ storage });
 const affaireSchema = z.object({
   clientId: z.string(),
   productId: z.string().optional(),
-  title: z.string().min(1),
+  title: z.string().optional(),
   description: z.string().optional(),
   type: z.nativeEnum(AffaireType),
   montantHT: z.number().nonnegative(),
@@ -87,8 +87,23 @@ affairesRoutes.get('/:id', async (req: AuthRequest, res, next) => {
 affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
   try {
     const data = affaireSchema.parse(req.body);
+
+    // Auto-generate title if not provided
+    let title = data.title;
+    if (!title) {
+      const client = await prisma.client.findUnique({
+        where: { id: data.clientId },
+        select: { name: true },
+      });
+      const product = data.productId ? await prisma.product.findUnique({
+        where: { id: data.productId },
+        select: { name: true },
+      }) : null;
+      title = product ? `${product.name} - ${client?.name || 'Client'}` : `${data.type === 'BILAN_CARBONE' ? 'Bilan Carbone' : 'Formation'} - ${client?.name || 'Client'}`;
+    }
+
     const affaire = await prisma.affaire.create({
-      data: { ...data, createdById: req.userId, organizationId: req.organizationId! },
+      data: { ...data, title, createdById: req.userId, organizationId: req.organizationId! },
       include: { client: true, product: true },
     });
     // Log activité

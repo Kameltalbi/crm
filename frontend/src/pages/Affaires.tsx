@@ -15,7 +15,6 @@ type FormData = {
   id?: string;
   clientId: string;
   productId: string;
-  title: string;
   type: AffaireType;
   montantHT: string;
   statut: StatutAffaire;
@@ -28,7 +27,7 @@ type FormData = {
 };
 
 const EMPTY: FormData = {
-  clientId: '', productId: '', title: '', type: 'BILAN_CARBONE', montantHT: '',
+  clientId: '', productId: '', type: 'BILAN_CARBONE', montantHT: '',
   statut: 'PROSPECTION', probabilite: '50',
   moisPrevu: String(new Date().getMonth() + 1), anneePrevue: '2026',
   viaPartenaire: false, tauxCommission: '40', notes: '',
@@ -61,7 +60,6 @@ export function Affaires() {
       const payload = {
         clientId: data.clientId,
         productId: data.productId || undefined,
-        title: data.title,
         type: data.type,
         montantHT: Number(data.montantHT),
         statut: data.statut,
@@ -127,7 +125,6 @@ export function Affaires() {
       id: a.id,
       clientId: a.clientId,
       productId: a.productId || '',
-      title: a.title,
       type: a.type,
       montantHT: String(a.montantHT),
       statut: a.statut,
@@ -385,14 +382,6 @@ export function Affaires() {
                   <SelectItem value="FORMATION">📚 Formation</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="col-span-2 space-y-1.5">
-              <Label>Titre *</Label>
-              <Input
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="ex: Bilan Carbone UBCI 2026"
-              />
             </div>
             <div className="space-y-1.5">
               <Label>Montant HT (DT) *</Label>

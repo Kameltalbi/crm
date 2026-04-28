@@ -437,7 +437,7 @@ export function Affaires() {
               onChange={(e) => setForm({ ...form, viaPartenaire: e.target.checked })}
               className="w-4 h-4 accent-purple"
             />
-            <span className="text-sm font-medium">🤝 Affaire apportée par le partenaire</span>
+            <span className="text-sm font-medium">🤝 Commission tiers</span>
           </label>
 
           {form.viaPartenaire && (

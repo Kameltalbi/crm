@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
@@ -39,6 +39,8 @@ export function Affaires() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', viaPartenaire: '' });
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY);
 
   const { data: affaires = [] } = useQuery<Affaire[]>({
@@ -98,6 +100,24 @@ export function Affaires() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['affaires'] }),
   });
 
+  const importMutation = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return api.post('/affaires/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['affaires'] });
+      qc.invalidateQueries({ queryKey: ['clients'] });
+      qc.invalidateQueries({ queryKey: ['products'] });
+      setImportOpen(false);
+      setImportFile(null);
+      alert(`Import réussi ! ${data.data.created} affaires créées, ${data.data.updated} mises à jour.`);
+    },
+  });
+
   const handleEdit = (a: Affaire) => {
     setForm({
       id: a.id,
@@ -146,7 +166,10 @@ export function Affaires() {
           <h1 className="font-serif text-2xl md:text-3xl">Affaires</h1>
           <p className="text-sm text-muted-foreground">Pipeline complet : prospection, confirmé, réalisé</p>
         </div>
-        <Button onClick={openNew} className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={() => setImportOpen(true)} variant="outline" className="w-full sm:w-auto"><Upload size={16} />Importer Excel</Button>
+          <Button onClick={openNew} className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
+        </div>
       </div>
 
       {/* Summary KPIs */}
@@ -435,6 +458,48 @@ export function Affaires() {
             <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
             <Button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending || !form.clientId || !form.title || !form.montantHT}>
               💾 Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Importer des affaires depuis Excel</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="importFile">Fichier Excel (.xlsx, .xls)</Label>
+              <Input
+                id="importFile"
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+              />
+            </div>
+            <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+              <p className="font-semibold mb-2">Colonnes attendues :</p>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>clientName / Nom du client</li>
+                <li>clientEmail / Email client</li>
+                <li>clientPhone / Téléphone client</li>
+                <li>productName / Produit</li>
+                <li>title / Titre</li>
+                <li>type / Type (BILAN_CARBONE, FORMATION, etc.)</li>
+                <li>montantHT / Montant HT</li>
+                <li>statut / Statut (PROSPECTION, PIPELINE, REALISE, etc.)</li>
+                <li>probabilite / Probabilité</li>
+                <li>moisPrevu / Mois prévu</li>
+                <li>anneePrevue / Année prévue</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportOpen(false)}>Annuler</Button>
+            <Button onClick={() => importFile && importMutation.mutate(importFile)} disabled={importMutation.isPending || !importFile}>
+              {importMutation.isPending ? 'Import...' : 'Importer'}
             </Button>
           </DialogFooter>
         </DialogContent>

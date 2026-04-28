@@ -3,9 +3,30 @@ import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { AffaireType, StatutAffaire } from '@prisma/client';
+import multer from 'multer';
+import xlsx from 'xlsx';
+import path from 'path';
+import fs from 'fs';
 
 export const affairesRoutes = Router();
 affairesRoutes.use(requireAuth);
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), '../frontend/public/uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'import-' + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage });
 
 const affaireSchema = z.object({
   clientId: z.string(),
@@ -145,5 +166,124 @@ affairesRoutes.post('/:id/activites', async (req: AuthRequest, res, next) => {
       data: { ...data, affaireId: req.params.id as string, organizationId: req.organizationId! },
     });
     res.status(201).json(activite);
+  } catch (e) { next(e); }
+});
+
+// ─── IMPORT FROM EXCEL ───────────────────────────────────────────
+affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Aucun fichier fourni' });
+    }
+
+    // Read Excel file
+    const workbook = xlsx.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(worksheet);
+
+    const results = {
+      created: 0,
+      updated: 0,
+      errors: [] as string[],
+    };
+
+    for (const row of data as any[]) {
+      try {
+        // Expected columns: clientName, clientEmail, clientPhone, productName, title, type, montantHT, statut, probabilite, moisPrevu, anneePrevue
+        const clientName = row.clientName || row['Nom du client'];
+        const clientEmail = row.clientEmail || row['Email client'];
+        const clientPhone = row.clientPhone || row['Téléphone client'];
+        const productName = row.productName || row['Produit'];
+        const title = row.title || row['Titre'];
+        const typeStr = row.type || row['Type'] || 'BILAN_CARBONE';
+        const montantHT = Number(row.montantHT || row['Montant HT'] || 0);
+        const statutStr = row.statut || row['Statut'] || 'PROSPECTION';
+        const probabilite = Number(row.probabilite || row['Probabilité'] || 50);
+        const moisPrevu = Number(row.moisPrevu || row['Mois prévu'] || 1);
+        const anneePrevue = Number(row.anneePrevue || row['Année prévue'] || new Date().getFullYear());
+
+        // Create or find client
+        let client = await prisma.client.findFirst({
+          where: { 
+            email: clientEmail,
+            organizationId: req.organizationId!,
+          },
+        });
+
+        if (!client) {
+          client = await prisma.client.create({
+            data: {
+              name: clientName,
+              email: clientEmail,
+              phone: clientPhone,
+              organizationId: req.organizationId!,
+            },
+          });
+          results.created++;
+        } else {
+          results.updated++;
+        }
+
+        // Create or find product
+        let product = null;
+        if (productName) {
+          product = await prisma.product.findFirst({
+            where: { 
+              name: productName,
+              organizationId: req.organizationId!,
+            },
+          });
+
+          if (!product) {
+            product = await prisma.product.create({
+              data: {
+                name: productName,
+                type: typeStr as any,
+                price: 0, // Default price for imported products
+                organizationId: req.organizationId!,
+              },
+            });
+          }
+        }
+
+        // Create affaire
+        const affaire = await prisma.affaire.create({
+          data: {
+            clientId: client.id,
+            productId: product?.id,
+            title: title || `${clientName} - ${productName || 'Affaire'}`,
+            type: typeStr as AffaireType,
+            montantHT,
+            statut: statutStr as StatutAffaire,
+            probabilite,
+            moisPrevu,
+            anneePrevue,
+            createdById: req.userId,
+            organizationId: req.organizationId!,
+          },
+        });
+
+        // Log activity
+        await prisma.activite.create({
+          data: {
+            affaireId: affaire.id,
+            organizationId: req.organizationId!,
+            type: 'AUTRE',
+            title: 'Affaire importée',
+            content: `Importée depuis Excel`,
+          },
+        });
+
+        results.created++;
+      } catch (err: any) {
+        results.errors.push(`Erreur ligne ${results.created + results.updated}: ${err.message}`);
+      }
+    }
+
+    // Delete uploaded file
+    fs.unlinkSync(req.file.path);
+
+    res.json(results);
   } catch (e) { next(e); }
 });

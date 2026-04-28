@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Phone, Mail, Calendar, FileText, Trash2, Pencil, DollarSign, Target, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Plus, Phone, Mail, Calendar, FileText, Trash2, Pencil, DollarSign, Target, TrendingUp, Building2, Package, Clock, MoreVertical, Edit, Send } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,6 +76,18 @@ export function AffaireDetail() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['affaire', id] }),
   });
 
+  const handleCallClient = () => {
+    if (affaire?.client?.phone) {
+      window.location.href = `tel:${affaire.client.phone}`;
+    }
+  };
+
+  const handleEmailClient = () => {
+    if (affaire?.client?.email) {
+      window.location.href = `mailto:${affaire.client.email}`;
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center py-20 text-muted-foreground">Chargement...</div>;
   }
@@ -91,129 +103,257 @@ export function AffaireDetail() {
 
   return (
     <div className="space-y-6 px-2 md:px-0">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/affaires')}>
-          <ArrowLeft size={16} />
-        </Button>
-        <div className="flex-1">
-          <h1 className="font-serif text-2xl md:text-3xl">{affaire.title}</h1>
-          <p className="text-sm text-muted-foreground">{affaire.client?.name || 'N/A'}</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/affaires')}>
+            <ArrowLeft size={16} />
+          </Button>
+          <div>
+            <h1 className="font-serif text-2xl md:text-3xl">{affaire.title}</h1>
+            <p className="text-sm text-muted-foreground">{affaire.client?.name || 'N/A'}</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {affaire.client?.phone && (
+            <Button variant="outline" size="sm" onClick={handleCallClient}>
+              <Phone size={16} className="mr-2" /> Appeler
+            </Button>
+          )}
+          {affaire.client?.email && (
+            <Button variant="outline" size="sm" onClick={handleEmailClient}>
+              <Mail size={16} className="mr-2" /> Email
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setActivityOpen(true)}>
+            <Plus size={16} className="mr-2" /> Ajouter activité
+          </Button>
         </div>
       </div>
 
-      {/* Affaire Details */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <DollarSign size={16} /> Montant
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{fmtDT(Number(affaire.montantHT))}</p>
-            <p className="text-sm text-muted-foreground">HT</p>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="border-2 border-emerald-200 bg-emerald-50/30">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-emerald-600" />
+              <div>
+                <p className="text-xs text-muted-foreground">Montant HT</p>
+                <p className="text-lg font-bold text-emerald-600">{fmtDT(Number(affaire.montantHT))}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Target size={16} /> Statut
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <StatutBadge statut={affaire.statut} />
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="text-xs text-muted-foreground">Statut</p>
+                <StatutBadge statut={affaire.statut} />
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp size={16} /> Probabilité
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{affaire.probabilite}%</p>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="text-xs text-muted-foreground">Probabilité</p>
+                <p className="text-lg font-bold">{affaire.probabilite}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="text-xs text-muted-foreground">Échéance</p>
+                <p className="text-sm font-semibold">{MOIS[affaire.moisPrevu]} {affaire.anneePrevue}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Informations</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Type</p>
-              <p className="font-medium">{affaire.type === 'BILAN_CARBONE' ? 'Bilan Carbone' : 'Formation'}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Mois prévu</p>
-              <p className="font-medium">{MOIS[affaire.moisPrevu]} {affaire.anneePrevue}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Via partenaire</p>
-              <p className="font-medium">{affaire.viaPartenaire ? 'Oui' : 'Non'}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Commission</p>
-              <p className="font-medium">{affaire.tauxCommission}%</p>
-            </div>
-          </div>
-          {affaire.notes && (
-            <div className="mt-4">
-              <p className="text-muted-foreground text-sm">Notes</p>
-              <p className="text-sm mt-1">{affaire.notes}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Details */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Client Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Building2 size={18} /> Client
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Nom</p>
+                <p className="font-medium">{affaire.client?.name || 'N/A'}</p>
+              </div>
+              {affaire.client?.contactName && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Contact</p>
+                  <p className="font-medium">{affaire.client.contactName}</p>
+                </div>
+              )}
+              {affaire.client?.email && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="font-medium text-sm">{affaire.client.email}</p>
+                </div>
+              )}
+              {affaire.client?.phone && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Téléphone</p>
+                  <p className="font-medium text-sm">{affaire.client.phone}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Activities Timeline */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Historique des activités</CardTitle>
-            <Button size="sm" onClick={() => setActivityOpen(true)}>
-              <Plus size={14} className="mr-2" /> Ajouter
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {affaire.activites?.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Aucune activité</p>
-            ) : (
-              affaire.activites?.map((a: Activite) => {
-                const Icon = ACTIVITY_ICONS[a.type];
-                return (
-                  <div key={a.id} className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                        <Icon size={18} className="text-muted-foreground" />
-                      </div>
-                      <div className="w-0.5 flex-1 bg-border mt-2" />
-                    </div>
-                    <div className="flex-1 pb-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted">
-                          {ACTIVITY_LABELS[a.type]}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(a.createdAt).toLocaleString('fr-FR')}
-                        </span>
-                      </div>
-                      <p className="font-medium text-sm">{a.title}</p>
-                      {a.content && <p className="text-sm text-muted-foreground mt-1">{a.content}</p>}
-                    </div>
+          {/* Product Info */}
+          {affaire.product && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Package size={18} /> Produit
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Nom</p>
+                  <p className="font-medium">{affaire.product.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Type</p>
+                  <p className="font-medium">{affaire.product.type === 'SERVICE' ? 'Service' : 'Produit'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Prix unitaire</p>
+                  <p className="font-medium">{fmtDT(Number(affaire.product.price))}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Financial Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign size={18} /> Détails financiers
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Montant HT</p>
+                <p className="font-medium">{fmtDT(Number(affaire.montantHT))}</p>
+              </div>
+              {affaire.viaPartenaire && (
+                <>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Via partenaire</p>
+                    <p className="font-medium">Oui</p>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Taux commission</p>
+                    <p className="font-medium">{affaire.tauxCommission}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Commission estimée</p>
+                    <p className="font-medium text-purple-600">
+                      {fmtDT(Number(affaire.montantHT) * (affaire.tauxCommission / 100))}
+                    </p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Activities */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Historique des activités</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {affaire.activites?.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText size={48} className="mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground mb-4">Aucune activité enregistrée</p>
+                    <Button size="sm" onClick={() => setActivityOpen(true)}>
+                      <Plus size={14} className="mr-2" /> Ajouter la première activité
+                    </Button>
+                  </div>
+                ) : (
+                  affaire.activites?.map((a: Activite, index: number) => {
+                    const Icon = ACTIVITY_ICONS[a.type];
+                    const isLast = index === (affaire.activites?.length || 0) - 1;
+                    return (
+                      <div key={a.id} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            a.type === 'APPEL' ? 'bg-blue-100 text-blue-600' :
+                            a.type === 'EMAIL_ENVOYE' || a.type === 'EMAIL_RECU' ? 'bg-purple-100 text-purple-600' :
+                            a.type === 'RDV' ? 'bg-amber-100 text-amber-600' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            <Icon size={20} />
+                          </div>
+                          {!isLast && <div className="w-0.5 flex-1 bg-border mt-3" />}
+                        </div>
+                        <div className={`flex-1 ${isLast ? '' : 'pb-6'}`}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                                  a.type === 'APPEL' ? 'bg-blue-100 text-blue-700' :
+                                  a.type === 'EMAIL_ENVOYE' || a.type === 'EMAIL_RECU' ? 'bg-purple-100 text-purple-700' :
+                                  a.type === 'RDV' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {ACTIVITY_LABELS[a.type]}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(a.createdAt).toLocaleString('fr-FR', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </span>
+                              </div>
+                              <p className="font-semibold text-base">{a.title}</p>
+                              {a.content && (
+                                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{a.content}</p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => confirm('Supprimer cette activité ?') && deleteActivityMutation.mutate(a.id)}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Add Activity Dialog */}
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
@@ -228,12 +368,12 @@ export function AffaireDetail() {
                 <Select value={activityForm.type} onValueChange={(v) => setActivityForm({ ...activityForm, type: v as ActiviteType })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="NOTE">Note</SelectItem>
-                    <SelectItem value="APPEL">Appel</SelectItem>
-                    <SelectItem value="EMAIL_ENVOYE">Email envoyé</SelectItem>
-                    <SelectItem value="EMAIL_RECU">Email reçu</SelectItem>
-                    <SelectItem value="RDV">Rendez-vous</SelectItem>
-                    <SelectItem value="AUTRE">Autre</SelectItem>
+                    <SelectItem value="NOTE">📝 Note</SelectItem>
+                    <SelectItem value="APPEL">📞 Appel</SelectItem>
+                    <SelectItem value="EMAIL_ENVOYE">📧 Email envoyé</SelectItem>
+                    <SelectItem value="EMAIL_RECU">📬 Email reçu</SelectItem>
+                    <SelectItem value="RDV">📅 Rendez-vous</SelectItem>
+                    <SelectItem value="AUTRE">📌 Autre</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

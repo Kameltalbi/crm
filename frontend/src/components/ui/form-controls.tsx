@@ -172,3 +172,20 @@ export const DropdownMenuContentWrapper = React.forwardRef<
   </DropdownMenuPrimitive.Portal>
 ));
 DropdownMenuContentWrapper.displayName = DropdownMenuPrimitive.Content.displayName;
+
+export const DropdownMenuItemStyled = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item>
+>(({ className, children, ...props }, ref) => (
+  <DropdownMenuPrimitive.Item
+    ref={ref}
+    className={cn(
+      'relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </DropdownMenuPrimitive.Item>
+));
+DropdownMenuItemStyled.displayName = DropdownMenuPrimitive.Item.displayName;

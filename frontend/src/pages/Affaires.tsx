@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItem } from '@/components/ui/form-controls';
+import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItemStyled } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { StatutBadge } from './Dashboard';
 import type { Affaire, Client, Product, AffaireType, StatutAffaire } from '@/types';
@@ -304,33 +304,33 @@ export function Affaires() {
                           </Button>
                         </DropdownMenuTriggerButton>
                         <DropdownMenuContentWrapper align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => navigate(`/affaires/${a.id}`)}>
+                          <DropdownMenuItemStyled onClick={() => navigate(`/affaires/${a.id}`)}>
                             <Eye size={16} className="mr-2 text-muted-foreground" /> Voir détails
-                          </DropdownMenuItem>
+                          </DropdownMenuItemStyled>
                           {!a.devisId && (
-                            <DropdownMenuItem onClick={() => createDevisMutation.mutate(a.id)}>
+                            <DropdownMenuItemStyled onClick={() => createDevisMutation.mutate(a.id)}>
                               <FileText size={16} className="mr-2 text-muted-foreground" /> Créer devis
-                            </DropdownMenuItem>
+                            </DropdownMenuItemStyled>
                           )}
                           {!a.factureId && (
-                            <DropdownMenuItem onClick={() => createFactureMutation.mutate(a.id)}>
+                            <DropdownMenuItemStyled onClick={() => createFactureMutation.mutate(a.id)}>
                               <Receipt size={16} className="mr-2 text-muted-foreground" /> Créer facture
-                            </DropdownMenuItem>
+                            </DropdownMenuItemStyled>
                           )}
                           {(a.devisPdfUrl || a.facturePdfUrl) && (
-                            <DropdownMenuItem onClick={() => {
+                            <DropdownMenuItemStyled onClick={() => {
                               const url = a.devisPdfUrl || a.facturePdfUrl;
                               if (url) window.open(url, '_blank');
                             }}>
                               <Mail size={16} className="mr-2 text-muted-foreground" /> Voir PDF
-                            </DropdownMenuItem>
+                            </DropdownMenuItemStyled>
                           )}
-                          <DropdownMenuItem onClick={() => handleEdit(a)}>
+                          <DropdownMenuItemStyled onClick={() => handleEdit(a)}>
                             <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(a.id)} className="text-destructive">
+                          </DropdownMenuItemStyled>
+                          <DropdownMenuItemStyled onClick={() => handleDelete(a.id)} className="text-destructive">
                             <Trash2 size={16} className="mr-2" /> Supprimer
-                          </DropdownMenuItem>
+                          </DropdownMenuItemStyled>
                         </DropdownMenuContentWrapper>
                       </DropdownMenu>
                     </td>

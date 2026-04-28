@@ -294,70 +294,48 @@ export function Affaires() {
                           {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
                       </div>
                     </td>
-                    <td className="p-2.5">
-                        <div className="flex gap-1 justify-end">
+                    <td className="p-2.5 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTriggerButton asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
-                            onClick={() => navigate(`/affaires/${a.id}`)}
-                            title="Voir détails"
+                            className="h-8 w-8 hover:bg-gray-100"
+                            title="Actions"
                           >
-                            <Eye size={16} />
+                            <MoreVertical size={16} />
                           </Button>
+                        </DropdownMenuTriggerButton>
+                        <DropdownMenuContentWrapper align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => navigate(`/affaires/${a.id}`)}>
+                            <Eye size={16} className="mr-2 text-muted-foreground" /> Voir détails
+                          </DropdownMenuItem>
                           {!a.devisId && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 hover:bg-emerald-50 hover:text-emerald-600"
-                              onClick={() => createDevisMutation.mutate(a.id)}
-                              title="Créer devis"
-                              disabled={createDevisMutation.isPending}
-                            >
-                              <FileText size={16} />
-                            </Button>
+                            <DropdownMenuItem onClick={() => createDevisMutation.mutate(a.id)}>
+                              <FileText size={16} className="mr-2 text-muted-foreground" /> Créer devis
+                            </DropdownMenuItem>
                           )}
                           {!a.factureId && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 hover:bg-purple-50 hover:text-purple-600"
-                              onClick={() => createFactureMutation.mutate(a.id)}
-                              title="Créer facture"
-                              disabled={createFactureMutation.isPending}
-                            >
-                              <Receipt size={16} />
-                            </Button>
+                            <DropdownMenuItem onClick={() => createFactureMutation.mutate(a.id)}>
+                              <Receipt size={16} className="mr-2 text-muted-foreground" /> Créer facture
+                            </DropdownMenuItem>
                           )}
-                          <DropdownMenu>
-                            <DropdownMenuTriggerButton asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 hover:bg-gray-100"
-                                title="Plus d'actions"
-                              >
-                                <MoreVertical size={16} />
-                              </Button>
-                            </DropdownMenuTriggerButton>
-                            <DropdownMenuContentWrapper align="end">
-                              {(a.devisPdfUrl || a.facturePdfUrl) && (
-                                <DropdownMenuItem onClick={() => {
-                                  const url = a.devisPdfUrl || a.facturePdfUrl;
-                                  if (url) window.open(url, '_blank');
-                                }}>
-                                  <Mail size={14} className="mr-2" /> Voir PDF
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem onClick={() => handleEdit(a)}>
-                                <Pencil size={14} className="mr-2" /> Modifier
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDelete(a.id)} className="text-destructive">
-                                <Trash2 size={14} className="mr-2" /> Supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContentWrapper>
-                          </DropdownMenu>
-                        </div>
+                          {(a.devisPdfUrl || a.facturePdfUrl) && (
+                            <DropdownMenuItem onClick={() => {
+                              const url = a.devisPdfUrl || a.facturePdfUrl;
+                              if (url) window.open(url, '_blank');
+                            }}>
+                              <Mail size={16} className="mr-2 text-muted-foreground" /> Voir PDF
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => handleEdit(a)}>
+                            <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(a.id)} className="text-destructive">
+                            <Trash2 size={16} className="mr-2" /> Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContentWrapper>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 );

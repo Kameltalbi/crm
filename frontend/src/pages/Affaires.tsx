@@ -251,11 +251,9 @@ export function Affaires() {
               <thead>
                 <tr className="border-b bg-sage">
                   <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Client / Titre</th>
-                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Type</th>
                   <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
                   <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
                   <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
-                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Partenaire</th>
                   <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Commission</th>
                   <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mon net</th>
                   <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mois</th>
@@ -273,15 +271,9 @@ export function Affaires() {
                         <div className="font-semibold">{a.client?.name || 'N/A'}</div>
                         <div className="text-[10px] text-muted-foreground">{a.title}</div>
                       </td>
-                      <td className="p-2.5">
-                        {a.type === 'BILAN_CARBONE'
-                          ? <Badge variant="secondary">🌍</Badge>
-                          : <Badge className="bg-gold-light text-gold">📚</Badge>}
-                      </td>
                       <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>
                       <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
                       <td className="p-2.5"><StatutBadge statut={a.statut} /></td>
-                      <td className="p-2.5">{a.viaPartenaire ? <Badge className="bg-purple text-white">🤝</Badge> : <span className="text-muted-foreground">—</span>}</td>
                       <td className="p-2.5 text-right font-mono text-purple">{a.viaPartenaire ? fmtDT(c) : '—'}</td>
                       <td className="p-2.5 text-right font-mono font-semibold text-leaf">{fmtDT(ht - c)}</td>
                       <td className="p-2.5 text-muted-foreground">{MOIS[a.moisPrevu]}</td>
@@ -289,52 +281,52 @@ export function Affaires() {
                         <div className="flex gap-1 text-[10px]">
                           {a.devisNumero && <Badge variant="outline">D {a.devisNumero}</Badge>}
                           {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
-                      </div>
-                    </td>
-                    <td className="p-2.5 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTriggerButton asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-gray-100"
-                            title="Actions"
-                          >
-                            <MoreVertical size={16} />
-                          </Button>
-                        </DropdownMenuTriggerButton>
-                        <DropdownMenuContentWrapper align="end" className="w-48">
-                          <DropdownMenuItemStyled onClick={() => navigate(`/affaires/${a.id}`)}>
-                            <Eye size={16} className="mr-2 text-muted-foreground" /> Voir détails
-                          </DropdownMenuItemStyled>
-                          {!a.devisId && (
-                            <DropdownMenuItemStyled onClick={() => createDevisMutation.mutate(a.id)}>
-                              <FileText size={16} className="mr-2 text-muted-foreground" /> Créer devis
+                        </div>
+                      </td>
+                      <td className="p-2.5 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTriggerButton asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-gray-100"
+                              title="Actions"
+                            >
+                              <MoreVertical size={16} />
+                            </Button>
+                          </DropdownMenuTriggerButton>
+                          <DropdownMenuContentWrapper align="end" className="w-48">
+                            <DropdownMenuItemStyled onClick={() => navigate(`/affaires/${a.id}`)}>
+                              <Eye size={16} className="mr-2 text-muted-foreground" /> Voir détails
                             </DropdownMenuItemStyled>
-                          )}
-                          {!a.factureId && (
-                            <DropdownMenuItemStyled onClick={() => createFactureMutation.mutate(a.id)}>
-                              <Receipt size={16} className="mr-2 text-muted-foreground" /> Créer facture
+                            {!a.devisId && (
+                              <DropdownMenuItemStyled onClick={() => createDevisMutation.mutate(a.id)}>
+                                <FileText size={16} className="mr-2 text-muted-foreground" /> Créer devis
+                              </DropdownMenuItemStyled>
+                            )}
+                            {!a.factureId && (
+                              <DropdownMenuItemStyled onClick={() => createFactureMutation.mutate(a.id)}>
+                                <Receipt size={16} className="mr-2 text-muted-foreground" /> Créer facture
+                              </DropdownMenuItemStyled>
+                            )}
+                            {(a.devisPdfUrl || a.facturePdfUrl) && (
+                              <DropdownMenuItemStyled onClick={() => {
+                                const url = a.devisPdfUrl || a.facturePdfUrl;
+                                if (url) window.open(url, '_blank');
+                              }}>
+                                <Mail size={16} className="mr-2 text-muted-foreground" /> Voir PDF
+                              </DropdownMenuItemStyled>
+                            )}
+                            <DropdownMenuItemStyled onClick={() => handleEdit(a)}>
+                              <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
                             </DropdownMenuItemStyled>
-                          )}
-                          {(a.devisPdfUrl || a.facturePdfUrl) && (
-                            <DropdownMenuItemStyled onClick={() => {
-                              const url = a.devisPdfUrl || a.facturePdfUrl;
-                              if (url) window.open(url, '_blank');
-                            }}>
-                              <Mail size={16} className="mr-2 text-muted-foreground" /> Voir PDF
+                            <DropdownMenuItemStyled onClick={() => handleDelete(a.id)} className="text-destructive">
+                              <Trash2 size={16} className="mr-2" /> Supprimer
                             </DropdownMenuItemStyled>
-                          )}
-                          <DropdownMenuItemStyled onClick={() => handleEdit(a)}>
-                            <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
-                          </DropdownMenuItemStyled>
-                          <DropdownMenuItemStyled onClick={() => handleDelete(a.id)} className="text-destructive">
-                            <Trash2 size={16} className="mr-2" /> Supprimer
-                          </DropdownMenuItemStyled>
-                        </DropdownMenuContentWrapper>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
+                          </DropdownMenuContentWrapper>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
                 );
               })}
             </tbody>

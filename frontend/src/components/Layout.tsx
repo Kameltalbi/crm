@@ -3,7 +3,7 @@ import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Me
 import { useAuth } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import type { Organization } from '@/types';
 import { Notifications } from './Notifications';
@@ -25,6 +25,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: organizations } = useQuery<Organization[]>({
     queryKey: ['organizations'],
@@ -61,7 +67,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex text-sm font-mono text-muted-foreground">
+            {currentTime.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} {currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
           <Notifications />
           <div className="border-l pl-2 flex items-center gap-3">
             <div className="hidden sm:block text-right">

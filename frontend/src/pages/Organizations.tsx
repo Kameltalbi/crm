@@ -92,6 +92,11 @@ export function Organizations() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: form });
+    } else {
+      createMutation.mutate(form);
+    }
   };
 
   const openEdit = (org: Organization) => {

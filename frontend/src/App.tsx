@@ -40,6 +40,7 @@ export default function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/affaires" element={<Affaires />} />
                 <Route path="/affaires/:id" element={<AffaireDetail />} />
                 <Route path="/clients" element={<Clients />} />

@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 import type { Organization } from '@/types';
 
 const nav = [
-  { to: '/',             label: 'Dashboard',     icon: LayoutDashboard },
+  { to: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
   { to: '/affaires',     label: 'Affaires',      icon: Briefcase       },
   { to: '/clients',      label: 'Clients',       icon: Users           },
   { to: '/activites',    label: 'Activités',     icon: FileText        },

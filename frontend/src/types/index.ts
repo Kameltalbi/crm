@@ -139,6 +139,7 @@ export interface PrevisionMois {
   commissionEstimee: number;
   netEstime: number;
   caReelRealise: number;
+  caPrevuMois: number;
   chargeJours: number;
   notes?: string | null;
 }
@@ -155,6 +156,13 @@ export interface Previsionnel {
     netHT: number;
     caTTC: number;
     caReelRealise: number;
-    caPredit31Decembre: number;
+    caTotalAnnuel: number;
+    caRealiseAnnuel: number;
+    caPrevuAnnuel: number;
+    moyenneMensuelle: number;
+    caProjete: number;
+    moisCourant: number;
+    anneeCourante: number;
   };
+  caParMois?: Record<number, { realise: number; previsionnel: number }>;
 }

@@ -14,23 +14,77 @@ previsionnelRoutes.get('/:annee', async (req: AuthRequest, res, next) => {
       orderBy: { mois: 'asc' },
     });
 
-    // Agrégats + croisement avec affaires réalisées
-    const affairesReelles = await prisma.affaire.findMany({
-      where: { anneePrevue: annee, statut: 'REALISE', organizationId: req.organizationId },
-    });
-    const reelParMois: Record<number, number> = {};
-    for (const a of affairesReelles) {
-      reelParMois[a.moisPrevu] = (reelParMois[a.moisPrevu] || 0) + Number(a.montantHT);
-    }
+    // Nouvelle logique de calcul : Réalisé (passé) + Prévisionnel (futur)
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
 
-    // Prédiction du CA au 31 décembre basée sur les affaires avec % de réalisation
-    const toutesAffaires = await prisma.affaire.findMany({
-      where: { anneePrevue: annee, organizationId: req.organizationId },
+    // CA Réalisé pour les mois passés
+    const affairesReelles = await prisma.affaire.findMany({
+      where: { 
+        anneePrevue: annee, 
+        statut: 'REALISE', 
+        organizationId: req.organizationId 
+      },
     });
     
-    let caPredit31Decembre = 0;
-    for (const a of toutesAffaires) {
-      caPredit31Decembre += Number(a.montantHT) * (a.probabilite / 100);
+    // CA Prévisionnel pour les mois futurs (basé sur probabilite)
+    const affairesFutures = await prisma.affaire.findMany({
+      where: { 
+        anneePrevue: annee, 
+        statut: { in: ['PROSPECTION', 'PIPELINE'] },
+        organizationId: req.organizationId 
+      },
+    });
+
+    // Calcul par mois
+    const caParMois: Record<number, { realise: number; previsionnel: number }> = {};
+    
+    // Initialiser tous les mois à 0
+    for (let m = 1; m <= 12; m++) {
+      caParMois[m] = { realise: 0, previsionnel: 0 };
+    }
+
+    // Ajouter CA réalisé (mois passés uniquement)
+    for (const a of affairesReelles) {
+      if (annee < currentYear || (annee === currentYear && a.moisPrevu <= currentMonth)) {
+        caParMois[a.moisPrevu].realise += Number(a.montantHT);
+      }
+    }
+
+    // Ajouter CA prévisionnel (mois futurs uniquement)
+    for (const a of affairesFutures) {
+      if (annee > currentYear || (annee === currentYear && a.moisPrevu > currentMonth)) {
+        caParMois[a.moisPrevu].previsionnel += Number(a.montantHT) * (a.probabilite / 100);
+      }
+    }
+
+    // Calcul de l'atterrissage annuel
+    let caTotalAnnuel = 0;
+    let caRealiseAnnuel = 0;
+    let caPrevuAnnuel = 0;
+    
+    for (let m = 1; m <= 12; m++) {
+      caTotalAnnuel += caParMois[m].realise + caParMois[m].previsionnel;
+      caRealiseAnnuel += caParMois[m].realise;
+      caPrevuAnnuel += caParMois[m].previsionnel;
+    }
+
+    // Moyenne mensuelle du réalisé
+    const moisRealises = annee < currentYear ? 12 : currentMonth;
+    const moyenneMensuelle = moisRealises > 0 ? caRealiseAnnuel / moisRealises : 0;
+
+    // Projection automatique si les mois futurs ne sont pas remplis
+    let caProjete = caTotalAnnuel;
+    const moisFutursVides = [];
+    for (let m = currentMonth + 1; m <= 12; m++) {
+      if (caParMois[m].previsionnel === 0) {
+        moisFutursVides.push(m);
+      }
+    }
+    
+    if (moisFutursVides.length > 0 && moyenneMensuelle > 0) {
+      caProjete = caTotalAnnuel + (moyenneMensuelle * moisFutursVides.length);
     }
 
     const data = mois.map(m => {
@@ -48,7 +102,8 @@ previsionnelRoutes.get('/:annee', async (req: AuthRequest, res, next) => {
         caTotalPrevu:       total,
         commissionEstimee:  commEstim,
         netEstime:          total - commEstim,
-        caReelRealise:      reelParMois[m.mois] || 0,
+        caReelRealise:      caParMois[m.mois].realise,
+        caPrevuMois:        caParMois[m.mois].previsionnel,
         chargeJours:        m.nbBilansPrevu * 4 + m.joursFormation,
       };
     });
@@ -72,8 +127,16 @@ previsionnelRoutes.get('/:annee', async (req: AuthRequest, res, next) => {
         netHT:           totalNet,
         caTTC:           Math.round(totalHT * 1.19),
         caReelRealise:   totalReel,
-        caPredit31Decembre: Math.round(caPredit31Decembre),
+        // Nouveaux champs basés sur la logique Réalisé + Prévisionnel
+        caTotalAnnuel:   Math.round(caTotalAnnuel),
+        caRealiseAnnuel: Math.round(caRealiseAnnuel),
+        caPrevuAnnuel:   Math.round(caPrevuAnnuel),
+        moyenneMensuelle: Math.round(moyenneMensuelle),
+        caProjete:       Math.round(caProjete),
+        moisCourant:     currentMonth,
+        anneeCourante:   currentYear,
       },
+      caParMois,
     });
   } catch (e) { next(e); }
 });

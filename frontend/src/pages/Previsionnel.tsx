@@ -18,13 +18,12 @@ export function Previsionnel() {
 
   const maxV = Math.max(...data.mois.map((m) => m.caTotalPrevu), 1);
   
-  // Prepare chart data
+  // Prepare chart data with stacked bars (realized + predicted)
   const chartData = data.mois.map((m) => ({
     month: MOIS[m.mois],
-    prevu: Number(m.caTotalPrevu),
-    reel: Number(m.caReelRealise),
-    bilans: Number(m.caBilansPrevu),
-    formations: Number(m.caFormationsPrevu),
+    realise: m.caReelRealise,
+    prevu: m.caPrevuMois || 0,
+    total: (m.caReelRealise || 0) + (m.caPrevuMois || 0),
   }));
 
   return (
@@ -60,23 +59,43 @@ export function Previsionnel() {
       <div className="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 md:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <div className="text-xs uppercase tracking-wider opacity-75">CA Prédit au 31 décembre</div>
-            <div className="text-2xl md:text-3xl font-mono font-bold">{fmtDT(data.totaux.caPredit31Decembre)}</div>
+            <div className="text-xs uppercase tracking-wider opacity-75">Atterrissage Annuel</div>
+            <div className="text-2xl md:text-3xl font-mono font-bold">{fmtDT(data.totaux.caTotalAnnuel)}</div>
           </div>
           <div className="text-xs opacity-75 text-right">
-            Basé sur les affaires avec % de réalisation
+            Réalisé: {fmtDT(data.totaux.caRealiseAnnuel)} + Prévu: {fmtDT(data.totaux.caPrevuAnnuel)}
           </div>
+        </div>
+      </div>
+
+      {/* Stats additionnelles */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-lg bg-sage/20 p-3">
+          <div className="text-xs text-muted-foreground">Moyenne mensuelle</div>
+          <div className="text-lg font-mono font-semibold">{fmtDT(data.totaux.moyenneMensuelle)}</div>
+        </div>
+        <div className="rounded-lg bg-sage/20 p-3">
+          <div className="text-xs text-muted-foreground">CA Projeté</div>
+          <div className="text-lg font-mono font-semibold">{fmtDT(data.totaux.caProjete)}</div>
+        </div>
+        <div className="rounded-lg bg-sage/20 p-3">
+          <div className="text-xs text-muted-foreground">Mois courant</div>
+          <div className="text-lg font-mono font-semibold">{MOIS[data.totaux.moisCourant]}</div>
+        </div>
+        <div className="rounded-lg bg-sage/20 p-3">
+          <div className="text-xs text-muted-foreground">Projection</div>
+          <div className="text-lg font-mono font-semibold">Auto</div>
         </div>
       </div>
 
       {/* Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm md:text-base">Évolution mensuelle CA (Prévu vs Réalisé)</CardTitle>
+          <CardTitle className="text-sm md:text-base">Évolution mensuelle CA (Réalisé + Prévisionnel)</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={chartData}>
+            <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="month" stroke="#6b7280" fontSize={10} />
               <YAxis stroke="#6b7280" fontSize={10} tickFormatter={(value) => `${value / 1000}k`} />
@@ -84,9 +103,9 @@ export function Previsionnel() {
                 formatter={(value: number) => [fmtDT(value), '']}
                 contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }}
               />
-              <Line type="monotone" dataKey="prevu" stroke="#22c55e" strokeWidth={2} name="Prévu" dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="reel" stroke="#3b82f6" strokeWidth={2} name="Réalisé" dot={{ r: 4 }} />
-            </LineChart>
+              <Bar dataKey="realise" stackId="ca" fill="#3b82f6" name="Réalisé" />
+              <Bar dataKey="prevu" stackId="ca" fill="#22c55e" name="Prévisionnel" />
+            </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>

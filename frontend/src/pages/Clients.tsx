@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Mail, Phone, FileBadge, Search, TrendingUp } from 'lucide-react';
+import { Plus, Pencil, Trash2, Mail, Phone, FileBadge, Search, TrendingUp, MoreVertical } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label, Textarea } from '@/components/ui/form-controls';
+import { Input, Label, Textarea, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItem } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import type { Client } from '@/types';
 
@@ -127,36 +127,71 @@ export function Clients() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filteredClients.map((c) => (
-          <Card key={c.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold">{c.name}</h3>
-                <span className="text-xs bg-sage text-leaf px-2 py-0.5 rounded-full">
-                  {c._count?.affaires || 0} affaire{(c._count?.affaires || 0) > 1 ? 's' : ''}
-                </span>
-              </div>
-              {c.contactName && <p className="text-sm text-muted-foreground">{c.contactName}</p>}
-              <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-                {c.email && <div className="flex items-center gap-1.5"><Mail size={11} />{c.email}</div>}
-                {c.phone && <div className="flex items-center gap-1.5"><Phone size={11} />{c.phone}</div>}
-                {c.matricule && <div className="flex items-center gap-1.5"><FileBadge size={11} />{c.matricule}</div>}
-              </div>
-              <div className="mt-3 flex gap-1 justify-end">
-                <Button size="sm" variant="outline" onClick={() => openEdit(c)}><Pencil size={12} /></Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => confirm('Supprimer ce client ?') && deleteMutation.mutate(c.id)}
-                >
-                  <Trash2 size={12} />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* List View */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-sage">
+                  <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Client</th>
+                  <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Contact</th>
+                  <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Email</th>
+                  <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Téléphone</th>
+                  <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Matricule</th>
+                  <th className="text-center p-3 uppercase tracking-wider text-leaf font-semibold">Affaires</th>
+                  <th className="text-right p-3 uppercase tracking-wider text-leaf font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredClients.map((c) => (
+                  <tr key={c.id} className="border-b hover:bg-sage/50">
+                    <td className="p-3 font-medium">{c.name}</td>
+                    <td className="p-3 text-muted-foreground">{c.contactName || '—'}</td>
+                    <td className="p-3 text-muted-foreground">{c.email || '—'}</td>
+                    <td className="p-3 text-muted-foreground">{c.phone || '—'}</td>
+                    <td className="p-3 text-muted-foreground">{c.matricule || '—'}</td>
+                    <td className="p-3 text-center">
+                      <span className="bg-sage text-leaf px-2 py-0.5 rounded-full text-xs font-medium">
+                        {c._count?.affaires || 0}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTriggerButton asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-gray-100"
+                            title="Actions"
+                          >
+                            <MoreVertical size={16} />
+                          </Button>
+                        </DropdownMenuTriggerButton>
+                        <DropdownMenuContentWrapper align="end">
+                          <DropdownMenuItem onClick={() => openEdit(c)}>
+                            <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => confirm('Supprimer ce client ?') && deleteMutation.mutate(c.id)} className="text-destructive">
+                            <Trash2 size={16} className="mr-2" /> Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContentWrapper>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
+                {filteredClients.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                      Aucun client trouvé
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl">

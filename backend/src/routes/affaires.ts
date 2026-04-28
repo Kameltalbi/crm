@@ -172,15 +172,20 @@ affairesRoutes.post('/:id/activites', async (req: AuthRequest, res, next) => {
 // ─── IMPORT FROM EXCEL ───────────────────────────────────────────
 affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, res, next) => {
   try {
+    console.log('Import request received');
     if (!req.file) {
       return res.status(400).json({ error: 'Aucun fichier fourni' });
     }
+
+    console.log('File uploaded:', req.file.path);
 
     // Read Excel file
     const workbook = xlsx.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(worksheet);
+
+    console.log('Excel data parsed, rows:', data.length);
 
     const results = {
       created: 0,
@@ -201,15 +206,20 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
         const statutStr = row.statut || row['Statut'] || 'PROSPECTION';
         const probabilite = Number(row.probabilite || row['Probabilité'] || 50);
         const moisPrevu = Number(row.moisPrevu || row['Mois prévu'] || row['Mois'] || new Date().getMonth() + 1);
-        const anneePrevue = Number(row.anneePrevue || row['Année prévue'] || row['Année'] || new Date().getFullYear());
+        const anneePrevue = Number(row.anneePrevue || row['Année prévu'] || row['Année'] || new Date().getFullYear());
+
+        console.log('Processing row:', { clientName, clientEmail, productName, title });
 
         // Create or find client
-        let client = await prisma.client.findFirst({
-          where: { 
-            email: clientEmail,
-            organizationId: req.organizationId!,
-          },
-        });
+        let client;
+        if (clientEmail) {
+          client = await prisma.client.findFirst({
+            where: { 
+              email: clientEmail,
+              organizationId: req.organizationId!,
+            },
+          });
+        }
 
         if (!client) {
           client = await prisma.client.create({
@@ -220,8 +230,10 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
               organizationId: req.organizationId!,
             },
           });
+          console.log('Client created:', client.id);
           results.created++;
         } else {
+          console.log('Client found:', client.id);
           results.updated++;
         }
 
@@ -244,6 +256,7 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
                 organizationId: req.organizationId!,
               },
             });
+            console.log('Product created:', product.id);
           }
         }
 
@@ -263,6 +276,7 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
             organizationId: req.organizationId!,
           },
         });
+        console.log('Affaire created:', affaire.id);
 
         // Log activity
         await prisma.activite.create({
@@ -277,6 +291,7 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
 
         results.created++;
       } catch (err: any) {
+        console.error('Error processing row:', err);
         results.errors.push(`Erreur ligne ${results.created + results.updated}: ${err.message}`);
       }
     }
@@ -284,6 +299,7 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
     // Delete uploaded file
     fs.unlinkSync(req.file.path);
 
+    console.log('Import completed:', results);
     res.json(results);
   } catch (e) { next(e); }
 });

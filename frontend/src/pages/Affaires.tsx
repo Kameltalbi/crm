@@ -116,6 +116,10 @@ export function Affaires() {
       setImportFile(null);
       alert(`Import réussi ! ${data.data.created} affaires créées, ${data.data.updated} mises à jour.`);
     },
+    onError: (error: any) => {
+      console.error('Import error:', error);
+      alert(`Erreur d'import : ${error.response?.data?.error || error.message || 'Erreur inconnue'}`);
+    },
   });
 
   const handleEdit = (a: Affaire) => {

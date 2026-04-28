@@ -437,8 +437,22 @@ export function Affaires() {
               onChange={(e) => setForm({ ...form, viaPartenaire: e.target.checked })}
               className="w-4 h-4 accent-purple"
             />
-            <span className="text-sm font-medium">🤝 Affaire apportée par le partenaire (commission 40% HT)</span>
+            <span className="text-sm font-medium">🤝 Affaire apportée par le partenaire</span>
           </label>
+
+          {form.viaPartenaire && (
+            <div className="space-y-1.5">
+              <Label>Taux de commission (%)</Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                value={form.tauxCommission}
+                onChange={(e) => setForm({ ...form, tauxCommission: e.target.value })}
+                placeholder="40"
+              />
+            </div>
+          )}
 
           {form.viaPartenaire && ht > 0 && (
             <div className="bg-purple-light border border-purple/30 rounded-lg p-3 space-y-1 text-sm">

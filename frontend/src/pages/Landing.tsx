@@ -10,9 +10,7 @@ export function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-leaf flex items-center justify-center">
-                <Leaf size={16} className="text-white" />
-              </div>
+              <img src="/logo.png" alt="kt-Optima" className="h-8 w-auto" />
               <span className="font-serif font-semibold text-2xl">kt-Optima</span>
             </div>
             <nav className="hidden md:flex items-center gap-6">
@@ -240,9 +238,7 @@ export function Landing() {
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-leaf flex items-center justify-center">
-                  <Leaf size={16} className="text-white" />
-                </div>
+                <img src="/logo.png" alt="kt-Optima" className="h-8 w-auto" />
                 <span className="font-serif font-semibold text-2xl">kt-Optima</span>
               </div>
               <p className="text-gray-400 mb-4 max-w-md text-base">

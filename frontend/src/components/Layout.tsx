@@ -50,9 +50,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-leaf flex items-center justify-center">
-              <Leaf size={16} className="text-white" />
-            </div>
+            <img src="/logo.png" alt="kt-Optima" className="h-8 w-auto" />
             <div className="font-serif font-semibold">kt-Optima</div>
           </div>
           {organization && (

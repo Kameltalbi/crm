@@ -33,8 +33,8 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sage to-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-3">
-          <div className="mx-auto w-12 h-12 rounded-xl bg-leaf flex items-center justify-center">
-            <Leaf className="text-white" size={22} />
+          <div className="mx-auto">
+            <img src="/logo.png" alt="kt-Optima" className="h-16 w-auto" />
           </div>
           <div>
             <CardTitle>kt-Optima</CardTitle>

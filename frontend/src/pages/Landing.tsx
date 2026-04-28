@@ -1,18 +1,8 @@
 import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/lib/auth';
 
 export function Landing() {
-  const { token } = useAuth();
-  const navigate = useNavigate();
-
-  // Redirect authenticated users to dashboard
-  if (token) {
-    navigate('/', { replace: true });
-    return null;
-  }
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}

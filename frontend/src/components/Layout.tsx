@@ -51,7 +51,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </button>
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="kt-Optima" className="h-8 w-auto" />
-            <div className="font-serif font-semibold">kt-Optima</div>
           </div>
           {organization && (
             <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l">

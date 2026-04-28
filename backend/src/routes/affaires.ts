@@ -187,6 +187,7 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
     let data: any[] = [];
     for (const sheetName of workbook.SheetNames) {
       const worksheet = workbook.Sheets[sheetName];
+      console.log(`Sheet ${sheetName} range:`, worksheet['!ref']);
       const sheetData = xlsx.utils.sheet_to_json(worksheet);
       console.log(`Sheet ${sheetName} has ${sheetData.length} rows`);
       if (sheetData.length > 0) {

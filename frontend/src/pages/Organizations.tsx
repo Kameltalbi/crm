@@ -71,9 +71,11 @@ export function Organizations() {
         finalData.logoUrl = uploadRes.data.url;
         console.log('Upload response:', uploadRes.data);
       }
+      console.log('Updating organization:', id, finalData);
       return api.put(`/organizations/${id}`, finalData).then((r) => r.data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update successful:', data);
       qc.invalidateQueries({ queryKey: ['organizations'] });
       setOpen(false);
       setForm(EMPTY);
@@ -82,6 +84,7 @@ export function Organizations() {
     },
     onError: (error) => {
       console.error('Update error:', error);
+      alert('Erreur lors de la mise à jour: ' + (error as any).message);
     },
   });
 

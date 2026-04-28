@@ -461,7 +461,7 @@ export function Affaires() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending || !form.clientId || !form.title || !form.montantHT}>
+            <Button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending || !form.clientId || !form.montantHT}>
               💾 Enregistrer
             </Button>
           </DialogFooter>

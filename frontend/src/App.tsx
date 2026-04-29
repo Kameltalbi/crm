@@ -10,6 +10,7 @@ import { AffaireDetail } from './pages/AffaireDetail';
 import { Clients } from './pages/Clients';
 import { Leads } from './pages/Leads';
 import { Calendar } from './pages/Calendar';
+import { Expenses } from './pages/Expenses';
 import { Settings } from './pages/Settings';
 import { Users } from './pages/Users';
 import { Products } from './pages/Products';
@@ -47,6 +48,7 @@ export default function App() {
                 <Route path="/clients" element={<Clients />} />
                 <Route path="/leads" element={<Leads />} />
                 <Route path="/calendar" element={<Calendar />} />
+                <Route path="/expenses" element={<Expenses />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/settings/organizations" element={<Organizations />} />
                 <Route path="/users" element={<Users />} />

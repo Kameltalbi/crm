@@ -33,6 +33,7 @@ model Organization {
   activites   Activite[]
   leadActivites LeadActivite[]
   calendarEvents CalendarEvent[]
+  expenses    Expense[]
   emails      Email[]
   gmailTokens GmailToken[]
   previsionnels PrevisionMois[]
@@ -61,6 +62,7 @@ model User {
   leadsCreated     Lead[]
   affairesCreated  Affaire[]
   calendarEventsCreated CalendarEvent[]
+  expensesCreated  Expense[]
   gmailTokens      GmailToken?
   notifications    Notification[]
   refreshTokens    RefreshToken[]
@@ -137,6 +139,7 @@ model Lead {
   organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   activites     LeadActivite[]
   calendarEvents CalendarEvent[]
+  expenses      Expense[]
 
   @@index([organizationId])
   @@index([status])
@@ -216,6 +219,61 @@ enum EventStatus {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  EXPENSE — Dépense
+// ═══════════════════════════════════════════════════════════════
+model Expense {
+  id            String   @id @default(cuid())
+  organizationId String
+  title         String
+  description   String?  @db.Text
+  amount        Decimal  @db.Decimal(12, 3) // DT
+  currency      String   @default("TND")
+  category      ExpenseCategory @default(OPERATIONAL)
+  date          DateTime @default(now())
+  relatedAffaireId String?
+  relatedAffaire Affaire? @relation(fields: [relatedAffaireId], references: [id], onDelete: SetNull)
+  relatedLeadId String?
+  relatedLead   Lead?    @relation(fields: [relatedLeadId], references: [id], onDelete: SetNull)
+  status        ExpenseStatus @default(PENDING)
+  receiptUrl    String?  // URL du justificatif
+  notes         String?  @db.Text
+  deletedAt     DateTime? // Soft delete
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdById   String?
+  createdBy     User?    @relation(fields: [createdById], references: [id])
+
+  // Relations
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([date])
+  @@index([category])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("expenses")
+}
+
+enum ExpenseCategory {
+  OPERATIONAL // Frais opérationnels
+  TRAVEL // Déplacements
+  MEAL // Repas
+  ACCOMMODATION // Hébergement
+  EQUIPMENT // Matériel
+  SOFTWARE // Logiciels
+  MARKETING // Marketing
+  COMMISSION // Commissions
+  OTHER // Autre
+}
+
+enum ExpenseStatus {
+  PENDING // En attente
+  APPROVED // Approuvé
+  REJECTED // Rejeté
+  PAID // Payé
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  AFFAIRE — Deal / Opportunité (cœur du CRM)
 // ═══════════════════════════════════════════════════════════════
 model Affaire {
@@ -265,6 +323,7 @@ model Affaire {
   organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   activites     Activite[]
   calendarEvents CalendarEvent[]
+  expenses      Expense[]
   emails        Email[]
 
   @@index([organizationId])

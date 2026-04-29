@@ -20,6 +20,7 @@ import { organizationsRoutes } from './routes/organizations.js';
 import { uploadRoutes } from './routes/upload.js';
 import { notificationsRouter } from './routes/notifications.js';
 import { calendarRoutes } from './routes/calendar.js';
+import { expensesRoutes } from './routes/expenses.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -63,6 +64,7 @@ app.use('/api/organizations', organizationsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/expenses', expensesRoutes);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

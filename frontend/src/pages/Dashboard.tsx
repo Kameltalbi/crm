@@ -17,18 +17,20 @@ export function Dashboard() {
     queryKey: ['kpis', selectedYear],
     queryFn: () => api.get(`/kpis?annee=${selectedYear}`).then((r) => r.data),
   });
-  const { data: affaires } = useQuery<Affaire[]>({
+  const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
     queryKey: ['affaires', selectedYear],
     queryFn: () => api.get(`/affaires?annee=${selectedYear}`).then((r) => r.data),
   });
+  const affaires = affairesData?.data || [];
   const { data: previsionnel } = useQuery({
     queryKey: ['previsionnel', selectedYear],
     queryFn: () => api.get(`/previsionnel/${selectedYear}`).then((r) => r.data),
   });
-  const { data: products } = useQuery({
+  const { data: productsData } = useQuery<{ data: any[], pagination: any }>({
     queryKey: ['products'],
     queryFn: () => api.get('/products').then((r) => r.data),
   });
+  const products = productsData?.data || [];
 
   if (!kpis || !affaires) {
     return <div className="text-center py-20 text-muted-foreground">Chargement...</div>;

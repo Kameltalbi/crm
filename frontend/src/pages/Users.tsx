@@ -15,10 +15,11 @@ export function Users() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
-  const { data: users = [] } = useQuery<User[]>({
+  const { data: usersData } = useQuery<{ data: User[], pagination: any }>({
     queryKey: ['users'],
     queryFn: () => api.get('/users').then((r) => r.data),
   });
+  const users = usersData?.data || [];
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ['me'],

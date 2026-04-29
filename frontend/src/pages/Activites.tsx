@@ -52,15 +52,17 @@ export function Activites() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
 
-  const { data: activites = [] } = useQuery<Activite[]>({
+  const { data: activitesData } = useQuery<{ data: Activite[], pagination: any }>({
     queryKey: ['activites'],
     queryFn: () => api.get('/activites').then((r) => r.data),
   });
+  const activites = activitesData?.data || [];
 
-  const { data: affaires = [] } = useQuery<Affaire[]>({
+  const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
     queryKey: ['affaires'],
     queryFn: () => api.get('/affaires').then((r) => r.data),
   });
+  const affaires = affairesData?.data || [];
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {

@@ -10,11 +10,12 @@ export function Notifications() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const { data: notifications = [] } = useQuery<Notification[]>({
+  const { data: notificationsData } = useQuery<{ data: Notification[], pagination: any }>({
     queryKey: ['notifications'],
     queryFn: () => api.get('/notifications').then((r) => r.data),
     refetchInterval: 60000, // Refetch every minute
   });
+  const notifications = notificationsData?.data || [];
 
   const { data: unreadCount } = useQuery<{ count: number }>({
     queryKey: ['notifications', 'unread-count'],

@@ -15,10 +15,11 @@ export function Products() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
-  const { data: products = [], error, isLoading } = useQuery<Product[]>({
+  const { data: productsData, error, isLoading } = useQuery<{ data: Product[], pagination: any }>({
     queryKey: ['products'],
     queryFn: () => api.get('/products').then((r) => r.data),
   });
+  const products = productsData?.data || [];
 
   const saveMutation = useMutation({
     mutationFn: (data: typeof EMPTY) => {

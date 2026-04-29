@@ -20,10 +20,11 @@ export function Clients() {
   const [search, setSearch] = useState('');
   const [importFile, setImportFile] = useState<File | null>(null);
 
-  const { data: clients = [] } = useQuery<Client[]>({
+  const { data: clientsData } = useQuery<{ data: Client[], pagination: any }>({
     queryKey: ['clients'],
     queryFn: () => api.get('/clients').then((r) => r.data),
   });
+  const clients = clientsData?.data || [];
 
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) ||

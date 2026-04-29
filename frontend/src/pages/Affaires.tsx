@@ -42,18 +42,21 @@ export function Affaires() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY);
 
-  const { data: affaires = [] } = useQuery<Affaire[]>({
+  const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
     queryKey: ['affaires', filters],
     queryFn: () => api.get('/affaires', { params: { ...filters } }).then((r) => r.data),
   });
-  const { data: clients = [] } = useQuery<Client[]>({
+  const affaires = affairesData?.data || [];
+  const { data: clientsData } = useQuery<{ data: Client[], pagination: any }>({
     queryKey: ['clients'],
     queryFn: () => api.get('/clients').then((r) => r.data),
   });
-  const { data: products = [] } = useQuery<Product[]>({
+  const clients = clientsData?.data || [];
+  const { data: productsData } = useQuery<{ data: Product[], pagination: any }>({
     queryKey: ['products'],
     queryFn: () => api.get('/products').then((r) => r.data),
   });
+  const products = productsData?.data || [];
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {

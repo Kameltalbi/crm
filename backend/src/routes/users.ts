@@ -2,12 +2,12 @@ import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import { prisma } from '../db/prisma.js';
-import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
 import { UserRole } from '@prisma/client';
 import { parsePagination } from '../lib/pagination.js';
 
 export const usersRoutes = Router();
-usersRoutes.use(requireAuth);
+usersRoutes.use(auth);
 
 const userSchema = z.object({
   email: z.string().email(),

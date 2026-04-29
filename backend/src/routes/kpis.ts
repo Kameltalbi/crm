@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { prisma } from '../db/prisma.js';
-import { requireAuth } from '../middleware/auth.js';
+import auth from '../middleware/auth.js';
 
 export const kpisRoutes = Router();
-kpisRoutes.use(requireAuth);
+kpisRoutes.use(auth);
 
 // Algorithme de prévision intelligent
 function calculateSmartForecast(

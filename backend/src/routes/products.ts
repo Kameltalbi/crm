@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
 import { parsePagination } from '../lib/pagination.js';
 import { ProductType } from '@prisma/client';
 
 export const productsRoutes = Router();
-productsRoutes.use(requireAuth);
+productsRoutes.use(auth);
 
 const productSchema = z.object({
   name: z.string().min(1),

@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { requireAuth } from '../middleware/auth.js';
+import auth from '../middleware/auth.js';
 import { softfactureClient } from '../services/softfacture.js';
 
 export const softfactureRoutes = Router();
-softfactureRoutes.use(requireAuth);
+softfactureRoutes.use(auth);
 
 // ─── Créer un DEVIS dans Softfacture à partir d'une affaire ─────
 softfactureRoutes.post('/devis/:affaireId', async (req, res, next) => {

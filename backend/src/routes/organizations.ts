@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
 export const organizationsRoutes = Router();
-organizationsRoutes.use(requireAuth);
+organizationsRoutes.use(auth);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({

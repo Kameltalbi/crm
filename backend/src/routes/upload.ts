@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { requireAuth } from '../middleware/auth.js';
+import auth from '../middleware/auth.js';
 
 export const uploadRoutes = Router();
-uploadRoutes.use(requireAuth);
+uploadRoutes.use(auth);
 
 // Configure multer for file storage
 const storage = multer.diskStorage({

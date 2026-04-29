@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
 import { AuditAction } from '@prisma/client';
 import { logAudit } from '../lib/audit.js';
 import { parsePagination, PaginationResult } from '../lib/pagination.js';
 
 export const clientsRoutes = Router();
-clientsRoutes.use(requireAuth);
+clientsRoutes.use(auth);
 
 const clientSchema = z.object({
   name: z.string().min(1),

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
 import { AffaireType, StatutAffaire } from '@prisma/client';
 import multer from 'multer';
 import xlsx from 'xlsx';
@@ -10,7 +10,7 @@ import fs from 'fs';
 import { parsePagination } from '../lib/pagination.js';
 
 export const affairesRoutes = Router();
-affairesRoutes.use(requireAuth);
+affairesRoutes.use(auth);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({

@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
 
 export const previsionnelRoutes = Router();
-previsionnelRoutes.use(requireAuth);
+previsionnelRoutes.use(auth);
 
 previsionnelRoutes.get('/:annee', async (req: AuthRequest, res, next) => {
   try {

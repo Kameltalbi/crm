@@ -1,19 +1,19 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
 import { gmailService } from '../services/gmail.js';
 
 export const gmailRoutes = Router();
 
 // ─── OAuth2 : initier la connexion ─────────────────────────────
-gmailRoutes.get('/auth', requireAuth, (req: AuthRequest, res) => {
+gmailRoutes.get('/auth', auth, (req: AuthRequest, res) => {
   const url = gmailService.getAuthUrl(req.userId!);
   res.json({ url });
 });
 
 // ─── OAuth2 : callback (après consentement Google) ─────────────
-gmailRoutes.get('/callback', async (req, res, next) => {
+gmailRoutes.get('/callback', auth, async (req, res, next) => {
   try {
     const { code, state } = req.query;
     if (!code || !state) return res.status(400).send('Paramètres manquants');
@@ -43,7 +43,7 @@ gmailRoutes.get('/callback', async (req, res, next) => {
 });
 
 // ─── Statut connexion Gmail ────────────────────────────────────
-gmailRoutes.get('/status', requireAuth, async (req: AuthRequest, res, next) => {
+gmailRoutes.get('/status', auth, async (req: AuthRequest, res, next) => {
   try {
     const token = await prisma.gmailToken.findUnique({
       where: { userId: req.userId! },
@@ -53,7 +53,7 @@ gmailRoutes.get('/status', requireAuth, async (req: AuthRequest, res, next) => {
 });
 
 // ─── Envoyer un email (avec PJ optionnelle) ────────────────────
-gmailRoutes.post('/send', requireAuth, async (req: AuthRequest, res, next) => {
+gmailRoutes.post('/send', auth, async (req: AuthRequest, res, next) => {
   try {
     const schema = z.object({
       affaireId:  z.string().optional(),

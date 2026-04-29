@@ -7,7 +7,7 @@ export interface AuthRequest extends Request {
   organizationId?: string;
 }
 
-export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Token manquant' });
@@ -32,4 +32,6 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
   } catch {
     return res.status(401).json({ error: 'Token invalide ou expiré' });
   }
-}
+};
+
+export default auth;

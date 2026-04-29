@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth } from '../middleware/auth';
+import auth from '../middleware/auth.js';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // Apply auth middleware to all routes
-router.use(requireAuth);
+router.use(auth);
 
 // GET /calendar - Get all calendar events for the organization
 router.get('/', async (req: any, res) => {

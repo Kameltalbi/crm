@@ -32,6 +32,7 @@ model Organization {
   products    Product[]
   activites   Activite[]
   leadActivites LeadActivite[]
+  calendarEvents CalendarEvent[]
   emails      Email[]
   gmailTokens GmailToken[]
   previsionnels PrevisionMois[]
@@ -59,6 +60,7 @@ model User {
   clientsCreated   Client[]
   leadsCreated     Lead[]
   affairesCreated  Affaire[]
+  calendarEventsCreated CalendarEvent[]
   gmailTokens      GmailToken?
   notifications    Notification[]
   refreshTokens    RefreshToken[]
@@ -134,6 +136,7 @@ model Lead {
   // Relations
   organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   activites     LeadActivite[]
+  calendarEvents CalendarEvent[]
 
   @@index([organizationId])
   @@index([status])
@@ -159,6 +162,57 @@ enum LeadStatus {
   QUALIFIED  // Qualifié, prêt pour conversion
   CONVERTED  // Converti en client
   LOST       // Perdu
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CALENDAR EVENT — Événements du calendrier
+// ═══════════════════════════════════════════════════════════════
+model CalendarEvent {
+  id            String   @id @default(cuid())
+  organizationId String
+  title         String
+  description   String?  @db.Text
+  startDate     DateTime
+  endDate       DateTime
+  allDay        Boolean  @default(false)
+  eventType     EventType @default(MEETING)
+  location      String?
+  relatedAffaireId String?
+  relatedAffaire Affaire? @relation(fields: [relatedAffaireId], references: [id], onDelete: SetNull)
+  relatedLeadId String?
+  relatedLead   Lead?    @relation(fields: [relatedLeadId], references: [id], onDelete: SetNull)
+  status        EventStatus @default(SCHEDULED)
+  reminderMinutes Int?   // Minutes avant l'événement pour le rappel
+  deletedAt     DateTime? // Soft delete
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdById   String?
+  createdBy     User?    @relation(fields: [createdById], references: [id])
+
+  // Relations
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([startDate])
+  @@index([eventType])
+  @@index([deletedAt])
+  @@map("calendar_events")
+}
+
+enum EventType {
+  MEETING
+  CALL
+  TASK
+  REMINDER
+  DEADLINE
+  AUTRE
+}
+
+enum EventStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  POSTPONED
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -210,6 +264,7 @@ model Affaire {
   // Relations
   organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   activites     Activite[]
+  calendarEvents CalendarEvent[]
   emails        Email[]
 
   @@index([organizationId])

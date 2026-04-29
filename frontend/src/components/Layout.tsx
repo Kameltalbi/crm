@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText, Building2, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ const nav = [
   { to: '/affaires',     label: 'Affaires',      icon: Briefcase       },
   { to: '/clients',      label: 'Clients',       icon: Users           },
   { to: '/leads',        label: 'Leads',         icon: UserCheck       },
+  { to: '/calendar',     label: 'Calendrier',    icon: CalendarIcon    },
   { to: '/activites',    label: 'Activités',     icon: FileText        },
 ];
 

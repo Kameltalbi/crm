@@ -123,42 +123,42 @@ export function Clients() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         <Card className="border-2">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 bg-gray-100 rounded-lg">
+                <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-gray-600" />
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground">Total clients</p>
-                <p className="text-lg md:text-2xl font-bold">{clients.length}</p>
+                <p className="text-[9px] md:text-[10px] text-muted-foreground">Total clients</p>
+                <p className="text-sm md:text-lg font-bold">{clients.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="border-2 border-emerald-200 bg-emerald-50/30">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" />
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 bg-emerald-100 rounded-lg">
+                <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-emerald-600" />
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground">Total affaires</p>
-                <p className="text-lg md:text-2xl font-bold text-emerald-600">{totalAffaires}</p>
+                <p className="text-[9px] md:text-[10px] text-muted-foreground">Total affaires</p>
+                <p className="text-sm md:text-lg font-bold text-emerald-600">{totalAffaires}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card className="border-2 border-blue-200 bg-blue-50/30">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <div className="p-1.5 bg-blue-100 rounded-lg">
+                <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground">Moyenne/client</p>
-                <p className="text-lg md:text-2xl font-bold text-blue-600">{avgAffairesPerClient}</p>
+                <p className="text-[9px] md:text-[10px] text-muted-foreground">Moyenne/client</p>
+                <p className="text-sm md:text-lg font-bold text-blue-600">{avgAffairesPerClient}</p>
               </div>
             </div>
           </CardContent>

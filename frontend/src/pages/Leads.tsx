@@ -144,7 +144,7 @@ export function Leads() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select value={filterStatus || 'all'} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Tous statuts" />
           </SelectTrigger>
@@ -155,7 +155,7 @@ export function Leads() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterSource} onValueChange={setFilterSource}>
+        <Select value={filterSource || 'all'} onValueChange={setFilterSource}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Toutes sources" />
           </SelectTrigger>

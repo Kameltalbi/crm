@@ -352,20 +352,20 @@ export function Calendar() {
               </div>
               <div className="space-y-1.5">
                 <Label>Affaire liée</Label>
-                <Select value={form.relatedAffaireId} onValueChange={(v) => setForm({ ...form, relatedAffaireId: v })}>
+                <Select value={form.relatedAffaireId || 'none'} onValueChange={(v) => setForm({ ...form, relatedAffaireId: v === 'none' ? '' : v })}>
                   <SelectTrigger><SelectValue placeholder="Aucune" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucune</SelectItem>
+                    <SelectItem value="none">Aucune</SelectItem>
                     {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Lead lié</Label>
-                <Select value={form.relatedLeadId} onValueChange={(v) => setForm({ ...form, relatedLeadId: v })}>
+                <Select value={form.relatedLeadId || 'none'} onValueChange={(v) => setForm({ ...form, relatedLeadId: v === 'none' ? '' : v })}>
                   <SelectTrigger><SelectValue placeholder="Aucun" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucun</SelectItem>
+                    <SelectItem value="none">Aucun</SelectItem>
                     {leads.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
                   </SelectContent>
                 </Select>

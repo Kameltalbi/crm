@@ -120,6 +120,25 @@ export function Previsionnel() {
         </Card>
       </div>
 
+      {/* Bilan Carbone and Formation cards - same size on same line */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">🌍 Bilan Carbone</div>
+            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caBilansHT)}</div>
+            <div className="text-xs opacity-75 mt-1">CA total bilans</div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">📚 Formations</div>
+            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caFormationsHT)}</div>
+            <div className="text-xs opacity-75 mt-1">CA total formations</div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Mois grid - collapsible/secondary */}
       <details className="group">
         <summary className="cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground mb-3">

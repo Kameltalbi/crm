@@ -21,15 +21,26 @@ gmailRoutes.get('/callback', auth, async (req, res, next) => {
     const userId = String(state);
     const tokens = await gmailService.exchangeCode(String(code));
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true }
+    });
+
+    if (!user) {
+      return res.status(404).send('Utilisateur introuvable');
+    }
+
     await prisma.gmailToken.upsert({
       where: { userId },
       update: {
+        organizationId: user.organizationId,
         accessToken:  tokens.access_token!,
         refreshToken: tokens.refresh_token!,
         expiresAt:    new Date(tokens.expiry_date!),
         scope:        tokens.scope || '',
       },
       create: {
+        organizationId: user.organizationId,
         userId,
         accessToken:  tokens.access_token!,
         refreshToken: tokens.refresh_token!,
@@ -82,7 +93,8 @@ gmailRoutes.post('/send', auth, async (req: AuthRequest, res, next) => {
 
     const emailLog = await prisma.email.create({
       data: {
-        affaireId: data.affaireId,
+        organizationId: req.organizationId!,
+        affaireId: data.affaireId || null,
         messageId: sent.messageId,
         fromEmail: sent.from,
         toEmail:   data.to,
@@ -96,6 +108,7 @@ gmailRoutes.post('/send', auth, async (req: AuthRequest, res, next) => {
     if (data.affaireId) {
       await prisma.activite.create({
         data: {
+          organizationId: req.organizationId!,
           affaireId: data.affaireId,
           type: 'EMAIL_ENVOYE',
           title: `Email envoyé à ${data.to}`,

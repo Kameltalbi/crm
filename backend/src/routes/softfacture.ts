@@ -22,7 +22,7 @@ softfactureRoutes.post('/devis/:affaireId', async (req, res, next) => {
     const result = await softfactureClient.creerDevis({
       clientNom:    affaire.client.name,
       clientEmail:  affaire.client.email,
-      clientMatricule: affaire.client.matricule,
+      clientMatricule: affaire.client.matricule!,
       designation:  affaire.title,
       montantHT:    Number(affaire.montantHT),
       tvaPct:       19,
@@ -39,6 +39,7 @@ softfactureRoutes.post('/devis/:affaireId', async (req, res, next) => {
     });
     await prisma.activite.create({
       data: {
+        organizationId: affaire.organizationId,
         affaireId: affaire.id,
         type:      'DEVIS_CREE',
         title:     `Devis ${result.numero} créé`,
@@ -64,7 +65,7 @@ softfactureRoutes.post('/facture/:affaireId', async (req, res, next) => {
     const result = await softfactureClient.creerFacture({
       clientNom:       affaire.client.name,
       clientEmail:     affaire.client.email,
-      clientMatricule: affaire.client.matricule,
+      clientMatricule: affaire.client.matricule!,
       designation:     affaire.title,
       montantHT:       Number(affaire.montantHT),
       tvaPct:          19,
@@ -84,6 +85,7 @@ softfactureRoutes.post('/facture/:affaireId', async (req, res, next) => {
     });
     await prisma.activite.create({
       data: {
+        organizationId: affaire.organizationId,
         affaireId: affaire.id,
         type:      'FACTURE_CREEE',
         title:     `Facture ${result.numero} créée`,

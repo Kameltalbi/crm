@@ -65,37 +65,42 @@ kpisRoutes.get('/', async (req: any, res, next) => {
   try {
     const annee = Number(req.query.annee) || new Date().getFullYear();
     const affaires = await prisma.affaire.findMany({
-      where: { anneePrevue: annee, organizationId: req.organizationId },
+      where: { organizationId: req.organizationId },
       include: { client: true },
     });
 
-    const realise  = affaires.filter(a => a.statut === 'REALISE');
-    const pipeline = affaires.filter(a => a.statut === 'PIPELINE');
-    const prospect = affaires.filter(a => a.statut === 'PROSPECTION');
-    const perdu    = affaires.filter(a => a.statut === 'PERDU');
+    // CA (performance actuelle) - toutes les affaires REALISE, indépendamment de l'année prévue
+    const allRealise = affaires.filter(a => a.statut === 'REALISE');
+    const caRealise = allRealise.reduce((s, a) => s + Number(a.montantHT), 0);
+
+    // Pipeline et prospection - filtrés par année prévue
+    const affairesAnnee = affaires.filter(a => a.anneePrevue === annee);
+    const pipeline = affairesAnnee.filter(a => a.statut === 'PIPELINE');
+    const prospect = affairesAnnee.filter(a => a.statut === 'PROSPECTION');
+    const perdu    = affairesAnnee.filter(a => a.statut === 'PERDU');
 
     const sum = (arr: typeof affaires) =>
       arr.reduce((s, a) => s + Number(a.montantHT), 0);
 
-    const commissionDue = realise
+    const commissionDue = allRealise
       .filter(a => a.viaPartenaire)
       .reduce((s, a) => s + Number(a.montantHT) * (Number(a.tauxCommission) / 100), 0);
 
-    const netRealise = sum(realise) - commissionDue;
-    const netPondere = sum(realise) +
+    const netRealise = caRealise - commissionDue;
+    const netPondere = caRealise +
       pipeline.reduce((s, a) => s + Number(a.montantHT) * (a.probabilite / 100), 0);
 
-    // Calculer la prévision intelligente
-    const smartForecast = calculateSmartForecast(realise, pipeline, prospect, perdu);
+    // Calculer la prévision intelligente (pour l'année sélectionnée)
+    const smartForecast = calculateSmartForecast(allRealise, pipeline, prospect, perdu);
 
     // Répartition par type
     const ca_bilans     = sum(affaires.filter(a => a.type === 'BILAN_CARBONE'));
     const ca_formations = sum(affaires.filter(a => a.type === 'FORMATION'));
 
-    // Distribution mensuelle
+    // Distribution mensuelle (pour l'année sélectionnée)
     const parMois: Record<number, { realise: number; pipeline: number; prospect: number }> = {};
     for (let m = 1; m <= 12; m++) parMois[m] = { realise: 0, pipeline: 0, prospect: 0 };
-    for (const a of affaires) {
+    for (const a of affairesAnnee) {
       const k = a.statut === 'REALISE' ? 'realise' :
                 a.statut === 'PIPELINE' ? 'pipeline' :
                 a.statut === 'PROSPECTION' ? 'prospect' : null;
@@ -104,17 +109,17 @@ kpisRoutes.get('/', async (req: any, res, next) => {
 
     res.json({
       annee,
-      caRealise: sum(realise),
+      caRealise,
       caPipeline: sum(pipeline),
       caProspection: sum(prospect),
-      caTotal: sum([...realise, ...pipeline, ...prospect]),
+      caTotal: caRealise + sum(pipeline) + sum(prospect),
       caPondere: netPondere,
       commissionPartenaireDue: commissionDue,
       netRealise,
       caBilans: ca_bilans,
       caFormations: ca_formations,
       counts: {
-        realise: realise.length,
+        realise: allRealise.length,
         pipeline: pipeline.length,
         prospect: prospect.length,
         perdu: perdu.length,

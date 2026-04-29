@@ -17,22 +17,22 @@ function KpiCard({ title, subtitle, value, icon, color }: {
   icon: React.ReactNode;
   color: string;
 }) {
-  const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
-    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
-    blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
-    violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
-    amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
+  const colorClasses: Record<string, { bg: string; text: string; border: string; iconBg: string }> = {
+    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', iconBg: 'bg-emerald-100' },
+    blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', iconBg: 'bg-blue-100' },
+    violet: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', iconBg: 'bg-violet-100' },
+    amber: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', iconBg: 'bg-amber-100' },
   };
   const colors = colorClasses[color] || colorClasses.emerald;
   return (
-    <Card className={`border-2 ${colors.border} hover:shadow-md transition-shadow`}>
-      <CardContent className="p-5">
+    <Card className={`border ${colors.border} hover:shadow-lg transition-all duration-200 hover:-translate-y-1`}>
+      <CardContent className="p-6">
         <div className="flex items-start justify-between">
-          <div className={`p-2 rounded-lg ${colors.bg} ${colors.text}`}>{icon}</div>
+          <div className={`p-3 rounded-xl ${colors.iconBg} ${colors.text}`}>{icon}</div>
         </div>
         <div className="mt-4">
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          <p className="text-sm font-medium text-gray-600 mt-1">{title}</p>
+          <p className="text-3xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-semibold text-gray-700 mt-1">{title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         </div>
       </CardContent>

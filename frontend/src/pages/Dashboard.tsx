@@ -55,17 +55,23 @@ export function Dashboard() {
     };
   };
 
-  // Calculate metrics by business type (BILAN_CARBONE vs FORMATION)
-  const bilans = affaires.filter(a => a.type === 'BILAN_CARBONE');
-  const formations = affaires.filter(a => a.type === 'FORMATION');
+  // Calculate metrics by product (dynamic based on organization's products)
+  const productMetrics = products.length > 0 ? products.map((product: any) => {
+    const productAffaires = affaires.filter(a => a.productId === product.id);
+    const metrics = calculateMetrics(productAffaires);
+    return {
+      product,
+      metrics,
+    };
+  }) : [];
 
-  const bilanMetrics = calculateMetrics(bilans);
-  const formationMetrics = calculateMetrics(formations);
-
-  const typeDistributionData = [
-    { name: 'Bilan Carbone', value: bilanMetrics.caRealise + bilanMetrics.caPipeline + bilanMetrics.caProspection, color: '#22c55e' },
-    { name: 'Formation', value: formationMetrics.caRealise + formationMetrics.caPipeline + formationMetrics.caProspection, color: '#f59e0b' },
-  ];
+  const typeDistributionData = productMetrics.length > 0
+    ? productMetrics.map((pm: any, index: number) => ({
+        name: pm.product.name,
+        value: pm.metrics.caRealise + pm.metrics.caPipeline + pm.metrics.caProspection,
+        color: ['#22c55e', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'][index % 5],
+      }))
+    : [{ name: 'Total', value: kpis.caRealise + kpis.caPipeline + kpis.caProspection, color: '#22c55e' }];
 
   // Calculate cumulative CA from previsionnel data
   const cumulativeData = previsionnel?.mois ? previsionnel.mois.map((m: any, index: number) => {
@@ -166,63 +172,45 @@ export function Dashboard() {
 
       {/* Business Type Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="border-2 border-emerald-100">
-          <CardHeader>
-            <CardTitle className="text-base md:text-lg flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              Bilan Carbone
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">CA Total</p>
-                <p className="text-xl md:text-2xl font-bold text-emerald-600">{fmtDT(bilanMetrics.caRealise + bilanMetrics.caPipeline + bilanMetrics.caProspection)}</p>
+        {productMetrics.length > 0 ? productMetrics.map((pm: any, index: number) => (
+          <Card key={pm.product.id} className="border-2">
+            <CardHeader>
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ['#22c55e', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'][index % 5] }} />
+                {pm.product.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">CA Total</p>
+                  <p className="text-xl md:text-2xl font-bold">{fmtDT(pm.metrics.caRealise + pm.metrics.caPipeline + pm.metrics.caProspection)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Nombre d'affaires</p>
+                  <p className="text-xl md:text-2xl font-bold">{pm.metrics.count}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Réalisé</p>
+                  <p className="text-lg font-semibold text-emerald-600">{fmtDT(pm.metrics.caRealise)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Pipeline</p>
+                  <p className="text-lg font-semibold text-blue-600">{fmtDT(pm.metrics.caPipeline)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Nombre d'affaires</p>
-                <p className="text-xl md:text-2xl font-bold">{bilanMetrics.count}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Réalisé</p>
-                <p className="text-lg font-semibold text-emerald-600">{fmtDT(bilanMetrics.caRealise)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Pipeline</p>
-                <p className="text-lg font-semibold text-blue-600">{fmtDT(bilanMetrics.caPipeline)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-amber-100">
-          <CardHeader>
-            <CardTitle className="text-base md:text-lg flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-amber-500" />
-              Formation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">CA Total</p>
-                <p className="text-xl md:text-2xl font-bold text-amber-600">{fmtDT(formationMetrics.caRealise + formationMetrics.caPipeline + formationMetrics.caProspection)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Nombre d'affaires</p>
-                <p className="text-xl md:text-2xl font-bold">{formationMetrics.count}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Réalisé</p>
-                <p className="text-lg font-semibold text-emerald-600">{fmtDT(formationMetrics.caRealise)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Pipeline</p>
-                <p className="text-lg font-semibold text-blue-600">{fmtDT(formationMetrics.caPipeline)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base md:text-lg">Aucun produit</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Créez des produits pour voir les statistiques par produit.</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Charts Row */}

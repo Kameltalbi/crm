@@ -70,7 +70,7 @@ export function OrganizationSettings() {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ex: kt-Optima"
+            placeholder="Ex: ktOptima"
           />
         </div>
 

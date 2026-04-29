@@ -1,4 +1,4 @@
-// Prisma schema pour kt-Optima
+// Prisma schema pour ktOptima
 // Docs: https://pris.ly/d/prisma-schema
 
 generator client {

@@ -34,10 +34,10 @@ export function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-3">
           <div className="mx-auto">
-            <img src="/logo.png" alt="kt-Optima" className="h-16 w-auto" />
+            <img src="/logo.png" alt="ktOptima" className="h-16 w-auto" />
           </div>
           <div>
-            <CardTitle>kt-Optima</CardTitle>
+            <CardTitle>ktOptima</CardTitle>
             <CardDescription>Connexion à votre espace</CardDescription>
           </div>
         </CardHeader>

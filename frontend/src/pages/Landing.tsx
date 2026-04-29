@@ -10,8 +10,8 @@ export function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="kt-Optima" className="h-8 w-auto" />
-              <span className="font-serif font-semibold text-2xl">kt-Optima</span>
+              <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
+              <span className="font-serif font-semibold text-2xl">ktOptima</span>
             </div>
             <nav className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
@@ -53,7 +53,7 @@ export function Landing() {
               <span className="text-leaf">intelligence</span>
             </h1>
             <p className="text-2xl md:text-3xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              kt-Optima vous aide à suivre vos affaires, gérer vos clients et optimiser vos prévisions avec une interface simple et puissante.
+              ktOptima vous aide à suivre vos affaires, gérer vos clients et optimiser vos prévisions avec une interface simple et puissante.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">
@@ -162,10 +162,10 @@ export function Landing() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6">
-                Pourquoi choisir kt-Optima ?
+                Pourquoi choisir ktOptima ?
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
-                Conçu spécifiquement pour les entreprises tunisiennes, kt-Optima s'adapte à vos besoins locaux avec une interface intuitive et des fonctionnalités puissantes.
+                Conçu spécifiquement pour les entreprises tunisiennes, ktOptima s'adapte à vos besoins locaux avec une interface intuitive et des fonctionnalités puissantes.
               </p>
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
@@ -218,7 +218,7 @@ export function Landing() {
               <div className="bg-gradient-to-br from-leaf to-emerald-600 rounded-3xl p-8 text-white">
                 <h3 className="text-2xl font-bold mb-4">Prêt à transformer votre entreprise ?</h3>
                 <p className="text-emerald-100 mb-6">
-                  Rejoignez des centaines d'entreprises tunisiennes qui utilisent déjà kt-Optima.
+                  Rejoignez des centaines d'entreprises tunisiennes qui utilisent déjà ktOptima.
                 </p>
                 <Link to="/register">
                   <Button size="lg" className="bg-white text-leaf hover:bg-white/90 w-full">
@@ -238,8 +238,8 @@ export function Landing() {
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <img src="/logo.png" alt="kt-Optima" className="h-8 w-auto" />
-                <span className="font-serif font-semibold text-2xl">kt-Optima</span>
+                <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
+                <span className="font-serif font-semibold text-2xl">ktOptima</span>
               </div>
               <p className="text-gray-400 mb-4 max-w-md text-base">
                 La solution CRM moderne pour les entreprises tunisiennes. Gérez vos affaires, vos clients et vos prévisions en toute simplicité.
@@ -297,7 +297,7 @@ export function Landing() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-base">
-            <p>&copy; 2026 kt-Optima. Tous droits réservés.</p>
+            <p>&copy; 2026 ktOptima. Tous droits réservés.</p>
           </div>
         </div>
       </footer>

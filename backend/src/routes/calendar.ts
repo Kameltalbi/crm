@@ -2,14 +2,14 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import auth from '../middleware/auth.js';
 
-const router = Router();
+export const calendarRoutes = Router();
 const prisma = new PrismaClient();
 
 // Apply auth middleware to all routes
-router.use(auth);
+calendarRoutes.use(auth);
 
 // GET /calendar - Get all calendar events for the organization
-router.get('/', async (req: any, res) => {
+calendarRoutes.get('/', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
     const { startDate, endDate, eventType, page = 1, limit = 50 } = req.query;
@@ -21,7 +21,7 @@ router.get('/', async (req: any, res) => {
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    const [data, total] = await Promise.all([
+    const [events, total] = await Promise.all([
       prisma.calendarEvent.findMany({
         where,
         include: {
@@ -34,10 +34,10 @@ router.get('/', async (req: any, res) => {
         take: Number(limit),
       }),
       prisma.calendarEvent.count({ where }),
-    });
+    ]);
 
     res.json({
-      data,
+      data: events,
       pagination: {
         currentPage: Number(page),
         totalPages: Math.ceil(total / Number(limit)),
@@ -51,7 +51,7 @@ router.get('/', async (req: any, res) => {
 });
 
 // GET /calendar/:id - Get a single calendar event
-router.get('/:id', async (req: any, res) => {
+calendarRoutes.get('/:id', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
     const event = await prisma.calendarEvent.findFirst({
@@ -75,7 +75,7 @@ router.get('/:id', async (req: any, res) => {
 });
 
 // POST /calendar - Create a new calendar event
-router.post('/', async (req: any, res) => {
+calendarRoutes.post('/', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
     const userId = req.user.id;
@@ -101,7 +101,7 @@ router.post('/', async (req: any, res) => {
 });
 
 // PUT /calendar/:id - Update a calendar event
-router.put('/:id', async (req: any, res) => {
+calendarRoutes.put('/:id', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
 
@@ -131,7 +131,7 @@ router.put('/:id', async (req: any, res) => {
 });
 
 // DELETE /calendar/:id - Soft delete a calendar event
-router.delete('/:id', async (req: any, res) => {
+calendarRoutes.delete('/:id', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
 
@@ -154,5 +154,3 @@ router.delete('/:id', async (req: any, res) => {
     res.status(500).json({ error: 'Failed to delete calendar event' });
   }
 });
-
-export default router;

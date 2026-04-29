@@ -64,7 +64,7 @@ export function Clients() {
           <h1 className="font-serif text-2xl md:text-3xl">Clients</h1>
           <p className="text-sm text-muted-foreground">Gestion des clients et prospects</p>
         </div>
-        <Button onClick={() => { setForm(EMPTY); setOpen(true); }} className="w-full sm:w-auto">
+        <Button onClick={() => { console.log('Opening form'); setForm(EMPTY); setOpen(true); console.log('Form should be open'); }} className="w-full sm:w-auto">
           <Plus size={16} />Nouveau client
         </Button>
       </div>

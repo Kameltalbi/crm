@@ -100,101 +100,101 @@ export function Dashboard() {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl md:text-3xl font-semibold">Tableau de bord</h1>
-          <p className="text-sm text-muted-foreground">Vue d'ensemble</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Tableau de bord</h1>
+          <p className="text-sm text-muted-foreground mt-1">Vue d'ensemble de vos activités</p>
         </div>
         <Link to="/affaires" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
+          <Button className="w-full sm:w-auto shadow-lg"><Plus size={16} className="mr-2" />Nouvelle affaire</Button>
         </Link>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <KpiCard
           title="CA Total"
           subtitle="Réalisé + Pipeline + Prospection"
           value={fmtDT(kpis.caTotal)}
-          icon={<DollarSign className="w-5 h-5" />}
+          icon={<DollarSign className="w-6 h-6" />}
           color="emerald"
         />
         <KpiCard
           title="CA Pipeline"
           subtitle="Pipeline + Prospection"
           value={fmtDT(kpis.caPipeline + kpis.caProspection)}
-          icon={<Target className="w-5 h-5" />}
+          icon={<Target className="w-6 h-6" />}
           color="blue"
         />
         <KpiCard
           title="CA Gagné"
           subtitle="Réalisé"
           value={fmtDT(kpis.caRealise)}
-          icon={<Wallet className="w-5 h-5" />}
+          icon={<Wallet className="w-6 h-6" />}
           color="emerald"
         />
         <KpiCard
           title="Affaires en cours"
           subtitle="Activité"
           value={`${kpis.counts.pipeline + kpis.counts.prospect}`}
-          icon={<TrendingUp className="w-5 h-5" />}
+          icon={<TrendingUp className="w-6 h-6" />}
           color="amber"
         />
         <KpiCard
           title="Affaires gagnées"
           subtitle="Résultat"
           value={`${kpis.counts.realise}`}
-          icon={<Wallet className="w-5 h-5" />}
+          icon={<Wallet className="w-6 h-6" />}
           color="emerald"
         />
         <KpiCard
           title="Conversion"
           subtitle="Efficacité"
           value={`${winRate}%`}
-          icon={<Target className="w-5 h-5" />}
+          icon={<Target className="w-6 h-6" />}
           color="purple"
         />
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm md:text-base">Évolution mensuelle du CA</CardTitle>
+            <CardTitle className="text-base font-semibold">Évolution mensuelle du CA</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" fontSize={10} />
-                <YAxis stroke="#6b7280" fontSize={10} tickFormatter={(value) => `${value / 1000}k`} />
+                <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
+                <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(value) => `${value / 1000}k`} />
                 <Tooltip
                   formatter={(value: number) => [fmtDT(value), '']}
-                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="realise" stroke="#22c55e" strokeWidth={2} name="Réalisé" dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="pipeline" stroke="#0ea5e9" strokeWidth={2} name="Pipeline" dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="prospect" stroke="#f59e0b" strokeWidth={2} name="Prospection" dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="realise" stroke="#22c55e" strokeWidth={3} name="Réalisé" dot={{ r: 5 }} />
+                <Line type="monotone" dataKey="pipeline" stroke="#0ea5e9" strokeWidth={3} name="Pipeline" dot={{ r: 5 }} />
+                <Line type="monotone" dataKey="prospect" stroke="#f59e0b" strokeWidth={3} name="Prospection" dot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-sm md:text-base">Répartition par statut</CardTitle>
+            <CardTitle className="text-base font-semibold">Répartition par statut</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <RechartsPieChart>
                 <Pie
                   data={statusDistributionData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
+                  innerRadius={60}
+                  outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
                 >

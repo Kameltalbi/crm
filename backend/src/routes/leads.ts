@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authMiddleware } from '../middleware/auth';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(requireAuth);
 
 // GET /leads - Get all leads for the organization
 router.get('/', async (req: any, res) => {

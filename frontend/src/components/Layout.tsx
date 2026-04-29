@@ -13,7 +13,6 @@ const nav = [
   { to: '/affaires',     label: 'Affaires',      icon: Briefcase       },
   { to: '/clients',      label: 'Clients',       icon: Users           },
   { to: '/activites',    label: 'Activités',     icon: FileText        },
-  { to: '/previsionnel', label: 'Prévisionnel',  icon: Calendar        },
 ];
 
 const adminNav = [

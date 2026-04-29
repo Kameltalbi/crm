@@ -8,7 +8,6 @@ import { Dashboard } from './pages/Dashboard';
 import { Affaires } from './pages/Affaires';
 import { AffaireDetail } from './pages/AffaireDetail';
 import { Clients } from './pages/Clients';
-import { Previsionnel } from './pages/Previsionnel';
 import { Settings } from './pages/Settings';
 import { Users } from './pages/Users';
 import { Products } from './pages/Products';
@@ -44,7 +43,6 @@ export default function App() {
                 <Route path="/affaires" element={<Affaires />} />
                 <Route path="/affaires/:id" element={<AffaireDetail />} />
                 <Route path="/clients" element={<Clients />} />
-                <Route path="/previsionnel" element={<Previsionnel />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/settings/organizations" element={<Organizations />} />
                 <Route path="/users" element={<Users />} />

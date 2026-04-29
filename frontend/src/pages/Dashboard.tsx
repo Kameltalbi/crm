@@ -41,21 +41,15 @@ function KpiCard({ title, subtitle, value, icon, color }: {
 }
 
 export function Dashboard() {
-  const [selectedYear, setSelectedYear] = useState(2026);
-
   const { data: kpis } = useQuery<KPIs>({
-    queryKey: ['kpis', selectedYear],
-    queryFn: () => api.get(`/kpis?annee=${selectedYear}`).then((r) => r.data),
+    queryKey: ['kpis'],
+    queryFn: () => api.get('/kpis').then((r) => r.data),
   });
   const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
-    queryKey: ['affaires', selectedYear],
-    queryFn: () => api.get(`/affaires?annee=${selectedYear}`).then((r) => r.data),
+    queryKey: ['affaires'],
+    queryFn: () => api.get('/affaires').then((r) => r.data),
   });
   const affaires = affairesData?.data || [];
-  const { data: previsionnel } = useQuery({
-    queryKey: ['previsionnel', selectedYear],
-    queryFn: () => api.get(`/previsionnel/${selectedYear}`).then((r) => r.data),
-  });
   const { data: productsData } = useQuery<{ data: any[], pagination: any }>({
     queryKey: ['products'],
     queryFn: () => api.get('/products').then((r) => r.data),
@@ -85,19 +79,6 @@ export function Dashboard() {
     };
   };
 
-  // Calculate cumulative CA from previsionnel data
-  const cumulativeData = previsionnel?.mois ? previsionnel.mois.map((m: any, index: number) => {
-    const cumulative = previsionnel.mois.slice(0, index + 1).reduce((sum: number, month: any) => sum + month.caTotalPrevu, 0);
-    return {
-      month: MOIS_S[m.mois],
-      cumulative: cumulative,
-      monthly: m.caTotalPrevu,
-    };
-  }) : [];
-
-  // Total cumulative CA for the year
-  const totalCumulativeCA = cumulativeData.length > 0 ? cumulativeData[cumulativeData.length - 1].cumulative : 0;
-
   // Prepare chart data
   const monthlyData = Object.entries(kpis.parMois).map(([month, data]) => ({
     month: MOIS_S[parseInt(month)],
@@ -123,24 +104,11 @@ export function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-serif text-2xl md:text-3xl font-semibold">Tableau de bord</h1>
-          <p className="text-sm text-muted-foreground">Vue d'ensemble — {selectedYear}</p>
+          <p className="text-sm text-muted-foreground">Vue d'ensemble</p>
         </div>
-        <div className="flex gap-2">
-          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2026">2026</SelectItem>
-              <SelectItem value="2027">2027</SelectItem>
-              <SelectItem value="2028">2028</SelectItem>
-            </SelectContent>
-          </Select>
-          <Link to="/affaires" className="w-full sm:w-auto">
-            <Button className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
-          </Link>
-        </div>
+        <Link to="/affaires" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
+        </Link>
       </div>
 
       {/* KPI Cards */}
@@ -274,26 +242,6 @@ export function Dashboard() {
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Cumulative CA Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm md:text-base">CA prévisionnel cumulé ({selectedYear})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={cumulativeData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-              <Legend />
-              <Line type="monotone" dataKey="cumulative" stroke="#22c55e" strokeWidth={2} name="Cumulé" />
-              <Line type="monotone" dataKey="monthly" stroke="#0ea5e9" strokeWidth={2} name="Mensuel" />
-            </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>

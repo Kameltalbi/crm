@@ -2,14 +2,14 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import auth from '../middleware/auth.js';
 
-const router = Router();
+export const expensesRoutes = Router();
 const prisma = new PrismaClient();
 
 // Apply auth middleware to all routes
-router.use(auth);
+expensesRoutes.use(auth);
 
 // GET /expenses - List expenses with pagination
-router.get('/', async (req, res) => {
+expensesRoutes.get('/', async (req, res) => {
   try {
     const userId = (req as any).user.id;
     const organizationId = (req as any).user.organizationId;
@@ -72,7 +72,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /expenses/:id - Get expense by ID
-router.get('/:id', async (req, res) => {
+expensesRoutes.get('/:id', async (req, res) => {
   try {
     const userId = (req as any).user.id;
     const organizationId = (req as any).user.organizationId;
@@ -101,7 +101,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /expenses - Create expense
-router.post('/', async (req, res) => {
+expensesRoutes.post('/', async (req, res) => {
   try {
     const userId = (req as any).user.id;
     const organizationId = (req as any).user.organizationId;
@@ -138,7 +138,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /expenses/:id - Update expense
-router.put('/:id', async (req, res) => {
+expensesRoutes.put('/:id', async (req, res) => {
   try {
     const userId = (req as any).user.id;
     const organizationId = (req as any).user.organizationId;
@@ -174,7 +174,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /expenses/:id - Soft delete expense
-router.delete('/:id', async (req, res) => {
+expensesRoutes.delete('/:id', async (req, res) => {
   try {
     const organizationId = (req as any).user.organizationId;
 
@@ -188,5 +188,3 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-export default router;

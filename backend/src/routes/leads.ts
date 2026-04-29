@@ -2,14 +2,14 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import auth from '../middleware/auth.js';
 
-const router = Router();
+export const leadsRoutes = Router();
 const prisma = new PrismaClient();
 
 // Apply auth middleware to all routes
-router.use(auth);
+leadsRoutes.use(auth);
 
 // GET /leads - Get all leads for the organization
-router.get('/', async (req: any, res) => {
+leadsRoutes.get('/', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
     const { status, source, page = 1, limit = 50 } = req.query;
@@ -49,7 +49,7 @@ router.get('/', async (req: any, res) => {
 });
 
 // GET /leads/:id - Get a single lead
-router.get('/:id', async (req: any, res) => {
+leadsRoutes.get('/:id', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
     const lead = await prisma.lead.findFirst({
@@ -75,7 +75,7 @@ router.get('/:id', async (req: any, res) => {
 });
 
 // POST /leads - Create a new lead
-router.post('/', async (req: any, res) => {
+leadsRoutes.post('/', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
     const userId = req.user.id;
@@ -100,7 +100,7 @@ router.post('/', async (req: any, res) => {
 });
 
 // PUT /leads/:id - Update a lead
-router.put('/:id', async (req: any, res) => {
+leadsRoutes.put('/:id', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
 
@@ -129,7 +129,7 @@ router.put('/:id', async (req: any, res) => {
 });
 
 // DELETE /leads/:id - Soft delete a lead
-router.delete('/:id', async (req: any, res) => {
+leadsRoutes.delete('/:id', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
 
@@ -154,7 +154,7 @@ router.delete('/:id', async (req: any, res) => {
 });
 
 // POST /leads/:id/convert - Convert lead to client
-router.post('/:id/convert', async (req: any, res) => {
+leadsRoutes.post('/:id/convert', async (req: any, res) => {
   try {
     const organizationId = req.user.organizationId;
     const userId = req.user.id;
@@ -204,5 +204,3 @@ router.post('/:id/convert', async (req: any, res) => {
     res.status(500).json({ error: 'Failed to convert lead' });
   }
 });
-
-export default router;

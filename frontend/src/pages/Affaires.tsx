@@ -37,6 +37,7 @@ export function Affaires() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', viaPartenaire: '' });
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -44,10 +45,11 @@ export function Affaires() {
   const [clientSearch, setClientSearch] = useState('');
 
   const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
-    queryKey: ['affaires', filters],
-    queryFn: () => api.get('/affaires', { params: { ...filters } }).then((r) => r.data),
+    queryKey: ['affaires', filters, page],
+    queryFn: () => api.get('/affaires', { params: { ...filters, page } }).then((r) => r.data),
   });
   const affaires = affairesData?.data || [];
+  const pagination = affairesData?.pagination;
   const { data: clientsData } = useQuery<{ data: Client[], pagination: any }>({
     queryKey: ['clients'],
     queryFn: () => api.get('/clients').then((r) => r.data),
@@ -348,6 +350,33 @@ export function Affaires() {
           </table>
           </div>
         </CardContent>
+        {pagination && pagination.totalPages > 1 && (
+          <CardContent className="border-t pt-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Page {pagination.currentPage} sur {pagination.totalPages} ({pagination.total} affaires)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={pagination.currentPage === 1}
+                >
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                >
+                  Suivant
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       {/* Modal create/edit */}

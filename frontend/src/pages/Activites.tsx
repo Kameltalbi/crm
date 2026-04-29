@@ -54,6 +54,8 @@ export function Activites() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterAffaire, setFilterAffaire] = useState<string>('all');
+  const [view, setView] = useState<'timeline' | 'calendar'>('timeline');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const { data: activitesData } = useQuery<{ data: Activite[], pagination: any }>({
     queryKey: ['activites'],
@@ -83,6 +85,49 @@ export function Activites() {
   }, {} as Record<string, Activite[]>);
 
   const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  // Calendar view logic
+  const getCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    const days = [];
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push({ date: null, activities: [] });
+    }
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = date.toLocaleDateString('fr-FR');
+      const dayActivities = filteredActivites.filter(a => {
+        const activityDate = new Date(a.createdAt).toLocaleDateString('fr-FR');
+        return activityDate === dateStr;
+      });
+      days.push({ date, activities: dayActivities });
+    }
+    return days;
+  };
+
+  const calendarDays = getCalendarDays();
+  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      if (direction === 'prev') {
+        newDate.setMonth(newDate.getMonth() - 1);
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1);
+      }
+      return newDate;
+    });
+  };
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
@@ -122,113 +167,197 @@ export function Activites() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl md:text-3xl">Activités</h1>
-          <p className="text-sm text-muted-foreground">Timeline des interactions et tâches</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Activités</h1>
+          <p className="text-sm text-muted-foreground mt-1">Timeline et calendrier des interactions</p>
         </div>
         <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
           <Plus size={16} className="mr-2" /> Nouvelle activité
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <Filter size={16} className="text-muted-foreground" />
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Type" />
+      {/* View Toggle and Filters */}
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="flex gap-2">
+          <Button
+            variant={view === 'timeline' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setView('timeline')}
+          >
+            Timeline
+          </Button>
+          <Button
+            variant={view === 'calendar' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setView('calendar')}
+          >
+            Calendrier
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-muted-foreground" />
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous types</SelectItem>
+                {Object.entries(ACTIVITY_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Select value={filterAffaire} onValueChange={setFilterAffaire}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Toutes affaires" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous types</SelectItem>
-              {Object.entries(ACTIVITY_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
-              ))}
+              <SelectItem value="all">Toutes affaires</SelectItem>
+              {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
-        <Select value={filterAffaire} onValueChange={setFilterAffaire}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Toutes affaires" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toutes affaires</SelectItem>
-            {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}
-          </SelectContent>
-        </Select>
       </div>
 
-      {/* Timeline */}
-      <div className="space-y-8">
-        {filteredActivites.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <p className="text-sm text-muted-foreground">Aucune activité</p>
-            </CardContent>
-          </Card>
-        ) : (
-          sortedDates.map((date) => (
-            <div key={date}>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-px h-8 bg-border"></div>
-                <h3 className="text-sm font-semibold text-muted-foreground">{date}</h3>
-              </div>
-              <div className="relative pl-8 space-y-4">
-                <div className="absolute left-[15px] top-0 bottom-0 w-px bg-border"></div>
-                {groupedByDate[date].map((a, idx) => {
-                  const Icon = ACTIVITY_ICONS[a.type];
-                  const affaire = affaires.find(af => af.id === a.affaireId);
-                  const isFirst = idx === 0;
-                  const isLast = idx === groupedByDate[date].length - 1;
-                  return (
-                    <div key={a.id} className="relative">
-                      <div className={`absolute -left-[23px] w-3 h-3 rounded-full bg-background border-2 ${
-                        a.type === 'NOTE' ? 'border-blue-500' :
-                        a.type === 'APPEL' ? 'border-green-500' :
-                        a.type === 'EMAIL_ENVOYE' || a.type === 'EMAIL_RECU' ? 'border-purple-500' :
-                        a.type === 'RDV' ? 'border-orange-500' : 'border-gray-500'
-                      } ${isFirst ? 'top-4' : isLast ? 'bottom-4' : 'top-1/2 -translate-y-1/2'}`}></div>
-                      <Card className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                              <Icon size={18} className="text-muted-foreground" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <Badge variant="secondary" className="text-xs">
-                                  {ACTIVITY_LABELS[a.type]}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(a.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                              <p className="font-medium text-sm">{a.title}</p>
-                              {a.content && <p className="text-sm text-muted-foreground mt-1">{a.content}</p>}
-                              {affaire && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Affaire: <span className="font-medium">{affaire.title}</span>
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="ghost" onClick={() => openEdit(a)}>
-                                <Pencil size={14} />
-                              </Button>
-                              <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(a.id)}>
-                                <Trash2 size={14} />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  );
-                })}
-              </div>
+      {/* Calendar View */}
+      {view === 'calendar' && (
+        <Card className="shadow-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
+                <Calendar size={16} className="mr-2" /> Précédent
+              </Button>
+              <CardTitle className="text-lg font-semibold">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </CardTitle>
+              <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
+                Suivant <Calendar size={16} className="ml-2" />
+              </Button>
             </div>
-          ))
-        )}
-      </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {dayNames.map(day => (
+                <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((day, idx) => (
+                <div
+                  key={idx}
+                  className={`min-h-[100px] p-2 border rounded-lg ${
+                    day.date ? 'hover:bg-muted/50 cursor-pointer' : 'bg-muted/30'
+                  }`}
+                >
+                  {day.date && (
+                    <>
+                      <div className="text-sm font-medium mb-1">{day.date.getDate()}</div>
+                      <div className="space-y-1">
+                        {day.activities.slice(0, 3).map((a) => {
+                          const Icon = ACTIVITY_ICONS[a.type];
+                          return (
+                            <div
+                              key={a.id}
+                              className="text-xs p-1 rounded bg-primary/10 text-primary flex items-center gap-1"
+                              title={a.title}
+                            >
+                              <Icon size={10} />
+                              <span className="truncate">{a.title}</span>
+                            </div>
+                          );
+                        })}
+                        {day.activities.length > 3 && (
+                          <div className="text-xs text-muted-foreground">
+                            +{day.activities.length - 3} autres
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Timeline View */}
+      {view === 'timeline' && (
+        <div className="space-y-8">
+          {filteredActivites.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-12">
+                <p className="text-sm text-muted-foreground">Aucune activité</p>
+              </CardContent>
+            </Card>
+          ) : (
+            sortedDates.map((date) => (
+              <div key={date}>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-px h-8 bg-border"></div>
+                  <h3 className="text-sm font-semibold text-muted-foreground">{date}</h3>
+                </div>
+                <div className="relative pl-8 space-y-4">
+                  <div className="absolute left-[15px] top-0 bottom-0 w-px bg-border"></div>
+                  {groupedByDate[date].map((a, idx) => {
+                    const Icon = ACTIVITY_ICONS[a.type];
+                    const affaire = affaires.find(af => af.id === a.affaireId);
+                    const isFirst = idx === 0;
+                    const isLast = idx === groupedByDate[date].length - 1;
+                    return (
+                      <div key={a.id} className="relative">
+                        <div className={`absolute -left-[23px] w-3 h-3 rounded-full bg-background border-2 ${
+                          a.type === 'NOTE' ? 'border-blue-500' :
+                          a.type === 'APPEL' ? 'border-green-500' :
+                          a.type === 'EMAIL_ENVOYE' || a.type === 'EMAIL_RECU' ? 'border-purple-500' :
+                          a.type === 'RDV' ? 'border-orange-500' : 'border-gray-500'
+                        } ${isFirst ? 'top-4' : isLast ? 'bottom-4' : 'top-1/2 -translate-y-1/2'}`}></div>
+                        <Card className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                <Icon size={18} className="text-muted-foreground" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {ACTIVITY_LABELS[a.type]}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(a.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                <p className="font-medium text-sm">{a.title}</p>
+                                {a.content && <p className="text-sm text-muted-foreground mt-1">{a.content}</p>}
+                                {affaire && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Affaire: <span className="font-medium">{affaire.title}</span>
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex gap-1">
+                                <Button size="sm" variant="ghost" onClick={() => openEdit(a)}>
+                                  <Pencil size={14} />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(a.id)}>
+                                  <Trash2 size={14} />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">

@@ -38,6 +38,7 @@ export function Affaires() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', viaPartenaire: '' });
   const [page, setPage] = useState(1);
+  const [view, setView] = useState<'table' | 'kanban'>('table');
   const [open, setOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -181,10 +182,26 @@ export function Affaires() {
     <div className="space-y-5 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl md:text-3xl">Affaires</h1>
-          <p className="text-sm text-muted-foreground">Pipeline complet : prospection, confirmé, réalisé</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Affaires</h1>
+          <p className="text-sm text-muted-foreground mt-1">Pipeline complet : prospection, confirmé, réalisé</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-1">
+            <Button
+              variant={view === 'table' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setView('table')}
+            >
+              Tableau
+            </Button>
+            <Button
+              variant={view === 'kanban' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setView('kanban')}
+            >
+              Kanban
+            </Button>
+          </div>
           <Button onClick={() => setImportOpen(true)} variant="outline" className="w-full sm:w-auto"><Upload size={16} />Importer Excel</Button>
           <Button onClick={openNew} className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
         </div>
@@ -222,162 +239,211 @@ export function Affaires() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-          <CardTitle className="text-base">{affaires.length} affaires</CardTitle>
-          <div className="flex flex-wrap gap-2">
-            <Select value={filters.statut || 'all'} onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous statuts</SelectItem>
-                <SelectItem value="PROSPECTION">🟡 Prospection</SelectItem>
-                <SelectItem value="PIPELINE">🔵 Pipeline</SelectItem>
-                <SelectItem value="REALISE">✅ Réalisé</SelectItem>
-                <SelectItem value="PERDU">❌ Perdu</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.type || 'all'} onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous types</SelectItem>
-                <SelectItem value="BILAN_CARBONE">🌍 Bilan</SelectItem>
-                <SelectItem value="FORMATION">📚 Formation</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.viaPartenaire || 'all'} onValueChange={(v) => setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous apports</SelectItem>
-                <SelectItem value="true">🤝 Partenaire</SelectItem>
-                <SelectItem value="false">👤 Direct</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
-              <SelectTrigger className="h-8 w-20 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2026">2026</SelectItem>
-                <SelectItem value="2027">2027</SelectItem>
-                <SelectItem value="2028">2028</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs min-w-[800px]">
-              <thead>
-                <tr className="border-b bg-sage">
-                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Client / Titre</th>
-                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
-                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
-                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
-                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Commission</th>
-                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mon net</th>
-                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mois</th>
-                  <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Devis/Fac</th>
-                  <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {affaires.map((a) => {
-                  const ht = Number(a.montantHT);
-                  const c = a.viaPartenaire ? Math.round(ht * Number(a.tauxCommission) / 100) : 0;
-                  return (
-                    <tr key={a.id} className={`border-b hover:bg-sage/50 ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`}>
-                      <td className="p-2.5">
-                        <div className="font-semibold">{a.client?.name || 'N/A'}</div>
-                        <div className="text-[10px] text-muted-foreground">{a.title}</div>
-                      </td>
-                      <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>
-                      <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
-                      <td className="p-2.5"><StatutBadge statut={a.statut} /></td>
-                      <td className="p-2.5 text-right font-mono text-purple">{a.viaPartenaire ? fmtDT(c) : '—'}</td>
-                      <td className="p-2.5 text-right font-mono font-semibold text-leaf">{fmtDT(ht - c)}</td>
-                      <td className="p-2.5 text-muted-foreground">{MOIS[a.moisPrevu]}</td>
-                      <td className="p-2.5">
-                        <div className="flex gap-1 text-[10px]">
-                          {a.devisNumero && <Badge variant="outline">D {a.devisNumero}</Badge>}
-                          {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
-                        </div>
-                      </td>
-                      <td className="p-2.5 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTriggerButton asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 hover:bg-gray-100"
-                              title="Actions"
-                            >
-                              <MoreVertical size={16} />
-                            </Button>
-                          </DropdownMenuTriggerButton>
-                          <DropdownMenuContentWrapper align="end" className="w-48">
-                            <DropdownMenuItemStyled onClick={() => navigate(`/affaires/${a.id}`)}>
-                              <Eye size={16} className="mr-2 text-muted-foreground" /> Voir détails
-                            </DropdownMenuItemStyled>
-                            {!a.devisId && (
-                              <DropdownMenuItemStyled onClick={() => createDevisMutation.mutate(a.id)}>
-                                <FileText size={16} className="mr-2 text-muted-foreground" /> Créer devis
-                              </DropdownMenuItemStyled>
-                            )}
-                            {!a.factureId && (
-                              <DropdownMenuItemStyled onClick={() => createFactureMutation.mutate(a.id)}>
-                                <Receipt size={16} className="mr-2 text-muted-foreground" /> Créer facture
-                              </DropdownMenuItemStyled>
-                            )}
-                            {(a.devisPdfUrl || a.facturePdfUrl) && (
-                              <DropdownMenuItemStyled onClick={() => {
-                                const url = a.devisPdfUrl || a.facturePdfUrl;
-                                if (url) window.open(url, '_blank');
-                              }}>
-                                <Mail size={16} className="mr-2 text-muted-foreground" /> Voir PDF
-                              </DropdownMenuItemStyled>
-                            )}
-                            <DropdownMenuItemStyled onClick={() => handleEdit(a)}>
-                              <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
-                            </DropdownMenuItemStyled>
-                            <DropdownMenuItemStyled onClick={() => handleDelete(a.id)} className="text-destructive">
-                              <Trash2 size={16} className="mr-2" /> Supprimer
-                            </DropdownMenuItemStyled>
-                          </DropdownMenuContentWrapper>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          </div>
-        </CardContent>
-        {pagination && pagination.totalPages > 1 && (
-          <CardContent className="border-t pt-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Page {pagination.currentPage} sur {pagination.totalPages} ({pagination.total} affaires)
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={pagination.currentPage === 1}
-                >
-                  Précédent
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
-                  disabled={pagination.currentPage === pagination.totalPages}
-                >
-                  Suivant
-                </Button>
-              </div>
+      {/* Table View */}
+      {view === 'table' && (
+        <Card>
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <CardTitle className="text-base">{affaires.length} affaires</CardTitle>
+            <div className="flex flex-wrap gap-2">
+              <Select value={filters.statut || 'all'} onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}>
+                <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous statuts</SelectItem>
+                  <SelectItem value="PROSPECTION">🟡 Prospection</SelectItem>
+                  <SelectItem value="PIPELINE">🔵 Pipeline</SelectItem>
+                  <SelectItem value="REALISE">✅ Réalisé</SelectItem>
+                  <SelectItem value="PERDU">❌ Perdu</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filters.type || 'all'} onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}>
+                <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous types</SelectItem>
+                  <SelectItem value="BILAN_CARBONE">🌍 Bilan</SelectItem>
+                  <SelectItem value="FORMATION">📚 Formation</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filters.viaPartenaire || 'all'} onValueChange={(v) => setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })}>
+                <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous apports</SelectItem>
+                  <SelectItem value="true">🤝 Partenaire</SelectItem>
+                  <SelectItem value="false">👤 Direct</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
+                <SelectTrigger className="h-8 w-20 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2026">2026</SelectItem>
+                  <SelectItem value="2027">2027</SelectItem>
+                  <SelectItem value="2028">2028</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs min-w-[800px]">
+                <thead>
+                  <tr className="border-b bg-sage">
+                    <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Client / Titre</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
+                    <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Commission</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mon net</th>
+                    <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mois</th>
+                    <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Devis/Fac</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {affaires.map((a) => {
+                    const ht = Number(a.montantHT);
+                    const c = a.viaPartenaire ? Math.round(ht * Number(a.tauxCommission) / 100) : 0;
+                    return (
+                      <tr key={a.id} className={`border-b hover:bg-sage/50 ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`}>
+                        <td className="p-2.5">
+                          <div className="font-semibold">{a.client?.name || 'N/A'}</div>
+                          <div className="text-[10px] text-muted-foreground">{a.title}</div>
+                        </td>
+                        <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>
+                        <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
+                        <td className="p-2.5"><StatutBadge statut={a.statut} /></td>
+                        <td className="p-2.5 text-right font-mono text-purple">{a.viaPartenaire ? fmtDT(c) : '—'}</td>
+                        <td className="p-2.5 text-right font-mono font-semibold text-leaf">{fmtDT(ht - c)}</td>
+                        <td className="p-2.5 text-muted-foreground">{MOIS[a.moisPrevu]}</td>
+                        <td className="p-2.5">
+                          <div className="flex gap-1 text-[10px]">
+                            {a.devisNumero && <Badge variant="outline">D {a.devisNumero}</Badge>}
+                            {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
+                          </div>
+                        </td>
+                        <td className="p-2.5 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTriggerButton asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-gray-100"
+                                title="Actions"
+                              >
+                                <MoreVertical size={16} />
+                              </Button>
+                            </DropdownMenuTriggerButton>
+                            <DropdownMenuContentWrapper align="end" className="w-48">
+                              <DropdownMenuItemStyled onClick={() => navigate(`/affaires/${a.id}`)}>
+                                <Eye size={16} className="mr-2 text-muted-foreground" /> Voir détails
+                              </DropdownMenuItemStyled>
+                              {!a.devisId && (
+                                <DropdownMenuItemStyled onClick={() => createDevisMutation.mutate(a.id)}>
+                                  <FileText size={16} className="mr-2 text-muted-foreground" /> Créer devis
+                                </DropdownMenuItemStyled>
+                              )}
+                              {!a.factureId && (
+                                <DropdownMenuItemStyled onClick={() => createFactureMutation.mutate(a.id)}>
+                                  <Receipt size={16} className="mr-2 text-muted-foreground" /> Créer facture
+                                </DropdownMenuItemStyled>
+                              )}
+                              {(a.devisPdfUrl || a.facturePdfUrl) && (
+                                <DropdownMenuItemStyled onClick={() => {
+                                  const url = a.devisPdfUrl || a.facturePdfUrl;
+                                  if (url) window.open(url, '_blank');
+                                }}>
+                                  <Mail size={16} className="mr-2 text-muted-foreground" /> Voir PDF
+                                </DropdownMenuItemStyled>
+                              )}
+                              <DropdownMenuItemStyled onClick={() => handleEdit(a)}>
+                                <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
+                              </DropdownMenuItemStyled>
+                              <DropdownMenuItemStyled onClick={() => handleDelete(a.id)} className="text-destructive">
+                                <Trash2 size={16} className="mr-2" /> Supprimer
+                              </DropdownMenuItemStyled>
+                            </DropdownMenuContentWrapper>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              </div>
           </CardContent>
-        )}
-      </Card>
+          {pagination && pagination.totalPages > 1 && (
+            <CardContent className="border-t pt-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Page {pagination.currentPage} sur {pagination.totalPages} ({pagination.total} affaires)
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={pagination.currentPage === 1}
+                  >
+                    Précédent
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                    disabled={pagination.currentPage === pagination.totalPages}
+                  >
+                    Suivant
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      {/* Kanban View */}
+      {view === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {(['PROSPECTION', 'PIPELINE', 'REALISE', 'PERDU'] as const).map((statut) => {
+            const statutAffaires = affaires.filter(a => a.statut === statut);
+            const statutCA = statutAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+            const statutLabels = {
+              PROSPECTION: { label: 'Prospection', color: 'bg-yellow-50 border-yellow-200' },
+              PIPELINE: { label: 'Pipeline', color: 'bg-blue-50 border-blue-200' },
+              REALISE: { label: 'Réalisé', color: 'bg-green-50 border-green-200' },
+              PERDU: { label: 'Perdu', color: 'bg-red-50 border-red-200' },
+            };
+            const statutInfo = statutLabels[statut];
+            return (
+              <Card key={statut} className={`flex flex-col ${statutInfo.color}`}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold">{statutInfo.label}</CardTitle>
+                  <p className="text-xs text-muted-foreground">{statutAffaires.length} affaires • {fmtDT(statutCA)}</p>
+                </CardHeader>
+                <CardContent className="flex-1 space-y-2">
+                  {statutAffaires.map((a) => {
+                    const ht = Number(a.montantHT);
+                    return (
+                      <Card key={a.id} className="p-3 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/affaires/${a.id}`)}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="font-semibold text-sm">{a.client?.name || 'N/A'}</div>
+                          <div className="text-sm font-bold">{fmtDT(ht)}</div>
+                        </div>
+                        <div className="text-xs text-muted-foreground mb-2">{a.title}</div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">{MOIS[a.moisPrevu]}</span>
+                          <span>{a.probabilite}%</span>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                  {statutAffaires.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-4">Aucune affaire</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Modal create/edit */}
       <Dialog open={open} onOpenChange={setOpen}>

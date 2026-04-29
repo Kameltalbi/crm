@@ -41,13 +41,16 @@ function KpiCard({ title, subtitle, value, icon, color }: {
 }
 
 export function Dashboard() {
+  const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1));
+  const [selectedYear, setSelectedYear] = useState<string>('2026');
+
   const { data: kpis } = useQuery<KPIs>({
-    queryKey: ['kpis'],
-    queryFn: () => api.get('/kpis').then((r) => r.data),
+    queryKey: ['kpis', selectedYear, selectedMonth],
+    queryFn: () => api.get('/kpis', { params: { annee: selectedYear, mois: selectedMonth } }).then((r) => r.data),
   });
   const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
-    queryKey: ['affaires'],
-    queryFn: () => api.get('/affaires').then((r) => r.data),
+    queryKey: ['affaires', selectedYear, selectedMonth],
+    queryFn: () => api.get('/affaires', { params: { annee: selectedYear, mois: selectedMonth } }).then((r) => r.data),
   });
   const affaires = affairesData?.data || [];
   const { data: productsData } = useQuery<{ data: any[], pagination: any }>({
@@ -106,9 +109,31 @@ export function Dashboard() {
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Tableau de bord</h1>
           <p className="text-sm text-muted-foreground mt-1">Vue d'ensemble de vos activités</p>
         </div>
-        <Link to="/affaires" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto shadow-lg"><Plus size={16} className="mr-2" />Nouvelle affaire</Button>
-        </Link>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2026">2026</SelectItem>
+              <SelectItem value="2027">2027</SelectItem>
+              <SelectItem value="2028">2028</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MOIS_S.map((label, idx) => (
+                <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Link to="/affaires" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto shadow-lg"><Plus size={16} className="mr-2" />Nouvelle affaire</Button>
+          </Link>
+        </div>
       </div>
 
       {/* KPI Cards */}

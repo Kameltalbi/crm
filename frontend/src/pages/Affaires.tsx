@@ -36,7 +36,7 @@ const EMPTY: FormData = {
 export function Affaires() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', viaPartenaire: '' });
+  const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', mois: String(new Date().getMonth() + 1), viaPartenaire: '' });
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'table' | 'kanban'>('table');
   const [open, setOpen] = useState(false);
@@ -269,6 +269,15 @@ export function Affaires() {
                   <SelectItem value="all">Tous apports</SelectItem>
                   <SelectItem value="true">🤝 Partenaire</SelectItem>
                   <SelectItem value="false">👤 Direct</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filters.mois || 'all'} onValueChange={(v) => setFilters({ ...filters, mois: v === 'all' ? '' : v })}>
+                <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Mois" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous mois</SelectItem>
+                  {MOIS.map((label, idx) => (
+                    <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>

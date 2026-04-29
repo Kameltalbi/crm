@@ -61,6 +61,8 @@ export function Leads() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
+  const [filterMonth, setFilterMonth] = useState<string>('all');
+  const [filterYear, setFilterYear] = useState<string>('2026');
 
   const { data: leadsData } = useQuery<{ data: any[], pagination: any }>({
     queryKey: ['leads', filterStatus, filterSource],
@@ -164,6 +166,27 @@ export function Leads() {
             {Object.entries(SOURCE_LABELS).map(([key, label]) => (
               <SelectItem key={key} value={key}>{label}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterMonth || 'all'} onValueChange={setFilterMonth}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Tous mois" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous mois</SelectItem>
+            {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map((label, idx) => (
+              <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterYear} onValueChange={setFilterYear}>
+          <SelectTrigger className="w-24">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="2026">2026</SelectItem>
+            <SelectItem value="2027">2027</SelectItem>
+            <SelectItem value="2028">2028</SelectItem>
           </SelectContent>
         </Select>
       </div>

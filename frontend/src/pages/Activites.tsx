@@ -54,6 +54,8 @@ export function Activites() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterAffaire, setFilterAffaire] = useState<string>('all');
+  const [filterMonth, setFilterMonth] = useState<string>('all');
+  const [filterYear, setFilterYear] = useState<string>('2026');
   const [view, setView] = useState<'timeline' | 'calendar'>('timeline');
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -73,6 +75,14 @@ export function Activites() {
   const filteredActivites = activites.filter(a => {
     if (filterType !== 'all' && a.type !== filterType) return false;
     if (filterAffaire !== 'all' && a.affaireId !== filterAffaire) return false;
+    if (filterMonth !== 'all') {
+      const activityDate = new Date(a.createdAt);
+      if (activityDate.getMonth() + 1 !== parseInt(filterMonth)) return false;
+    }
+    if (filterYear !== 'all') {
+      const activityDate = new Date(a.createdAt);
+      if (activityDate.getFullYear() !== parseInt(filterYear)) return false;
+    }
     return true;
   });
 
@@ -193,28 +203,46 @@ export function Activites() {
             Calendrier
           </Button>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <Filter size={16} className="text-muted-foreground" />
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous types</SelectItem>
-                {Object.entries(ACTIVITY_LABELS).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex gap-2 flex-wrap">
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous types</SelectItem>
+              {Object.entries(ACTIVITY_LABELS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={filterAffaire} onValueChange={setFilterAffaire}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="Toutes affaires" />
+              <SelectValue placeholder="Affaire" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes affaires</SelectItem>
               {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterMonth} onValueChange={setFilterMonth}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Mois" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous mois</SelectItem>
+              {monthNames.map((label, idx) => (
+                <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2026">2026</SelectItem>
+              <SelectItem value="2027">2027</SelectItem>
+              <SelectItem value="2028">2028</SelectItem>
             </SelectContent>
           </Select>
         </div>

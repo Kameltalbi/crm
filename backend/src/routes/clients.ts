@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import { AuditAction } from '@prisma/client';
+import { logAudit } from '../lib/audit.js';
 
 export const clientsRoutes = Router();
 clientsRoutes.use(requireAuth);
@@ -53,24 +55,72 @@ clientsRoutes.post('/', async (req: AuthRequest, res, next) => {
     const client = await prisma.client.create({
       data: { ...data, createdById: req.userId, organizationId: req.organizationId! },
     });
+
+    // Log audit
+    await logAudit({
+      organizationId: req.organizationId!,
+      userId: req.userId!,
+      action: AuditAction.CREATE,
+      entityType: 'Client',
+      entityId: client.id,
+      newValues: data,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
     res.status(201).json(client);
   } catch (e) { next(e); }
 });
 
-clientsRoutes.put('/:id', async (req, res, next) => {
+clientsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   try {
     const data = clientSchema.parse(req.body);
+    const id = req.params.id as string;
+    const oldClient = await prisma.client.findUnique({ where: { id } });
     const client = await prisma.client.update({
-      where: { id: req.params.id },
+      where: { id },
       data,
     });
+
+    // Log audit
+    if (oldClient) {
+      await logAudit({
+        organizationId: req.organizationId!,
+        userId: req.userId!,
+        action: AuditAction.UPDATE,
+        entityType: 'Client',
+        entityId: client.id,
+        oldValues: oldClient,
+        newValues: data,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+    }
+
     res.json(client);
   } catch (e) { next(e); }
 });
 
-clientsRoutes.delete('/:id', async (req, res, next) => {
+clientsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
-    await prisma.client.delete({ where: { id: req.params.id } });
+    const id = req.params.id as string;
+    const oldClient = await prisma.client.findUnique({ where: { id } });
+    await prisma.client.delete({ where: { id } });
+
+    // Log audit
+    if (oldClient) {
+      await logAudit({
+        organizationId: req.organizationId!,
+        userId: req.userId!,
+        action: AuditAction.DELETE,
+        entityType: 'Client',
+        entityId: id,
+        oldValues: oldClient,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+    }
+
     res.json({ success: true });
   } catch (e) { next(e); }
 });
@@ -81,7 +131,7 @@ clientsRoutes.post('/import', async (req: AuthRequest, res, next) => {
       clients: z.array(clientSchema),
     });
     const { clients } = importSchema.parse(req.body);
-    
+
     const createdClients = await prisma.client.createMany({
       data: clients.map(c => ({
         ...c,
@@ -90,7 +140,19 @@ clientsRoutes.post('/import', async (req: AuthRequest, res, next) => {
       })),
       skipDuplicates: true,
     });
-    
+
+    // Log audit
+    await logAudit({
+      organizationId: req.organizationId!,
+      userId: req.userId!,
+      action: AuditAction.IMPORT,
+      entityType: 'Client',
+      entityId: 'bulk',
+      newValues: { count: createdClients.count },
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
     res.status(201).json({ success: true, count: createdClients.count });
   } catch (e) { next(e); }
 });

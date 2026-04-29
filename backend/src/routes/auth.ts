@@ -3,7 +3,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import { UserRole } from '@prisma/client';
+import { UserRole, AuditAction } from '@prisma/client';
+import { logAudit } from '../lib/audit.js';
 
 export const authRoutes = Router();
 
@@ -69,6 +70,18 @@ authRoutes.post('/register', async (req, res, next) => {
       },
     });
 
+    // Log audit
+    await logAudit({
+      organizationId: organization.id,
+      userId: user.id,
+      action: AuditAction.CREATE,
+      entityType: 'User',
+      entityId: user.id,
+      newValues: { email: user.email, name: user.name, role: user.role },
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
     res.status(201).json({
       accessToken,
       refreshToken,
@@ -112,6 +125,17 @@ authRoutes.post('/login', async (req, res, next) => {
         token: refreshToken,
         expiresAt,
       },
+    });
+
+    // Log audit
+    await logAudit({
+      organizationId: user.organizationId,
+      userId: user.id,
+      action: AuditAction.LOGIN,
+      entityType: 'User',
+      entityId: user.id,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
     });
 
     res.json({
@@ -187,8 +211,25 @@ authRoutes.post('/logout', async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
     if (refreshToken) {
+      // Get user info from refresh token for audit logging
+      const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as { userId: string };
+      const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+
       // Delete refresh token from database
       await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+
+      // Log audit
+      if (user) {
+        await logAudit({
+          organizationId: user.organizationId,
+          userId: user.id,
+          action: AuditAction.LOGOUT,
+          entityType: 'User',
+          entityId: user.id,
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'],
+        });
+      }
     }
     res.json({ success: true });
   } catch (e) {

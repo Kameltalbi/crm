@@ -34,6 +34,7 @@ model Organization {
   gmailTokens GmailToken[]
   previsionnels PrevisionMois[]
   notifications Notification[]
+  auditLogs   AuditLog[]
 
   @@map("organizations")
 }
@@ -58,6 +59,7 @@ model User {
   gmailTokens      GmailToken?
   notifications    Notification[]
   refreshTokens    RefreshToken[]
+  auditLogs        AuditLog[]
 
   @@index([organizationId])
   @@map("users")
@@ -341,4 +343,40 @@ model RefreshToken {
 enum ProductType {
   SERVICE  // Bilan carbone, formation, conseil
   PRODUCT  // Produit physique
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AUDIT LOG — Logs d'audit pour traçabilité des actions
+// ═══════════════════════════════════════════════════════════════
+model AuditLog {
+  id            String   @id @default(cuid())
+  organizationId String
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action        AuditAction
+  entityType    String   // ex: "Client", "Affaire", "User"
+  entityId      String   // ID de l'entité concernée
+  oldValues     String?  @db.Text // Valeurs avant modification (JSON)
+  newValues     String?  @db.Text // Valeurs après modification (JSON)
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
 }

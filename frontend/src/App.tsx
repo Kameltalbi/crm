@@ -17,8 +17,8 @@ import { Organizations } from './pages/Organizations';
 import { Landing } from './pages/Landing';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = useAuth((s) => s.token);
-  return token ? <>{children}</> : <Navigate to="/login" replace />;
+  const accessToken = useAuth((s) => s.accessToken);
+  return accessToken ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 export default function App() {

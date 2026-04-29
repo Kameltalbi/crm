@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Mail, Phone, FileBadge, Search, TrendingUp, MoreVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, Mail, Phone, FileBadge, Search, TrendingUp, MoreVertical, Upload } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,14 +8,17 @@ import { Button } from '@/components/ui/button';
 import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItem } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import type { Client } from '@/types';
+import * as XLSX from 'xlsx';
 
 const EMPTY = { id: '', name: '', contactName: '', email: '', phone: '', address: '', matricule: '', qualificatif: 'NON_SPECIFIE', notes: '' };
 
 export function Clients() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [search, setSearch] = useState('');
+  const [importFile, setImportFile] = useState<File | null>(null);
 
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ['clients'],
@@ -48,6 +51,51 @@ export function Clients() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['clients'] }),
   });
 
+  const importMutation = useMutation({
+    mutationFn: (clients: Omit<typeof EMPTY, 'id'>[]) => api.post('/clients/import', { clients }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['clients'] });
+      setImportOpen(false);
+      setImportFile(null);
+    },
+  });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImportFile(file);
+    }
+  };
+
+  const handleImport = () => {
+    if (!importFile) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = e.target?.result;
+      if (data) {
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(sheet) as any[];
+
+        const clientsToImport = jsonData.map((row: any) => ({
+          name: row.name || row.Raison_sociale || row['Raison sociale'] || '',
+          contactName: row.contactName || row.Contact || '',
+          email: row.email || row.Email || '',
+          phone: row.phone || row.Téléphone || row.Telephone || '',
+          address: row.address || row.Adresse || '',
+          matricule: row.matricule || row.Matricule || '',
+          qualificatif: row.qualificatif || row.Qualificatif || 'NON_SPECIFIE',
+          notes: row.notes || row.Notes || '',
+        }));
+
+        importMutation.mutate(clientsToImport);
+      }
+    };
+    reader.readAsBinaryString(importFile);
+  };
+
   const openEdit = (c: Client) => {
     setForm({
       id: c.id, name: c.name, contactName: c.contactName || '',
@@ -64,9 +112,14 @@ export function Clients() {
           <h1 className="font-serif text-2xl md:text-3xl">Clients</h1>
           <p className="text-sm text-muted-foreground">Gestion des clients et prospects</p>
         </div>
-        <Button onClick={() => { console.log('Opening form'); setForm(EMPTY); setOpen(true); console.log('Form should be open'); }} className="w-full sm:w-auto">
-          <Plus size={16} />Nouveau client
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setImportOpen(true)} variant="outline" className="w-full sm:w-auto">
+            <Upload size={16} />Importer Excel
+          </Button>
+          <Button onClick={() => { console.log('Opening form'); setForm(EMPTY); setOpen(true); console.log('Form should be open'); }} className="w-full sm:w-auto">
+            <Plus size={16} />Nouveau client
+          </Button>
+        </div>
       </div>
 
       {/* Stats Summary */}
@@ -246,6 +299,39 @@ export function Clients() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
             <Button onClick={() => saveMutation.mutate(form)} disabled={!form.name}>💾 Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Importer clients depuis Excel</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Fichier Excel (.xlsx, .xls)</Label>
+              <Input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileUpload}
+              />
+            </div>
+            {importFile && (
+              <div className="text-sm text-muted-foreground">
+                Fichier sélectionné: {importFile.name}
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground">
+              Les colonnes Excel doivent être: name (ou Raison sociale), contactName (ou Contact), email, phone (ou Téléphone), address (ou Adresse), matricule (ou Matricule), qualificatif, notes
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setImportOpen(false); setImportFile(null); }}>Annuler</Button>
+            <Button onClick={handleImport} disabled={!importFile || importMutation.isPending}>
+              {importMutation.isPending ? 'Importation...' : 'Importer'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

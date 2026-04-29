@@ -13,6 +13,7 @@ const clientSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   matricule: z.string().optional(),
+  qualificatif: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -71,5 +72,25 @@ clientsRoutes.delete('/:id', async (req, res, next) => {
   try {
     await prisma.client.delete({ where: { id: req.params.id } });
     res.json({ success: true });
+  } catch (e) { next(e); }
+});
+
+clientsRoutes.post('/import', async (req: AuthRequest, res, next) => {
+  try {
+    const importSchema = z.object({
+      clients: z.array(clientSchema),
+    });
+    const { clients } = importSchema.parse(req.body);
+    
+    const createdClients = await prisma.client.createMany({
+      data: clients.map(c => ({
+        ...c,
+        createdById: req.userId,
+        organizationId: req.organizationId!,
+      })),
+      skipDuplicates: true,
+    });
+    
+    res.status(201).json({ success: true, count: createdClients.count });
   } catch (e) { next(e); }
 });

@@ -50,7 +50,7 @@ affairesRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
     const { page, limit, skip } = parsePagination(req.query);
     const { statut, type, annee, viaPartenaire } = req.query;
-    const where: any = { organizationId: req.organizationId };
+    const where: any = { organizationId: req.organizationId, deletedAt: null };
     if (statut)        where.statut = statut;
     if (type)          where.type = type;
     if (annee)         where.anneePrevue = Number(annee);
@@ -177,9 +177,13 @@ affairesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 });
 
 // ─── DELETE ──────────────────────────────────────────────────────
-affairesRoutes.delete('/:id', async (req, res, next) => {
+affairesRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
-    await prisma.affaire.delete({ where: { id: req.params.id } });
+    const id = req.params.id as string;
+    await prisma.affaire.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
     res.json({ success: true });
   } catch (e) { next(e); }
 });

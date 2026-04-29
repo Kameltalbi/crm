@@ -23,7 +23,7 @@ const clientSchema = z.object({
 clientsRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
     const { page, limit, skip } = parsePagination(req.query);
-    const where = { organizationId: req.organizationId };
+    const where = { organizationId: req.organizationId, deletedAt: null };
 
     const [clients, total] = await Promise.all([
       prisma.client.findMany({
@@ -123,7 +123,10 @@ clientsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
     const id = req.params.id as string;
     const oldClient = await prisma.client.findUnique({ where: { id } });
-    await prisma.client.delete({ where: { id } });
+    await prisma.client.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
 
     // Log audit
     if (oldClient) {

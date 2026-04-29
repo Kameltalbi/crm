@@ -20,7 +20,7 @@ const productSchema = z.object({
 productsRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
     const { page, limit, skip } = parsePagination(req.query);
-    const where = { organizationId: req.organizationId };
+    const where = { organizationId: req.organizationId, deletedAt: null };
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
@@ -85,11 +85,13 @@ productsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   } catch (e) { next(e); }
 });
 
-// DELETE /api/products/:id - Delete product
+// DELETE /api/products/:id - Delete product (soft delete)
 productsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
-    await prisma.product.delete({
-      where: { id: req.params.id as string },
+    const id = req.params.id as string;
+    await prisma.product.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
     res.json({ success: true });
   } catch (e) { next(e); }

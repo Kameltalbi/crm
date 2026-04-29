@@ -10,6 +10,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { KPIs, Affaire } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
 
+function KpiCard({ title, subtitle, value, icon, color }: {
+  title: string;
+  subtitle: string;
+  value: string;
+  icon: React.ReactNode;
+  color: string;
+}) {
+  const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
+    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
+    blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
+    violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+    amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
+  };
+  const colors = colorClasses[color] || colorClasses.emerald;
+  return (
+    <Card className={`border-2 ${colors.border} hover:shadow-md transition-shadow`}>
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div className={`p-2 rounded-lg ${colors.bg} ${colors.text}`}>{icon}</div>
+        </div>
+        <div className="mt-4">
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-medium text-gray-600 mt-1">{title}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function Dashboard() {
   const [selectedYear, setSelectedYear] = useState(2026);
 
@@ -115,41 +145,47 @@ export function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <ProfessionalKpiCard
-          title="CA prévisionnel cumulé"
-          value={fmtDT(totalCumulativeCA)}
-          subtitle={`Année ${selectedYear}`}
-          icon={<Wallet className="w-5 h-5" />}
-          trend="+15%"
-          trendUp={true}
-          color="blue"
-        />
-        <ProfessionalKpiCard
-          title="Chiffre d'affaires réalisé"
+        <KpiCard
+          title="CA"
+          subtitle="Performance actuelle"
           value={fmtDT(kpis.caRealise)}
-          subtitle={`${kpis.counts.realise} affaires gagnées`}
           icon={<DollarSign className="w-5 h-5" />}
-          trend="+12%"
-          trendUp={true}
           color="emerald"
         />
-        <ProfessionalKpiCard
-          title="Prévision intelligente"
-          value={fmtDT(kpis.smartForecast?.forecast || 0)}
-          subtitle={`Confiance: ${kpis.smartForecast?.confidenceScore || 0}%`}
+        <KpiCard
+          title="Pipeline"
+          subtitle="Potentiel futur"
+          value={fmtDT(kpis.caPipeline)}
           icon={<Target className="w-5 h-5" />}
-          trend="+8%"
-          trendUp={true}
           color="blue"
         />
-        <ProfessionalKpiCard
-          title="Taux de conversion"
-          value={`${kpis.smartForecast?.conversionRates?.overall || winRate}%`}
-          subtitle={`Pipeline: ${kpis.smartForecast?.conversionRates?.pipelineToRealise || 0}%`}
+        <KpiCard
+          title="Affaires en cours"
+          subtitle="Activité"
+          value={`${kpis.counts.pipeline + kpis.counts.prospect}`}
           icon={<TrendingUp className="w-5 h-5" />}
-          trend="+5%"
-          trendUp={true}
+          color="amber"
+        />
+        <KpiCard
+          title="Affaires gagnées"
+          subtitle="Résultat"
+          value={`${kpis.counts.realise}`}
+          icon={<Wallet className="w-5 h-5" />}
+          color="emerald"
+        />
+        <KpiCard
+          title="Conversion"
+          subtitle="Efficacité"
+          value={`${winRate}%`}
+          icon={<Target className="w-5 h-5" />}
           color="purple"
+        />
+        <KpiCard
+          title="Nouveaux clients"
+          subtitle="Développement"
+          value={`${new Set(affaires.map(a => a.clientId)).size}`}
+          icon={<Plus className="w-5 h-5" />}
+          color="blue"
         />
       </div>
 

@@ -39,8 +39,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const organization = organizations?.[0];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

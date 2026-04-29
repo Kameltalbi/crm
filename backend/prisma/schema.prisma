@@ -57,6 +57,7 @@ model User {
   affairesCreated  Affaire[]
   gmailTokens      GmailToken?
   notifications    Notification[]
+  refreshTokens    RefreshToken[]
 
   @@index([organizationId])
   @@map("users")
@@ -319,6 +320,22 @@ enum NotificationType {
   DEVIS_CREE             // Devis créé
   FACTURE_CREEE          // Facture créée
   RAPPEL                 // Rappel personnalisé
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REFRESH TOKEN — JWT refresh tokens pour authentification persistante
+// ═══════════════════════════════════════════════════════════════
+model RefreshToken {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
 }
 
 enum ProductType {

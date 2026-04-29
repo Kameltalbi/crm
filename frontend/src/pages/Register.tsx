@@ -22,7 +22,8 @@ export function Register() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', { email, password, name, organizationName });
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/');
     } catch (err: any) {

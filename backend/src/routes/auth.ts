@@ -49,16 +49,33 @@ authRoutes.post('/register', async (req, res, next) => {
       },
     });
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
-      expiresIn: '7d',
+    // Generate access token (short-lived: 15 minutes)
+    const accessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: '15m',
+    });
+
+    // Generate refresh token (long-lived: 30 days)
+    const refreshToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: '30d',
+    });
+
+    // Store refresh token in database
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt,
+      },
     });
 
     res.status(201).json({
-      token,
-      user: { 
-        id: user.id, 
-        email: user.email, 
-        name: user.name, 
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
         role: user.role,
         organizationId: user.organizationId,
       },
@@ -77,11 +94,29 @@ authRoutes.post('/login', async (req, res, next) => {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
-      expiresIn: '7d',
+    // Generate access token (short-lived: 15 minutes)
+    const accessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: '15m',
     });
+
+    // Generate refresh token (long-lived: 30 days)
+    const refreshToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: '30d',
+    });
+
+    // Store refresh token in database
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt,
+      },
+    });
+
     res.json({
-      token,
+      accessToken,
+      refreshToken,
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
     });
   } catch (e) {
@@ -98,16 +133,64 @@ authRoutes.get('/me', async (req, res, next) => {
     const { userId } = jwt.verify(authHeader.substring(7), process.env.JWT_SECRET!) as { userId: string };
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { 
-        id: true, 
-        email: true, 
-        name: true, 
+      select: {
+        id: true,
+        email: true,
+        name: true,
         role: true,
         organizationId: true,
       },
     });
     if (!user) return res.status(404).json({ error: 'User introuvable' });
     res.json({ user });
+  } catch (e) {
+    next(e);
+  }
+});
+
+authRoutes.post('/refresh', async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'Refresh token manquant' });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as { userId: string };
+
+    // Check if refresh token exists in database and is not expired
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { user: true },
+    });
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      // Delete expired token if exists
+      if (storedToken) {
+        await prisma.refreshToken.delete({ where: { id: storedToken.id } });
+      }
+      return res.status(401).json({ error: 'Refresh token invalide ou expiré' });
+    }
+
+    // Generate new access token
+    const accessToken = jwt.sign({ userId: decoded.userId }, process.env.JWT_SECRET!, {
+      expiresIn: '15m',
+    });
+
+    res.json({ accessToken });
+  } catch (e) {
+    next(e);
+  }
+});
+
+authRoutes.post('/logout', async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+      // Delete refresh token from database
+      await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+    }
+    res.json({ success: true });
   } catch (e) {
     next(e);
   }

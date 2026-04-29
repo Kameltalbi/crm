@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuth } from './auth';
 
 const API_URL = '/api';
 
@@ -9,19 +10,38 @@ export const api = axios.create({
 
 // Injection du token JWT à chaque requête
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const accessToken = localStorage.getItem('accessToken');
+  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
   return config;
 });
 
-// Logout auto en cas de 401
+// Logout auto en cas de 401 avec tentative de refresh
 api.interceptors.response.use(
   r => r,
-  err => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      if (window.location.pathname !== '/login') window.location.href = '/login';
+  async err => {
+    const originalRequest = err.config;
+
+    if (err.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const auth = useAuth.getState();
+        await auth.refreshAccessToken();
+
+        // Retry original request with new token
+        const newAccessToken = localStorage.getItem('accessToken');
+        if (newAccessToken) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed, logout and redirect
+        const auth = useAuth.getState();
+        await auth.logout();
+        if (window.location.pathname !== '/login') window.location.href = '/login';
+      }
     }
+
     return Promise.reject(err);
   }
 );

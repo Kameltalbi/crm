@@ -7,6 +7,7 @@ import rateLimit from 'express-rate-limit';
 
 import { authRoutes } from './routes/auth.js';
 import { clientsRoutes } from './routes/clients.js';
+import { leadsRoutes } from './routes/leads.js';
 import { affairesRoutes } from './routes/affaires.js';
 import { previsionnelRoutes } from './routes/previsionnel.js';
 import { softfactureRoutes } from './routes/softfacture.js';
@@ -48,6 +49,7 @@ app.get('/api/health', (_, res) => {
 // ─── API Routes ──────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/clients', clientsRoutes);
+app.use('/api/leads', leadsRoutes);
 app.use('/api/affaires', affairesRoutes);
 app.use('/api/previsionnel', previsionnelRoutes);
 app.use('/api/softfacture', softfactureRoutes);

@@ -5,11 +5,11 @@ import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label, Textarea, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItem } from '@/components/ui/form-controls';
+import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItem } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import type { Client } from '@/types';
 
-const EMPTY = { id: '', name: '', contactName: '', email: '', phone: '', address: '', matricule: '', notes: '' };
+const EMPTY = { id: '', name: '', contactName: '', email: '', phone: '', address: '', matricule: '', qualificatif: '', notes: '' };
 
 export function Clients() {
   const qc = useQueryClient();
@@ -52,7 +52,7 @@ export function Clients() {
     setForm({
       id: c.id, name: c.name, contactName: c.contactName || '',
       email: c.email || '', phone: c.phone || '', address: c.address || '',
-      matricule: c.matricule || '', notes: c.notes || '',
+      matricule: c.matricule || '', qualificatif: c.qualificatif || '', notes: c.notes || '',
     });
     setOpen(true);
   };
@@ -138,6 +138,7 @@ export function Clients() {
                   <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Contact</th>
                   <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Email</th>
                   <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Téléphone</th>
+                  <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Qualificatif</th>
                   <th className="text-left p-3 uppercase tracking-wider text-leaf font-semibold">Matricule</th>
                   <th className="text-center p-3 uppercase tracking-wider text-leaf font-semibold">Affaires</th>
                   <th className="text-right p-3 uppercase tracking-wider text-leaf font-semibold">Actions</th>
@@ -150,6 +151,9 @@ export function Clients() {
                     <td className="p-3 text-muted-foreground">{c.contactName || '—'}</td>
                     <td className="p-3 text-muted-foreground">{c.email || '—'}</td>
                     <td className="p-3 text-muted-foreground">{c.phone || '—'}</td>
+                    <td className="p-3 text-muted-foreground">
+                      {c.qualificatif === 'PROSPECT' ? '🔍 Prospect' : c.qualificatif === 'CLIENT' ? '🤝 Client' : '—'}
+                    </td>
                     <td className="p-3 text-muted-foreground">{c.matricule || '—'}</td>
                     <td className="p-3 text-center">
                       <span className="bg-sage text-leaf px-2 py-0.5 rounded-full text-xs font-medium">
@@ -182,7 +186,7 @@ export function Clients() {
                 ))}
                 {filteredClients.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
                       Aucun client trouvé
                     </td>
                   </tr>
@@ -210,6 +214,17 @@ export function Clients() {
             <div className="space-y-1.5">
               <Label>Matricule fiscal</Label>
               <Input value={form.matricule} onChange={(e) => setForm({ ...form, matricule: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Qualificatif</Label>
+              <Select value={form.qualificatif} onValueChange={(v) => setForm({ ...form, qualificatif: v })}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Non spécifié</SelectItem>
+                  <SelectItem value="PROSPECT">🔍 Prospect</SelectItem>
+                  <SelectItem value="CLIENT">🤝 Client</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Email</Label>

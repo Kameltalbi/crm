@@ -45,6 +45,7 @@ export interface Client {
   phone?: string | null;
   address?: string | null;
   matricule?: string | null;
+  qualificatif?: string | null;
   notes?: string | null;
   organizationId: string;
   _count?: { affaires: number };

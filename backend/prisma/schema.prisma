@@ -79,6 +79,7 @@ model Client {
   phone       String?
   address     String?
   matricule   String?  // Matricule fiscal tunisien
+  qualificatif String?  // ex: "PROSPECT" ou "CLIENT"
   notes       String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

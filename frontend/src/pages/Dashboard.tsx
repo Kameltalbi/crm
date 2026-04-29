@@ -114,18 +114,25 @@ export function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <KpiCard
-          title="CA"
-          subtitle="Performance actuelle"
-          value={fmtDT(kpis.caRealise)}
+          title="CA Total"
+          subtitle="Réalisé + Pipeline + Prospection"
+          value={fmtDT(kpis.caTotal)}
           icon={<DollarSign className="w-5 h-5" />}
           color="emerald"
         />
         <KpiCard
-          title="Pipeline"
-          subtitle="Potentiel futur"
-          value={fmtDT(kpis.caPipeline)}
+          title="CA Pipeline"
+          subtitle="Pipeline + Prospection"
+          value={fmtDT(kpis.caPipeline + kpis.caProspection)}
           icon={<Target className="w-5 h-5" />}
           color="blue"
+        />
+        <KpiCard
+          title="CA Gagné"
+          subtitle="Réalisé"
+          value={fmtDT(kpis.caRealise)}
+          icon={<Wallet className="w-5 h-5" />}
+          color="emerald"
         />
         <KpiCard
           title="Affaires en cours"
@@ -147,13 +154,6 @@ export function Dashboard() {
           value={`${winRate}%`}
           icon={<Target className="w-5 h-5" />}
           color="purple"
-        />
-        <KpiCard
-          title="Nouveaux clients"
-          subtitle="Développement"
-          value={`${new Set(affaires.map(a => a.clientId)).size}`}
-          icon={<Plus className="w-5 h-5" />}
-          color="blue"
         />
       </div>
 

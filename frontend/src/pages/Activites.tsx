@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Phone, Mail, Calendar, FileText, Trash2, Pencil } from 'lucide-react';
+import { Plus, Phone, Mail, Calendar, FileText, Trash2, Pencil, Filter } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import type { Activite, Affaire, ActiviteType } from '@/types';
 
 const ACTIVITY_ICONS: Record<ActiviteType, any> = {
@@ -51,6 +52,8 @@ export function Activites() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterAffaire, setFilterAffaire] = useState<string>('all');
 
   const { data: activitesData } = useQuery<{ data: Activite[], pagination: any }>({
     queryKey: ['activites'],
@@ -63,6 +66,23 @@ export function Activites() {
     queryFn: () => api.get('/affaires').then((r) => r.data),
   });
   const affaires = affairesData?.data || [];
+
+  // Filter activities
+  const filteredActivites = activites.filter(a => {
+    if (filterType !== 'all' && a.type !== filterType) return false;
+    if (filterAffaire !== 'all' && a.affaireId !== filterAffaire) return false;
+    return true;
+  });
+
+  // Group by date
+  const groupedByDate = filteredActivites.reduce((acc, a) => {
+    const date = new Date(a.createdAt).toLocaleDateString('fr-FR');
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(a);
+    return acc;
+  }, {} as Record<string, Activite[]>);
+
+  const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
@@ -103,62 +123,112 @@ export function Activites() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-serif text-2xl md:text-3xl">Activités</h1>
-          <p className="text-sm text-muted-foreground">Historique des interactions et tâches</p>
+          <p className="text-sm text-muted-foreground">Timeline des interactions et tâches</p>
         </div>
         <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
           <Plus size={16} className="mr-2" /> Nouvelle activité
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Toutes les activités</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {activites.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Aucune activité</p>
-            ) : (
-              activites.map((a) => {
-                const Icon = ACTIVITY_ICONS[a.type];
-                const affaire = affaires.find(af => af.id === a.affaireId);
-                return (
-                  <div key={a.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                      <Icon size={18} className="text-muted-foreground" />
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <Filter size={16} className="text-muted-foreground" />
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous types</SelectItem>
+              {Object.entries(ACTIVITY_LABELS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Select value={filterAffaire} onValueChange={setFilterAffaire}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Toutes affaires" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes affaires</SelectItem>
+            {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Timeline */}
+      <div className="space-y-8">
+        {filteredActivites.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-12">
+              <p className="text-sm text-muted-foreground">Aucune activité</p>
+            </CardContent>
+          </Card>
+        ) : (
+          sortedDates.map((date) => (
+            <div key={date}>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-px h-8 bg-border"></div>
+                <h3 className="text-sm font-semibold text-muted-foreground">{date}</h3>
+              </div>
+              <div className="relative pl-8 space-y-4">
+                <div className="absolute left-[15px] top-0 bottom-0 w-px bg-border"></div>
+                {groupedByDate[date].map((a, idx) => {
+                  const Icon = ACTIVITY_ICONS[a.type];
+                  const affaire = affaires.find(af => af.id === a.affaireId);
+                  const isFirst = idx === 0;
+                  const isLast = idx === groupedByDate[date].length - 1;
+                  return (
+                    <div key={a.id} className="relative">
+                      <div className={`absolute -left-[23px] w-3 h-3 rounded-full bg-background border-2 ${
+                        a.type === 'NOTE' ? 'border-blue-500' :
+                        a.type === 'APPEL' ? 'border-green-500' :
+                        a.type === 'EMAIL_ENVOYE' || a.type === 'EMAIL_RECU' ? 'border-purple-500' :
+                        a.type === 'RDV' ? 'border-orange-500' : 'border-gray-500'
+                      } ${isFirst ? 'top-4' : isLast ? 'bottom-4' : 'top-1/2 -translate-y-1/2'}`}></div>
+                      <Card className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                              <Icon size={18} className="text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <Badge variant="secondary" className="text-xs">
+                                  {ACTIVITY_LABELS[a.type]}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(a.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <p className="font-medium text-sm">{a.title}</p>
+                              {a.content && <p className="text-sm text-muted-foreground mt-1">{a.content}</p>}
+                              {affaire && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Affaire: <span className="font-medium">{affaire.title}</span>
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="ghost" onClick={() => openEdit(a)}>
+                                <Pencil size={14} />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(a.id)}>
+                                <Trash2 size={14} />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted">
-                          {ACTIVITY_LABELS[a.type]}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(a.createdAt).toLocaleDateString('fr-FR')}
-                        </span>
-                      </div>
-                      <p className="font-medium text-sm">{a.title}</p>
-                      {a.content && <p className="text-sm text-muted-foreground mt-1">{a.content}</p>}
-                      {affaire && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Affaire: {affaire.title}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => openEdit(a)}>
-                        <Pencil size={14} />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(a.id)}>
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">

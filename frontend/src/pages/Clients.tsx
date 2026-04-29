@@ -9,7 +9,7 @@ import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import type { Client } from '@/types';
 
-const EMPTY = { id: '', name: '', contactName: '', email: '', phone: '', address: '', matricule: '', qualificatif: '', notes: '' };
+const EMPTY = { id: '', name: '', contactName: '', email: '', phone: '', address: '', matricule: '', qualificatif: 'NON_SPECIFIE', notes: '' };
 
 export function Clients() {
   const qc = useQueryClient();
@@ -220,7 +220,7 @@ export function Clients() {
               <Select value={form.qualificatif} onValueChange={(v) => setForm({ ...form, qualificatif: v })}>
                 <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Non spécifié</SelectItem>
+                  <SelectItem value="NON_SPECIFIE">Non spécifié</SelectItem>
                   <SelectItem value="PROSPECT">🔍 Prospect</SelectItem>
                   <SelectItem value="CLIENT">🤝 Client</SelectItem>
                 </SelectContent>

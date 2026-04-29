@@ -69,72 +69,69 @@ export function Previsionnel() {
         </CardContent>
       </Card>
 
-      {/* Key metrics cards - 6 cards max, 3 per row on desktop, 2 per row on mobile */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {/* Key metrics cards - 8 cards, 4 per row on desktop, 2 per row on mobile */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">CA Total Annuel</div>
-            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caTotalAnnuel)}</div>
-            <div className="text-xs opacity-75 mt-1">Réalisé: {fmtDT(data.totaux.caRealiseAnnuel)} + Prévu: {fmtDT(data.totaux.caPrevuAnnuel)}</div>
+          <CardContent className="p-3">
+            <div className="text-[10px] uppercase tracking-wider opacity-75 mb-1">CA Total Annuel</div>
+            <div className="text-lg md:text-xl font-mono font-bold">{fmtDT(data.totaux.caTotalAnnuel)}</div>
+            <div className="text-[10px] opacity-75 mt-1">Réalisé: {fmtDT(data.totaux.caRealiseAnnuel)} + Prévu: {fmtDT(data.totaux.caPrevuAnnuel)}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-          <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">CA Brut HT</div>
-            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caBrutHT)}</div>
-            <div className="text-xs opacity-75 mt-1">Prévisions des affaires</div>
+          <CardContent className="p-3">
+            <div className="text-[10px] uppercase tracking-wider opacity-75 mb-1">CA Brut HT</div>
+            <div className="text-lg md:text-xl font-mono font-bold">{fmtDT(data.totaux.caBrutHT)}</div>
+            <div className="text-[10px] opacity-75 mt-1">Prévisions des affaires</div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">Revenu Net HT</div>
-            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.netHT)}</div>
-            <div className="text-xs opacity-75 mt-1">Après commissions tiers</div>
+          <CardContent className="p-3">
+            <div className="text-[10px] uppercase tracking-wider opacity-75 mb-1">Revenu Net HT</div>
+            <div className="text-lg md:text-xl font-mono font-bold">{fmtDT(data.totaux.netHT)}</div>
+            <div className="text-[10px] opacity-75 mt-1">Après commissions tiers</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Moyenne mensuelle</div>
-            <div className="text-2xl font-mono font-semibold">{fmtDT(data.totaux.moyenneMensuelle)}</div>
-            <div className="text-xs text-muted-foreground mt-1">Basé sur CA réalisé</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">CA Projeté</div>
-            <div className="text-2xl font-mono font-semibold">{fmtDT(data.totaux.caProjete)}</div>
-            <div className="text-xs text-muted-foreground mt-1">Projection automatique</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Mois en cours</div>
-            <div className="text-2xl font-mono font-semibold">{MOIS[data.totaux.moisCourant]}</div>
-            <div className="text-xs text-muted-foreground mt-1">{data.totaux.anneeCourante}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bilan Carbone and Formation cards - same size on same line */}
-      <div className="grid grid-cols-2 gap-4">
         <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">🌍 Bilan Carbone</div>
-            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caBilansHT)}</div>
-            <div className="text-xs opacity-75 mt-1">CA total bilans</div>
+          <CardContent className="p-3">
+            <div className="text-[10px] uppercase tracking-wider opacity-75 mb-1">🌍 Bilan Carbone</div>
+            <div className="text-lg md:text-xl font-mono font-bold">{fmtDT(data.totaux.caBilansHT)}</div>
+            <div className="text-[10px] opacity-75 mt-1">CA total bilans</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Moyenne mensuelle</div>
+            <div className="text-lg md:text-xl font-mono font-semibold">{fmtDT(data.totaux.moyenneMensuelle)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">Basé sur CA réalisé</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">CA Projeté</div>
+            <div className="text-lg md:text-xl font-mono font-semibold">{fmtDT(data.totaux.caProjete)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">Projection automatique</div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
-          <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wider opacity-75 mb-1">📚 Formations</div>
-            <div className="text-2xl font-mono font-bold">{fmtDT(data.totaux.caFormationsHT)}</div>
-            <div className="text-xs opacity-75 mt-1">CA total formations</div>
+          <CardContent className="p-3">
+            <div className="text-[10px] uppercase tracking-wider opacity-75 mb-1">📚 Formations</div>
+            <div className="text-lg md:text-xl font-mono font-bold">{fmtDT(data.totaux.caFormationsHT)}</div>
+            <div className="text-[10px] opacity-75 mt-1">CA total formations</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Mois en cours</div>
+            <div className="text-lg md:text-xl font-mono font-semibold">{MOIS[data.totaux.moisCourant]}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">{data.totaux.anneeCourante}</div>
           </CardContent>
         </Card>
       </div>

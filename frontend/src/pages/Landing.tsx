@@ -11,7 +11,6 @@ export function Landing() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
-              <span className="font-serif font-semibold text-2xl">ktOptima</span>
             </div>
             <nav className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
@@ -239,7 +238,6 @@ export function Landing() {
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
                 <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
-                <span className="font-serif font-semibold text-2xl">ktOptima</span>
               </div>
               <p className="text-gray-400 mb-4 max-w-md text-base">
                 La solution CRM moderne pour les entreprises tunisiennes. Gérez vos affaires, vos clients et vos prévisions en toute simplicité.

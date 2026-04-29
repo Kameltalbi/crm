@@ -41,6 +41,7 @@ export function Affaires() {
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY);
+  const [clientSearch, setClientSearch] = useState('');
 
   const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
     queryKey: ['affaires', filters],
@@ -52,6 +53,10 @@ export function Affaires() {
     queryFn: () => api.get('/clients').then((r) => r.data),
   });
   const clients = clientsData?.data || [];
+  const filteredClients = clients.filter(c =>
+    c.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
+    (c.contactName && c.contactName.toLowerCase().includes(clientSearch.toLowerCase()))
+  );
   const { data: productsData } = useQuery<{ data: Product[], pagination: any }>({
     queryKey: ['products'],
     queryFn: () => api.get('/products').then((r) => r.data),
@@ -143,6 +148,7 @@ export function Affaires() {
       tauxCommission: String(a.tauxCommission),
       notes: a.notes || '',
     });
+    setClientSearch('');
     setOpen(true);
   };
 
@@ -152,6 +158,7 @@ export function Affaires() {
 
   const openNew = () => {
     setForm(EMPTY);
+    setClientSearch('');
     setOpen(true);
   };
 
@@ -353,10 +360,24 @@ export function Affaires() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Client *</Label>
+              <Input
+                placeholder="Rechercher un client..."
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+                className="mb-2"
+              />
               <Select value={form.clientId} onValueChange={(v) => setForm({ ...form, clientId: v })}>
                 <SelectTrigger><SelectValue placeholder="Choisir un client" /></SelectTrigger>
                 <SelectContent>
-                  {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  {filteredClients.length > 0 ? (
+                    filteredClients.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} {c.contactName ? `(${c.contactName})` : ''}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-muted-foreground">Aucun client trouvé</div>
+                  )}
                 </SelectContent>
               </Select>
             </div>

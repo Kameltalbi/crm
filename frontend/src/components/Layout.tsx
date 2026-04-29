@@ -63,7 +63,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Building2 size={20} className="text-muted-foreground" />
               </div>
             ) : (
-              <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
+              <img src="/logo.png" alt="ktOptima" className="h-12 w-auto" />
             )}
           </div>
         </div>

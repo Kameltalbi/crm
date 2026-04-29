@@ -2,21 +2,38 @@ import express from 'express';
 import { prisma } from '../db/prisma.js';
 import type { AuthRequest } from '../middleware/auth';
 import type { NotificationType } from '@prisma/client';
+import { parsePagination } from '../lib/pagination.js';
 
 const notificationsRouter = express.Router();
 
 // ─── GET USER NOTIFICATIONS ───────────────────────────────────────────
 notificationsRouter.get('/', async (req: AuthRequest, res, next) => {
   try {
-    const notifications = await prisma.notification.findMany({
-      where: {
-        userId: req.userId,
-        organizationId: req.organizationId,
+    const { page, limit, skip } = parsePagination(req.query);
+    const where = {
+      userId: req.userId,
+      organizationId: req.organizationId,
+    };
+
+    const [notifications, total] = await Promise.all([
+      prisma.notification.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.notification.count({ where }),
+    ]);
+
+    res.json({
+      data: notifications,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
     });
-    res.json(notifications);
   } catch (e) { next(e); }
 });
 

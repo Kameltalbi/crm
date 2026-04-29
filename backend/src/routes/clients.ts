@@ -4,6 +4,7 @@ import { prisma } from '../db/prisma.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { AuditAction } from '@prisma/client';
 import { logAudit } from '../lib/audit.js';
+import { parsePagination, PaginationResult } from '../lib/pagination.js';
 
 export const clientsRoutes = Router();
 clientsRoutes.use(requireAuth);
@@ -21,12 +22,29 @@ const clientSchema = z.object({
 
 clientsRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
-    const clients = await prisma.client.findMany({
-      where: { organizationId: req.organizationId },
-      orderBy: { name: 'asc' },
-      include: { _count: { select: { affaires: true } } },
+    const { page, limit, skip } = parsePagination(req.query);
+    const where = { organizationId: req.organizationId };
+
+    const [clients, total] = await Promise.all([
+      prisma.client.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+        include: { _count: { select: { affaires: true } } },
+      }),
+      prisma.client.count({ where }),
+    ]);
+
+    res.json({
+      data: clients,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
-    res.json(clients);
   } catch (e) { next(e); }
 });
 

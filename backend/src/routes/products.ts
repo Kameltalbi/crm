@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
+import { parsePagination } from '../lib/pagination.js';
 import { ProductType } from '@prisma/client';
 
 export const productsRoutes = Router();
@@ -18,11 +19,28 @@ const productSchema = z.object({
 // GET /api/products - List all products
 productsRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
-    const products = await prisma.product.findMany({
-      where: { organizationId: req.organizationId },
-      orderBy: { createdAt: 'desc' },
+    const { page, limit, skip } = parsePagination(req.query);
+    const where = { organizationId: req.organizationId };
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ]);
+
+    res.json({
+      data: products,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
-    res.json(products);
   } catch (e) { next(e); }
 });
 

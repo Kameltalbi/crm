@@ -7,6 +7,7 @@ import multer from 'multer';
 import xlsx from 'xlsx';
 import path from 'path';
 import fs from 'fs';
+import { parsePagination } from '../lib/pagination.js';
 
 export const affairesRoutes = Router();
 affairesRoutes.use(requireAuth);
@@ -47,6 +48,7 @@ const affaireSchema = z.object({
 // ─── LIST avec filtres ──────────────────────────────────────────
 affairesRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
+    const { page, limit, skip } = parsePagination(req.query);
     const { statut, type, annee, viaPartenaire } = req.query;
     const where: any = { organizationId: req.organizationId };
     if (statut)        where.statut = statut;
@@ -54,12 +56,26 @@ affairesRoutes.get('/', async (req: AuthRequest, res, next) => {
     if (annee)         where.anneePrevue = Number(annee);
     if (viaPartenaire) where.viaPartenaire = viaPartenaire === 'true';
 
-    const affaires = await prisma.affaire.findMany({
-      where,
-      include: { client: true, product: true, _count: { select: { activites: true } } },
-      orderBy: { createdAt: 'desc' },
+    const [affaires, total] = await Promise.all([
+      prisma.affaire.findMany({
+        where,
+        include: { client: true, product: true, _count: { select: { activites: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.affaire.count({ where }),
+    ]);
+
+    res.json({
+      data: affaires,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
-    res.json(affaires);
   } catch (e) { next(e); }
 });
 

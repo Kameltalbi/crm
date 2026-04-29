@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { ActiviteType } from '@prisma/client';
+import { parsePagination } from '../lib/pagination.js';
 
 export const activitesRoutes = Router();
 activitesRoutes.use(requireAuth);
@@ -17,12 +18,29 @@ const activiteSchema = z.object({
 // ─── LIST ─────────────────────────────────────────────────────
 activitesRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
-    const activites = await prisma.activite.findMany({
-      where: { organizationId: req.organizationId },
-      include: { affaire: { include: { client: true } } },
-      orderBy: { createdAt: 'desc' },
+    const { page, limit, skip } = parsePagination(req.query);
+    const where = { organizationId: req.organizationId };
+
+    const [activites, total] = await Promise.all([
+      prisma.activite.findMany({
+        where,
+        include: { affaire: { include: { client: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.activite.count({ where }),
+    ]);
+
+    res.json({
+      data: activites,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
-    res.json(activites);
   } catch (e) { next(e); }
 });
 

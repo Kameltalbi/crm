@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import { prisma } from '../db/prisma.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { UserRole } from '@prisma/client';
+import { parsePagination } from '../lib/pagination.js';
 
 export const usersRoutes = Router();
 usersRoutes.use(requireAuth);
@@ -26,20 +27,36 @@ usersRoutes.get('/', async (req: AuthRequest, res, next) => {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
-    const users = await prisma.user.findMany({
-      where: { organizationId: req.organizationId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const { page, limit, skip } = parsePagination(req.query);
+    const where = { organizationId: req.organizationId };
 
-    res.json(users);
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    res.json({
+      data: users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (e) { next(e); }
 });
 

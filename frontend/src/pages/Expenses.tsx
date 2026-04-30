@@ -281,71 +281,63 @@ export function Expenses() {
         </Select>
       </div>
 
-      {/* Expenses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {expenses.length === 0 ? (
-          <Card className="col-span-full">
-            <CardContent className="text-center py-12">
+      {/* Expenses List */}
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          {expenses.length === 0 ? (
+            <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">Aucune dépense</p>
-            </CardContent>
-          </Card>
-        ) : (
-          expenses.map((expense: any) => {
-            const statusInfo = STATUS_LABELS[expense.status] || STATUS_LABELS.PENDING;
-            return (
-              <Card key={expense.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-base font-semibold">{expense.title}</CardTitle>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(expense.date).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                    <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Montant</span>
-                      <span className="text-lg font-bold">{fmtDT(Number(expense.amount))} {expense.currency}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-muted-foreground">Catégorie</span>
-                      <span className="text-xs">{CATEGORY_LABELS[expense.category] || expense.category}</span>
-                    </div>
-                    {expense.relatedAffaire && (
-                      <div className="text-xs text-muted-foreground">
-                        Affaire: {expense.relatedAffaire.title}
-                      </div>
-                    )}
-                    {expense.relatedLead && (
-                      <div className="text-xs text-muted-foreground">
-                        Lead: {expense.relatedLead.name}
-                      </div>
-                    )}
-                    {expense.receiptUrl && (
-                      <div className="flex items-center gap-1 text-xs text-blue-600">
-                        <Receipt size={12} />
-                        <span>Justificatif</span>
-                      </div>
-                    )}
-                    <div className="flex gap-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => openEdit(expense)}>
-                        <Pencil size={14} className="mr-1" /> Modifier
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => deleteMutation.mutate(expense.id)}>
-                        <Trash2 size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Titre</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Catégorie</th>
+                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Montant</th>
+                    <th className="text-center py-3 px-4 font-medium text-muted-foreground">Statut</th>
+                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenses.map((expense: any) => {
+                    const statusInfo = STATUS_LABELS[expense.status] || STATUS_LABELS.PENDING;
+                    return (
+                      <tr key={expense.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                          {new Date(expense.date).toLocaleDateString('fr-FR')}
+                        </td>
+                        <td className="py-3 px-4 font-medium">{expense.title}</td>
+                        <td className="py-3 px-4 text-muted-foreground">
+                          {CATEGORY_LABELS[expense.category] || expense.category}
+                        </td>
+                        <td className="py-3 px-4 text-right font-semibold whitespace-nowrap">
+                          {fmtDT(Number(expense.amount))} TND
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex gap-1 justify-end">
+                            <Button size="sm" variant="ghost" onClick={() => openEdit(expense)}>
+                              <Pencil size={14} />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(expense.id)}>
+                              <Trash2 size={14} className="text-red-500" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>

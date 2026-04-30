@@ -79,12 +79,35 @@ calendarRoutes.post('/', async (req: any, res) => {
   try {
     const organizationId = req.organizationId;
     const userId = req.userId;
+    const {
+      title,
+      description,
+      startDate,
+      endDate,
+      allDay,
+      eventType,
+      location,
+      relatedAffaireId,
+      relatedLeadId,
+      status,
+      reminderMinutes,
+    } = req.body;
 
     const event = await prisma.calendarEvent.create({
       data: {
         organizationId,
         createdById: userId,
-        ...req.body,
+        title,
+        description: description || null,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        allDay: allDay === true || allDay === 'true',
+        eventType: eventType || 'MEETING',
+        location: location || null,
+        relatedAffaireId: relatedAffaireId || null,
+        relatedLeadId: relatedLeadId || null,
+        status: status || 'SCHEDULED',
+        reminderMinutes: reminderMinutes ? Number(reminderMinutes) : null,
       },
       include: {
         relatedAffaire: { include: { client: true } },
@@ -104,6 +127,19 @@ calendarRoutes.post('/', async (req: any, res) => {
 calendarRoutes.put('/:id', async (req: any, res) => {
   try {
     const organizationId = req.organizationId;
+    const {
+      title,
+      description,
+      startDate,
+      endDate,
+      allDay,
+      eventType,
+      location,
+      relatedAffaireId,
+      relatedLeadId,
+      status,
+      reminderMinutes,
+    } = req.body;
 
     const existingEvent = await prisma.calendarEvent.findFirst({
       where: { id: req.params.id, organizationId, deletedAt: null },
@@ -115,7 +151,19 @@ calendarRoutes.put('/:id', async (req: any, res) => {
 
     const event = await prisma.calendarEvent.update({
       where: { id: req.params.id },
-      data: req.body,
+      data: {
+        ...(title !== undefined && { title }),
+        ...(description !== undefined && { description: description || null }),
+        ...(startDate !== undefined && { startDate: new Date(startDate) }),
+        ...(endDate !== undefined && { endDate: new Date(endDate) }),
+        ...(allDay !== undefined && { allDay: allDay === true || allDay === 'true' }),
+        ...(eventType !== undefined && { eventType: eventType || 'MEETING' }),
+        ...(location !== undefined && { location: location || null }),
+        ...(relatedAffaireId !== undefined && { relatedAffaireId: relatedAffaireId || null }),
+        ...(relatedLeadId !== undefined && { relatedLeadId: relatedLeadId || null }),
+        ...(status !== undefined && { status: status || 'SCHEDULED' }),
+        ...(reminderMinutes !== undefined && { reminderMinutes: reminderMinutes ? Number(reminderMinutes) : null }),
+      },
       include: {
         relatedAffaire: { include: { client: true } },
         relatedLead: true,

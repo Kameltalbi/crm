@@ -80,11 +80,23 @@ leadsRoutes.post('/', async (req: any, res) => {
     const organizationId = req.organizationId;
     const userId = req.userId;
 
+    const { name, contactName, email, phone, company, source, status, score, estimatedValue, notes, clientId } = req.body;
+
     const lead = await prisma.lead.create({
       data: {
         organizationId,
         createdById: userId,
-        ...req.body,
+        name,
+        contactName: contactName || null,
+        email: email || null,
+        phone: phone || null,
+        company: company || null,
+        source: source || 'AUTRE',
+        status: status || 'NEW',
+        score: score ? Number(score) : 0,
+        estimatedValue: estimatedValue ? parseFloat(estimatedValue) : null,
+        notes: notes || null,
+        clientId: clientId || null,
       },
       include: {
         client: true,

@@ -46,11 +46,11 @@ export function Dashboard() {
 
   const { data: kpis } = useQuery<KPIs>({
     queryKey: ['kpis', selectedYear, selectedMonth],
-    queryFn: () => api.get('/kpis', { params: { annee: selectedYear, mois: selectedMonth } }).then((r) => r.data),
+    queryFn: () => api.get('/kpis', { params: { annee: selectedYear, ...(selectedMonth !== 'all' && { mois: selectedMonth }) } }).then((r) => r.data),
   });
   const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
     queryKey: ['affaires', selectedYear, selectedMonth],
-    queryFn: () => api.get('/affaires', { params: { annee: selectedYear, mois: selectedMonth } }).then((r) => r.data),
+    queryFn: () => api.get('/affaires', { params: { annee: selectedYear, ...(selectedMonth !== 'all' && { mois: selectedMonth }) } }).then((r) => r.data),
   });
   const affaires = affairesData?.data || [];
   const { data: productsData } = useQuery<{ data: any[], pagination: any }>({
@@ -71,7 +71,7 @@ export function Dashboard() {
 
   const { data: expensesData } = useQuery<{ data: any[], pagination: any }>({
     queryKey: ['expenses', selectedYear, selectedMonth],
-    queryFn: () => api.get('/expenses', { params: { year: selectedYear, month: selectedMonth, limit: 9999 } }).then((r) => r.data),
+    queryFn: () => api.get('/expenses', { params: { year: selectedYear, ...(selectedMonth !== 'all' && { month: selectedMonth }), limit: 9999 } }).then((r) => r.data),
   });
   const expenses = expensesData?.data || [];
   const totalExpenses = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
@@ -170,6 +170,7 @@ export function Dashboard() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">Tous les mois</SelectItem>
               {MOIS_S.map((label, idx) => (
                 <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
               ))}

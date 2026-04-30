@@ -65,6 +65,10 @@ export function Affaires() {
     queryFn: () => api.get('/products').then((r) => r.data),
   });
   const products = productsData?.data || [];
+  const { data: revenueCategories = [] } = useQuery<any[]>({
+    queryKey: ['categories', 'REVENUE'],
+    queryFn: () => api.get('/categories', { params: { type: 'REVENUE' } }).then((r) => r.data),
+  });
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
@@ -182,7 +186,7 @@ export function Affaires() {
     <div className="space-y-5 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Affaires</h1>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Opportunités</h1>
           <p className="text-sm text-muted-foreground mt-1">Pipeline complet : prospection, confirmé, réalisé</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -203,7 +207,7 @@ export function Affaires() {
             </Button>
           </div>
           <Button onClick={() => setImportOpen(true)} variant="outline" className="w-full sm:w-auto"><Upload size={16} />Importer Excel</Button>
-          <Button onClick={openNew} className="w-full sm:w-auto"><Plus size={16} />Nouvelle affaire</Button>
+          <Button onClick={openNew} className="w-full sm:w-auto"><Plus size={16} />Nouvelle opportunité</Button>
         </div>
       </div>
 
@@ -256,11 +260,14 @@ export function Affaires() {
                 </SelectContent>
               </Select>
               <Select value={filters.type || 'all'} onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}>
-                <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Catégorie" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous types</SelectItem>
-                  <SelectItem value="BILAN_CARBONE">🌍 Bilan</SelectItem>
-                  <SelectItem value="FORMATION">📚 Formation</SelectItem>
+                  <SelectItem value="all">Toutes catégories</SelectItem>
+                  <SelectItem value="BILAN_CARBONE">Bilan Carbone</SelectItem>
+                  <SelectItem value="FORMATION">Formation</SelectItem>
+                  {revenueCategories.map((cat: any) => (
+                    <SelectItem key={cat.id} value={`CUSTOM_${cat.id}`}>{cat.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={filters.viaPartenaire || 'all'} onValueChange={(v) => setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })}>
@@ -458,7 +465,7 @@ export function Affaires() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouvelle'} affaire</DialogTitle>
+            <DialogTitle>{form.id ? 'Modifier' : 'Nouvelle'} opportunité</DialogTitle>
           </DialogHeader>
 
           <div className="grid grid-cols-2 gap-4">
@@ -499,12 +506,15 @@ export function Affaires() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Type *</Label>
+              <Label>Catégorie *</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as AffaireType })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Choisir une catégorie" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="BILAN_CARBONE">🌍 Bilan Carbone</SelectItem>
-                  <SelectItem value="FORMATION">📚 Formation</SelectItem>
+                  <SelectItem value="BILAN_CARBONE">Bilan Carbone</SelectItem>
+                  <SelectItem value="FORMATION">Formation</SelectItem>
+                  {revenueCategories.map((cat: any) => (
+                    <SelectItem key={cat.id} value={`CUSTOM_${cat.id}`}>{cat.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

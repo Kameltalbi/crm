@@ -22,7 +22,7 @@ type FormData = {
 const EMPTY: FormData = {
   title: '',
   amount: '',
-  category: 'OPERATIONAL',
+  category: '',
   date: new Date().toISOString().split('T')[0],
   isRecurrent: false,
   recurrenceMonths: '1',
@@ -254,11 +254,8 @@ export function Expenses() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toutes catégories</SelectItem>
-            {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-              <SelectItem key={key} value={key}>{label}</SelectItem>
-            ))}
             {expenseCategories.map((cat: any) => (
-              <SelectItem key={cat.id} value={`CUSTOM_${cat.id}`}>{cat.name}</SelectItem>
+              <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -314,7 +311,7 @@ export function Expenses() {
                         </td>
                         <td className="py-3 px-4 font-medium">{expense.title}</td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {CATEGORY_LABELS[expense.category] || expense.category}
+                          {expense.category}
                         </td>
                         <td className="py-3 px-4 text-right font-semibold whitespace-nowrap">
                           {fmtDT(Number(expense.amount))} TND
@@ -360,11 +357,8 @@ export function Expenses() {
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
                     {expenseCategories.map((cat: any) => (
-                      <SelectItem key={cat.id} value={`CUSTOM_${cat.id}`}>{cat.name}</SelectItem>
+                      <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

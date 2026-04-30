@@ -237,6 +237,8 @@ model Expense {
   relatedLead   Lead?    @relation(fields: [relatedLeadId], references: [id], onDelete: SetNull)
   status        ExpenseStatus @default(PENDING)
   receiptUrl    String?  // URL du justificatif
+  isRecurrent   Boolean  @default(false)
+  recurrenceMonths String?  // e.g., "1,2,3" for months to repeat
   notes         String?  @db.Text
   deletedAt     DateTime? // Soft delete
   createdAt     DateTime @default(now())

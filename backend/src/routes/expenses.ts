@@ -106,7 +106,7 @@ expensesRoutes.post('/', async (req, res) => {
     const userId = (req as any).userId;
     const organizationId = (req as any).organizationId;
 
-    const { title, description, amount, currency, category, date, relatedAffaireId, relatedLeadId, status, receiptUrl, notes } = req.body;
+    const { title, description, amount, currency, category, date, relatedAffaireId, relatedLeadId, status, receiptUrl, isRecurrent, recurrenceMonths, notes } = req.body;
 
     const expense = await prisma.expense.create({
       data: {
@@ -121,6 +121,8 @@ expensesRoutes.post('/', async (req, res) => {
         relatedLeadId,
         status: status || 'PENDING',
         receiptUrl,
+        isRecurrent: isRecurrent === true || isRecurrent === 'true',
+        recurrenceMonths: recurrenceMonths || null,
         notes,
         createdById: userId,
       },
@@ -143,7 +145,7 @@ expensesRoutes.put('/:id', async (req, res) => {
     const userId = (req as any).userId;
     const organizationId = (req as any).organizationId;
 
-    const { title, description, amount, currency, category, date, relatedAffaireId, relatedLeadId, status, receiptUrl, notes } = req.body;
+    const { title, description, amount, currency, category, date, relatedAffaireId, relatedLeadId, status, receiptUrl, isRecurrent, recurrenceMonths, notes } = req.body;
 
     const expense = await prisma.expense.update({
       where: { id: req.params.id },
@@ -158,6 +160,8 @@ expensesRoutes.put('/:id', async (req, res) => {
         relatedLeadId,
         status,
         receiptUrl,
+        isRecurrent: isRecurrent !== undefined ? (isRecurrent === true || isRecurrent === 'true') : undefined,
+        recurrenceMonths,
         notes,
       },
       include: {

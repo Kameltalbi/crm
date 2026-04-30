@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Receipt, Repeat } from 'lucide-react';
+import { Plus, Pencil, Trash2, Receipt, Repeat, TrendingUp, TrendingDown, Scale } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,6 +69,26 @@ export function Expenses() {
   });
   const expenses = expensesData?.data || [];
 
+  // Fetch all expenses (unfiltered) for total balance
+  const { data: allExpensesData } = useQuery<{ data: any[], pagination: any }>({
+    queryKey: ['expenses', 'all', filterYear],
+    queryFn: () => api.get('/expenses', { params: { year: filterYear, limit: 9999 } }).then((r) => r.data),
+  });
+  const allExpenses = allExpensesData?.data || [];
+  const totalExpenses = allExpenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
+
+  // Fetch affaires for CA calculation
+  const { data: affairesData } = useQuery<{ data: any[], pagination: any }>({
+    queryKey: ['affaires', 'for-balance', filterYear],
+    queryFn: () => api.get('/affaires', { params: { year: filterYear, limit: 9999 } }).then((r) => r.data),
+  });
+  const affaires = affairesData?.data || [];
+  const caRealise = affaires.filter((a: any) => a.statut === 'REALISE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caPipeline = affaires.filter((a: any) => a.statut === 'PIPELINE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caProspection = affaires.filter((a: any) => a.statut === 'PROSPECTION').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caTotal = caRealise + caPipeline + caProspection;
+  const solde = caTotal - totalExpenses;
+
   const saveMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const payload = {
@@ -129,8 +149,6 @@ export function Expenses() {
     saveMutation.mutate(form);
   };
 
-  const totalAmount = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-
   return (
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -143,21 +161,78 @@ export function Expenses() {
         </Button>
       </div>
 
-      {/* Summary Card */}
-      <Card className="shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total des dépenses</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{fmtDT(totalAmount)} TND</p>
-              <p className="text-xs text-muted-foreground mt-1">{expenses.length} dépenses</p>
+      {/* Solde Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">CA Total ({filterYear})</p>
+                <p className="text-xl font-bold text-emerald-600 mt-1">{fmtDT(caTotal)} TND</p>
+                <div className="flex gap-2 mt-1 text-[10px] text-muted-foreground">
+                  <span>R: {fmtDT(caRealise)}</span>
+                  <span>P: {fmtDT(caPipeline)}</span>
+                  <span>Pr: {fmtDT(caProspection)}</span>
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                <TrendingUp size={20} className="text-emerald-600" />
+              </div>
             </div>
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Receipt size={24} className="text-primary" />
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Dépenses ({filterYear})</p>
+                <p className="text-xl font-bold text-red-600 mt-1">{fmtDT(totalExpenses)} TND</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{allExpenses.length} dépenses</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                <TrendingDown size={20} className="text-red-600" />
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card className={`shadow-sm border-2 ${solde >= 0 ? 'border-emerald-200' : 'border-red-200'}`}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Solde (CA - Dépenses)</p>
+                <p className={`text-xl font-bold mt-1 ${solde >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {solde >= 0 ? '+' : ''}{fmtDT(solde)} TND
+                </p>
+                <p className={`text-[10px] mt-1 ${solde >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {solde >= 0 ? 'Les revenus couvrent les dépenses' : 'Les dépenses dépassent les revenus'}
+                </p>
+              </div>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${solde >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                <Scale size={20} className={solde >= 0 ? 'text-emerald-600' : 'text-red-600'} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Taux de couverture</p>
+                <p className="text-xl font-bold text-gray-900 mt-1">
+                  {totalExpenses > 0 ? Math.round((caTotal / totalExpenses) * 100) : '—'}%
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">CA / Dépenses</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <Receipt size={20} className="text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">

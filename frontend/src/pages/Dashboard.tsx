@@ -59,7 +59,24 @@ export function Dashboard() {
   });
   const products = productsData?.data || [];
 
-  if (!kpis || !affaires) {
+  const { data: revenueCategories = [] } = useQuery<any[]>({
+    queryKey: ['categories', 'REVENUE'],
+    queryFn: () => api.get('/categories', { params: { type: 'REVENUE' } }).then((r) => r.data),
+  });
+
+  const { data: expenseCategories = [] } = useQuery<any[]>({
+    queryKey: ['categories', 'EXPENSE'],
+    queryFn: () => api.get('/categories', { params: { type: 'EXPENSE' } }).then((r) => r.data),
+  });
+
+  const { data: expensesData } = useQuery<{ data: any[], pagination: any }>({
+    queryKey: ['expenses', selectedYear, selectedMonth],
+    queryFn: () => api.get('/expenses', { params: { year: selectedYear, month: selectedMonth, limit: 9999 } }).then((r) => r.data),
+  });
+  const expenses = expensesData?.data || [];
+  const totalExpenses = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
+
+  if (!kpis || !affaires || !expenses) {
     return <div className="text-center py-20 text-muted-foreground">Chargement...</div>;
   }
 
@@ -98,6 +115,34 @@ export function Dashboard() {
     { name: 'Prospection', value: kpis.caProspection, color: '#f59e0b' },
   ];
 
+  // Revenue by category
+  const revenueByCategory: any[] = [];
+  const categoryMap = new Map(revenueCategories.map((c: any) => [c.name, c.name]));
+  categoryMap.set('BILAN_CARBONE', 'Bilan Carbone');
+  categoryMap.set('FORMATION', 'Formation');
+  affaires.forEach((a: any) => {
+    const catName = a.type.startsWith('CUSTOM_') ? revenueCategories.find((c: any) => c.id === a.type.replace('CUSTOM_', ''))?.name || a.type : categoryMap.get(a.type) || a.type;
+    const existing = revenueByCategory.find((r) => r.name === catName);
+    if (existing) {
+      existing.value += Number(a.montantHT);
+    } else {
+      revenueByCategory.push({ name: catName, value: Number(a.montantHT) });
+    }
+  });
+  const revenueColors = ['#22c55e', '#0ea5e9', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+  // Expenses by category
+  const expensesByCategory: any[] = [];
+  expenses.forEach((e: any) => {
+    const existing = expensesByCategory.find((ex) => ex.name === e.category);
+    if (existing) {
+      existing.value += Number(e.amount);
+    } else {
+      expensesByCategory.push({ name: e.category, value: Number(e.amount) });
+    }
+  });
+  const expenseColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#06b6d4', '#6366f1'];
+
   const winRate = kpis.counts.realise + kpis.counts.perdu > 0
     ? Math.round((kpis.counts.realise / (kpis.counts.realise + kpis.counts.perdu)) * 100)
     : 0;
@@ -131,7 +176,7 @@ export function Dashboard() {
             </SelectContent>
           </Select>
           <Link to="/affaires" className="w-full sm:w-auto">
-            <Button className="w-full sm:w-auto shadow-lg"><Plus size={16} className="mr-2" />Nouvelle affaire</Button>
+            <Button className="w-full sm:w-auto shadow-lg"><Plus size={16} className="mr-2" />Nouvelle opportunité</Button>
           </Link>
         </div>
       </div>
@@ -140,42 +185,42 @@ export function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <KpiCard
           title="CA Total"
-          subtitle="Réalisé + Pipeline + Prospection"
+          subtitle={`${affaires.length} opportunités`}
           value={fmtDT(kpis.caTotal)}
           icon={<DollarSign className="w-6 h-6" />}
           color="emerald"
         />
         <KpiCard
           title="CA Pipeline"
-          subtitle="Pipeline + Prospection"
+          subtitle={`${kpis.counts.pipeline + kpis.counts.prospect} opportunités`}
           value={fmtDT(kpis.caPipeline + kpis.caProspection)}
           icon={<Target className="w-6 h-6" />}
           color="blue"
         />
         <KpiCard
           title="CA Gagné"
-          subtitle="Réalisé"
+          subtitle={`${kpis.counts.realise} opportunités`}
           value={fmtDT(kpis.caRealise)}
           icon={<Wallet className="w-6 h-6" />}
           color="emerald"
         />
         <KpiCard
-          title="Affaires en cours"
-          subtitle="Activité"
+          title="Opportunités en cours"
+          subtitle={`${kpis.counts.pipeline + kpis.counts.prospect} opportunités`}
           value={`${kpis.counts.pipeline + kpis.counts.prospect}`}
           icon={<TrendingUp className="w-6 h-6" />}
           color="amber"
         />
         <KpiCard
-          title="Affaires gagnées"
-          subtitle="Résultat"
+          title="Opportunités gagnées"
+          subtitle={`${kpis.counts.realise} opportunités`}
           value={`${kpis.counts.realise}`}
           icon={<Wallet className="w-6 h-6" />}
           color="emerald"
         />
         <KpiCard
           title="Conversion"
-          subtitle="Efficacité"
+          subtitle={`${kpis.counts.realise + kpis.counts.perdu} conclues`}
           value={`${winRate}%`}
           icon={<Target className="w-6 h-6" />}
           color="purple"
@@ -186,7 +231,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Évolution mensuelle du CA</CardTitle>
+            <CardTitle className="text-base font-semibold">Évolution mensuelle du CA ({selectedYear})</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -209,7 +254,7 @@ export function Dashboard() {
 
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Répartition par statut</CardTitle>
+            <CardTitle className="text-base font-semibold">Répartition du CA par statut ({affaires.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -238,7 +283,7 @@ export function Dashboard() {
       {/* Pipeline Status Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm md:text-base">État du pipeline par statut</CardTitle>
+          <CardTitle className="text-sm md:text-base">État du pipeline des opportunités ({affaires.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 mb-4">
@@ -271,28 +316,62 @@ export function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Recent Affaires */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm md:text-base">Affaires récentes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {affaires.slice(0, 5).map((a) => (
-              <div key={a.id} className="flex justify-between items-center p-2 rounded bg-muted/50">
-                <div>
-                  <div className="font-medium text-sm">{a.title}</div>
-                  <div className="text-xs text-muted-foreground">{a.client?.name || 'N/A'}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-sm">{fmtDT(Number(a.montantHT))}</div>
-                  <div className="text-xs text-muted-foreground">{MOIS_S[a.moisPrevu]}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Revenue and Expenses by Category */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Revenus par catégorie ({fmtDT(kpis.caTotal)})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <RechartsPieChart>
+                <Pie
+                  data={revenueByCategory}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {revenueByCategory.map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={revenueColors[index % revenueColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
+                <Legend />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Dépenses par catégorie ({fmtDT(totalExpenses)})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <RechartsPieChart>
+                <Pie
+                  data={expensesByCategory}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {expensesByCategory.map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
+                <Legend />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

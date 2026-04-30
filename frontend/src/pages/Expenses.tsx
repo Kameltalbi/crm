@@ -77,6 +77,12 @@ export function Expenses() {
   const allExpenses = allExpensesData?.data || [];
   const totalExpenses = allExpenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
 
+  // Fetch custom expense categories
+  const { data: expenseCategories = [] } = useQuery<any[]>({
+    queryKey: ['categories', 'EXPENSE'],
+    queryFn: () => api.get('/categories', { params: { type: 'EXPENSE' } }).then((r) => r.data),
+  });
+
   // Fetch affaires for CA calculation
   const { data: affairesData } = useQuery<{ data: any[], pagination: any }>({
     queryKey: ['affaires', 'for-balance', filterYear],
@@ -251,6 +257,9 @@ export function Expenses() {
             {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
               <SelectItem key={key} value={key}>{label}</SelectItem>
             ))}
+            {expenseCategories.map((cat: any) => (
+              <SelectItem key={cat.id} value={`CUSTOM_${cat.id}`}>{cat.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -368,6 +377,9 @@ export function Expenses() {
                   <SelectContent>
                     {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                       <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                    {expenseCategories.map((cat: any) => (
+                      <SelectItem key={cat.id} value={`CUSTOM_${cat.id}`}>{cat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

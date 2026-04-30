@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertical, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
@@ -44,6 +44,7 @@ export function Affaires() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY);
   const [clientSearch, setClientSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
     queryKey: ['affaires', filters, page],
@@ -51,6 +52,17 @@ export function Affaires() {
   });
   const affaires = affairesData?.data || [];
   const pagination = affairesData?.pagination;
+
+  // Filter affaires by search term
+  const filteredAffaires = searchTerm ? affaires.filter(a =>
+    a.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.client?.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.montantHT?.toString().includes(searchTerm) ||
+    a.statut?.toLowerCase().includes(searchTerm) ||
+    a.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) : affaires;
   const { data: clientsData } = useQuery<{ data: Client[], pagination: any }>({
     queryKey: ['clients'],
     queryFn: () => api.get('/clients').then((r) => r.data),
@@ -247,8 +259,17 @@ export function Affaires() {
       {view === 'table' && (
         <Card>
           <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-            <CardTitle className="text-base">{affaires.length} affaires</CardTitle>
-            <div className="flex flex-wrap gap-2">
+            <CardTitle className="text-base">{filteredAffaires.length} affaires</CardTitle>
+            <div className="flex flex-wrap gap-2 items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Rechercher..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 h-8 w-40 text-xs"
+                />
+              </div>
               <Select value={filters.statut || 'all'} onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}>
                 <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
                 <SelectContent>
@@ -314,7 +335,7 @@ export function Affaires() {
                   </tr>
                 </thead>
                 <tbody>
-                  {affaires.map((a) => {
+                  {filteredAffaires.map((a) => {
                     const ht = Number(a.montantHT);
                     const c = a.viaPartenaire ? Math.round(ht * Number(a.tauxCommission) / 100) : 0;
                     return (
@@ -419,7 +440,7 @@ export function Affaires() {
       {view === 'kanban' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(['PROSPECTION', 'PIPELINE', 'REALISE', 'PERDU'] as const).map((statut) => {
-            const statutAffaires = affaires.filter(a => a.statut === statut);
+            const statutAffaires = filteredAffaires.filter(a => a.statut === statut);
             const statutCA = statutAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
             const statutLabels = {
               PROSPECTION: { label: 'Prospection', color: 'bg-yellow-50 border-yellow-200' },

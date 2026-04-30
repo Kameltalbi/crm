@@ -55,24 +55,34 @@ export function Expenses() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterMonth, setFilterMonth] = useState<string>(String(new Date().getMonth() + 1));
   const [filterYear, setFilterYear] = useState<string>(String(new Date().getFullYear()));
+  const [page, setPage] = useState<number>(1);
+  const limit = 25;
+
+  // Reset page to 1 when filters change
+  const handleFilterChange = (setter: (val: string) => void, value: string) => {
+    setter(value);
+    setPage(1);
+  };
 
   const { data: expensesData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['expenses', filterCategory, filterStatus, filterMonth, filterYear],
+    queryKey: ['expenses', filterCategory, filterStatus, filterMonth, filterYear, page],
     queryFn: () => api.get('/expenses', {
       params: {
         category: filterCategory !== 'all' ? filterCategory : undefined,
         status: filterStatus !== 'all' ? filterStatus : undefined,
         month: filterMonth !== 'all' ? filterMonth : undefined,
         year: filterYear,
+        page,
+        limit,
       }
     }).then((r) => r.data),
   });
   const expenses = expensesData?.data || [];
 
-  // Fetch all expenses (unfiltered) for total balance
+  // Fetch all expenses (unfiltered) for total balance - includes month filter so cards update when month changes
   const { data: allExpensesData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['expenses', 'all', filterYear],
-    queryFn: () => api.get('/expenses', { params: { year: filterYear, limit: 9999 } }).then((r) => r.data),
+    queryKey: ['expenses', 'all', filterYear, filterMonth],
+    queryFn: () => api.get('/expenses', { params: { year: filterYear, ...(filterMonth !== 'all' && { month: filterMonth }), limit: 9999 } }).then((r) => r.data),
   });
   const allExpenses = allExpensesData?.data || [];
   const totalExpenses = allExpenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
@@ -248,7 +258,7 @@ export function Expenses() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <Select value={filterCategory} onValueChange={setFilterCategory}>
+        <Select value={filterCategory} onValueChange={(v) => handleFilterChange(setFilterCategory, v)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Catégorie" />
           </SelectTrigger>
@@ -259,18 +269,18 @@ export function Expenses() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterMonth} onValueChange={setFilterMonth}>
+        <Select value={filterMonth} onValueChange={(v) => handleFilterChange(setFilterMonth, v)}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Mois" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous mois</SelectItem>
+            <SelectItem value="all">Tous les mois</SelectItem>
             {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map((label, idx) => (
               <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterYear} onValueChange={setFilterYear}>
+        <Select value={filterYear} onValueChange={(v) => handleFilterChange(setFilterYear, v)}>
           <SelectTrigger className="w-24">
             <SelectValue />
           </SelectTrigger>
@@ -331,6 +341,32 @@ export function Expenses() {
                   })}
                 </tbody>
               </table>
+              {/* Pagination */}
+              {expensesData?.pagination && expensesData.pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 px-4">
+                  <div className="text-sm text-muted-foreground">
+                    Page {expensesData.pagination.page} sur {expensesData.pagination.totalPages} ({expensesData.pagination.total} dépenses)
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >
+                      Précédent
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setPage(p => p + 1)}
+                      disabled={page === expensesData.pagination.totalPages}
+                    >
+                      Suivant
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

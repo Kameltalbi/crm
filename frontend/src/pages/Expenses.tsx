@@ -338,7 +338,12 @@ export function Expenses() {
                         <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                           {new Date(expense.date).toLocaleDateString('fr-FR')}
                         </td>
-                        <td className="py-3 px-4 font-medium">{expense.title}</td>
+                        <td className="py-3 px-4 font-medium">
+                          <div className="flex items-center gap-2">
+                            {expense.isRecurrent && <Repeat size={14} className="text-purple-500" />}
+                            {expense.title}
+                          </div>
+                        </td>
                         <td className="py-3 px-4 text-muted-foreground">
                           {expense.category}
                         </td>

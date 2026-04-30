@@ -229,7 +229,7 @@ model Expense {
   description   String?  @db.Text
   amount        Decimal  @db.Decimal(12, 3) // DT
   currency      String   @default("TND")
-  category      ExpenseCategory @default(OPERATIONAL)
+  category      String   @default("Autre")
   date          DateTime @default(now())
   relatedAffaireId String?
   relatedAffaire Affaire? @relation(fields: [relatedAffaireId], references: [id], onDelete: SetNull)

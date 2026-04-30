@@ -115,7 +115,7 @@ expensesRoutes.post('/', async (req, res) => {
         description,
         amount: parseFloat(amount),
         currency: currency || 'TND',
-        category: category || 'OPERATIONAL',
+        category: category || 'Autre',
         date: date ? new Date(date) : new Date(),
         relatedAffaireId,
         relatedLeadId,

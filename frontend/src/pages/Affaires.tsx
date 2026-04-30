@@ -155,7 +155,7 @@ export function Affaires() {
       tauxCommission: String(a.tauxCommission),
       notes: a.notes || '',
     });
-    setClientSearch('');
+    setClientSearch(a.client?.name || '');
     setOpen(true);
   };
 

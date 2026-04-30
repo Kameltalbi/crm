@@ -53,6 +53,13 @@ export function Affaires() {
   const affaires = affairesData?.data || [];
   const pagination = affairesData?.pagination;
 
+  // Fetch all affaires (unfiltered) for KPI calculations
+  const { data: allAffairesData } = useQuery<{ data: Affaire[], pagination: any }>({
+    queryKey: ['affaires', 'all', filters],
+    queryFn: () => api.get('/affaires', { params: { ...filters, limit: 9999 } }).then((r) => r.data),
+  });
+  const allAffaires = allAffairesData?.data || [];
+
   // Filter affaires by search term
   const filteredAffaires = searchTerm ? affaires.filter(a =>
     a.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -185,13 +192,13 @@ export function Affaires() {
   const comm = form.viaPartenaire ? Math.round(ht * Number(form.tauxCommission) / 100) : 0;
   const net = ht - comm;
 
-  // Calculate summary KPIs
-  const totalCA = affaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const pipelineCA = affaires.filter(a => a.statut === 'PIPELINE').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const realiseCA = affaires.filter(a => a.statut === 'REALISE').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const prospectionCA = affaires.filter(a => a.statut === 'PROSPECTION').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const winRate = affaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length > 0
-    ? Math.round((affaires.filter(a => a.statut === 'REALISE').length / affaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length) * 100)
+  // Calculate summary KPIs from all affaires (not paginated)
+  const totalCA = allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const pipelineCA = allAffaires.filter(a => a.statut === 'PIPELINE').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const realiseCA = allAffaires.filter(a => a.statut === 'REALISE').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const prospectionCA = allAffaires.filter(a => a.statut === 'PROSPECTION').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const winRate = allAffaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length > 0
+    ? Math.round((allAffaires.filter(a => a.statut === 'REALISE').length / allAffaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length) * 100)
     : 0;
 
   return (
@@ -229,28 +236,28 @@ export function Affaires() {
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">CA Total</p>
             <p className="text-lg md:text-2xl font-bold text-gray-900 mt-1">{fmtDT(totalCA)}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{affaires.length} affaires</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{allAffaires.length} affaires</p>
           </CardContent>
         </Card>
         <Card className="border-2 border-blue-200 bg-blue-50/30">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pipeline</p>
             <p className="text-lg md:text-2xl font-bold text-blue-600 mt-1">{fmtDT(pipelineCA)}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{affaires.filter(a => a.statut === 'PIPELINE').length} en cours</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{allAffaires.filter(a => a.statut === 'PIPELINE').length} en cours</p>
           </CardContent>
         </Card>
         <Card className="border-2 border-emerald-200 bg-emerald-50/30">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Réalisé</p>
             <p className="text-lg md:text-2xl font-bold text-emerald-600 mt-1">{fmtDT(realiseCA)}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{affaires.filter(a => a.statut === 'REALISE').length} gagnées</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{allAffaires.filter(a => a.statut === 'REALISE').length} gagnées</p>
           </CardContent>
         </Card>
         <Card className="border-2 border-violet-200 bg-violet-50/30">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Taux conversion</p>
             <p className="text-lg md:text-2xl font-bold text-violet-600 mt-1">{winRate}%</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{affaires.filter(a => a.statut === 'PERDU').length} perdues</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{allAffaires.filter(a => a.statut === 'PERDU').length} perdues</p>
           </CardContent>
         </Card>
       </div>

@@ -108,7 +108,7 @@ export function Expenses() {
         category: data.category,
         date: data.date,
         currency: 'TND',
-        status: 'PENDING',
+        status: 'PAID',
       };
 
       if (data.id) {
@@ -262,17 +262,6 @@ export function Expenses() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Statut" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous statuts</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([key, { label }]) => (
-              <SelectItem key={key} value={key}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={filterMonth} onValueChange={setFilterMonth}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Mois" />
@@ -312,7 +301,6 @@ export function Expenses() {
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Titre</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Catégorie</th>
                     <th className="text-right py-3 px-4 font-medium text-muted-foreground">Montant</th>
-                    <th className="text-center py-3 px-4 font-medium text-muted-foreground">Statut</th>
                     <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
@@ -330,9 +318,6 @@ export function Expenses() {
                         </td>
                         <td className="py-3 px-4 text-right font-semibold whitespace-nowrap">
                           {fmtDT(Number(expense.amount))} TND
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex gap-1 justify-end">

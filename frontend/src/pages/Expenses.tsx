@@ -129,6 +129,8 @@ export function Expenses() {
         date: data.date,
         currency: 'TND',
         status: 'PAID',
+        isRecurrent: data.isRecurrent,
+        recurrenceMonths: data.recurrenceMonths,
       };
 
       if (data.id) {

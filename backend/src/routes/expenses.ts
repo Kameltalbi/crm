@@ -11,8 +11,8 @@ expensesRoutes.use(auth);
 // GET /expenses - List expenses with pagination
 expensesRoutes.get('/', async (req, res) => {
   try {
-    const userId = (req as any).user.id;
-    const organizationId = (req as any).user.organizationId;
+    const userId = (req as any).userId;
+    const organizationId = (req as any).organizationId;
 
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 50;
@@ -74,8 +74,8 @@ expensesRoutes.get('/', async (req, res) => {
 // GET /expenses/:id - Get expense by ID
 expensesRoutes.get('/:id', async (req, res) => {
   try {
-    const userId = (req as any).user.id;
-    const organizationId = (req as any).user.organizationId;
+    const userId = (req as any).userId;
+    const organizationId = (req as any).organizationId;
 
     const expense = await prisma.expense.findFirst({
       where: {
@@ -103,8 +103,8 @@ expensesRoutes.get('/:id', async (req, res) => {
 // POST /expenses - Create expense
 expensesRoutes.post('/', async (req, res) => {
   try {
-    const userId = (req as any).user.id;
-    const organizationId = (req as any).user.organizationId;
+    const userId = (req as any).userId;
+    const organizationId = (req as any).organizationId;
 
     const { title, description, amount, currency, category, date, relatedAffaireId, relatedLeadId, status, receiptUrl, notes } = req.body;
 
@@ -140,8 +140,8 @@ expensesRoutes.post('/', async (req, res) => {
 // PUT /expenses/:id - Update expense
 expensesRoutes.put('/:id', async (req, res) => {
   try {
-    const userId = (req as any).user.id;
-    const organizationId = (req as any).user.organizationId;
+    const userId = (req as any).userId;
+    const organizationId = (req as any).organizationId;
 
     const { title, description, amount, currency, category, date, relatedAffaireId, relatedLeadId, status, receiptUrl, notes } = req.body;
 
@@ -176,7 +176,7 @@ expensesRoutes.put('/:id', async (req, res) => {
 // DELETE /expenses/:id - Soft delete expense
 expensesRoutes.delete('/:id', async (req, res) => {
   try {
-    const organizationId = (req as any).user.organizationId;
+    const organizationId = (req as any).organizationId;
 
     await prisma.expense.update({
       where: { id: req.params.id },

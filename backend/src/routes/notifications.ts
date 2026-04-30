@@ -1,10 +1,11 @@
 import express from 'express';
 import { prisma } from '../db/prisma.js';
-import type { AuthRequest } from '../middleware/auth';
+import auth, { AuthRequest } from '../middleware/auth.js';
 import type { NotificationType } from '@prisma/client';
 import { parsePagination } from '../lib/pagination.js';
 
 const notificationsRouter = express.Router();
+notificationsRouter.use(auth);
 
 // ─── GET USER NOTIFICATIONS ───────────────────────────────────────────
 notificationsRouter.get('/', async (req: AuthRequest, res, next) => {
@@ -56,7 +57,7 @@ notificationsRouter.patch('/:id/read', async (req: AuthRequest, res, next) => {
   try {
     const notification = await prisma.notification.update({
       where: {
-        id: req.params.id,
+        id: String(req.params.id),
         userId: req.userId,
         organizationId: req.organizationId,
       },
@@ -86,7 +87,7 @@ notificationsRouter.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
     await prisma.notification.delete({
       where: {
-        id: req.params.id,
+        id: String(req.params.id),
         userId: req.userId,
         organizationId: req.organizationId,
       },
@@ -145,8 +146,8 @@ notificationsRouter.post('/check-activity', async (req: AuthRequest, res, next) 
       if (!existingNotification && daysSinceActivity >= daysThreshold) {
         await prisma.notification.create({
           data: {
-            userId: req.userId,
-            organizationId: req.organizationId,
+            userId: req.userId!,
+            organizationId: req.organizationId!,
             type: 'AFFAIRE_SANS_ACTIVITE' as NotificationType,
             title: `Affaire sans activité depuis ${daysSinceActivity} jours`,
             content: `L'affaire "${affaire.title}" (${affaire.client.name}) n'a pas d'activité depuis ${daysSinceActivity} jours.`,

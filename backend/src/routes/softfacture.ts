@@ -22,8 +22,8 @@ softfactureRoutes.post('/devis/:affaireId', async (req, res, next) => {
     const result = await softfactureClient.creerDevis({
       clientNom:    affaire.client.name,
       clientEmail:  affaire.client.email,
-      clientMatricule: affaire.client.matricule!,
-      designation:  affaire.title,
+      clientMatricule: affaire.client.matricule,
+      designation:  affaire.title || '',
       montantHT:    Number(affaire.montantHT),
       tvaPct:       19,
       type:         affaire.type,
@@ -65,8 +65,8 @@ softfactureRoutes.post('/facture/:affaireId', async (req, res, next) => {
     const result = await softfactureClient.creerFacture({
       clientNom:       affaire.client.name,
       clientEmail:     affaire.client.email,
-      clientMatricule: affaire.client.matricule!,
-      designation:     affaire.title,
+      clientMatricule: affaire.client.matricule,
+      designation:     affaire.title || '',
       montantHT:       Number(affaire.montantHT),
       tvaPct:          19,
       type:            affaire.type,

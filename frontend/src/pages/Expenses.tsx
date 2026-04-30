@@ -83,11 +83,16 @@ export function Expenses() {
     queryFn: () => api.get('/affaires', { params: { year: filterYear, limit: 9999 } }).then((r) => r.data),
   });
   const affaires = affairesData?.data || [];
-  const caRealise = affaires.filter((a: any) => a.statut === 'REALISE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
-  const caPipeline = affaires.filter((a: any) => a.statut === 'PIPELINE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
-  const caProspection = affaires.filter((a: any) => a.statut === 'PROSPECTION').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
-  const caTotal = caRealise + caPipeline + caProspection;
-  const solde = caTotal - totalExpenses;
+  const TVA = 0.19;
+  const caRealiseHT = affaires.filter((a: any) => a.statut === 'REALISE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caPipelineHT = affaires.filter((a: any) => a.statut === 'PIPELINE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caProspectionHT = affaires.filter((a: any) => a.statut === 'PROSPECTION').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caTotalHT = caRealiseHT + caPipelineHT + caProspectionHT;
+  const caTotalTTC = caTotalHT * (1 + TVA);
+  const caRealiseTTC = caRealiseHT * (1 + TVA);
+  const caPipelineTTC = caPipelineHT * (1 + TVA);
+  const caProspectionTTC = caProspectionHT * (1 + TVA);
+  const solde = caTotalTTC - totalExpenses;
 
   const saveMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -167,12 +172,13 @@ export function Expenses() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">CA Total ({filterYear})</p>
-                <p className="text-xl font-bold text-emerald-600 mt-1">{fmtDT(caTotal)} TND</p>
+                <p className="text-xs text-muted-foreground">CA Total TTC ({filterYear})</p>
+                <p className="text-xl font-bold text-emerald-600 mt-1">{fmtDT(caTotalTTC)} TND</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">HT: {fmtDT(caTotalHT)} TND</p>
                 <div className="flex gap-2 mt-1 text-[10px] text-muted-foreground">
-                  <span>R: {fmtDT(caRealise)}</span>
-                  <span>P: {fmtDT(caPipeline)}</span>
-                  <span>Pr: {fmtDT(caProspection)}</span>
+                  <span>R: {fmtDT(caRealiseTTC)}</span>
+                  <span>P: {fmtDT(caPipelineTTC)}</span>
+                  <span>Pr: {fmtDT(caProspectionTTC)}</span>
                 </div>
               </div>
               <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -222,7 +228,7 @@ export function Expenses() {
               <div>
                 <p className="text-xs text-muted-foreground">Taux de couverture</p>
                 <p className="text-xl font-bold text-gray-900 mt-1">
-                  {totalExpenses > 0 ? Math.round((caTotal / totalExpenses) * 100) : '—'}%
+                  {totalExpenses > 0 ? Math.round((caTotalTTC / totalExpenses) * 100) : '—'}%
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">CA / Dépenses</p>
               </div>

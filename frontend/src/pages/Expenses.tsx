@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Receipt, Repeat, TrendingUp, TrendingDown, Scale } from 'lucide-react';
+import { Plus, Pencil, Trash2, Receipt, Repeat, TrendingUp, TrendingDown, Scale, Search } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +57,7 @@ export function Expenses() {
   const [filterYear, setFilterYear] = useState<string>(String(new Date().getFullYear()));
   const [page, setPage] = useState<number>(1);
   const limit = 25;
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Reset page to 1 when filters change
   const handleFilterChange = (setter: (val: string) => void, value: string) => {
@@ -78,6 +79,15 @@ export function Expenses() {
     }).then((r) => r.data),
   });
   const expenses = expensesData?.data || [];
+
+  // Filter expenses by search term
+  const filteredExpenses = searchTerm ? expenses.filter(e =>
+    e.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.amount?.toString().includes(searchTerm) ||
+    e.date?.includes(searchTerm) ||
+    e.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) : expenses;
 
   // Fetch all expenses (unfiltered) for total balance - includes month filter so cards update when month changes
   const { data: allExpensesData } = useQuery<{ data: any[], pagination: any }>({
@@ -257,7 +267,16 @@ export function Expenses() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Rechercher..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9 w-40 text-xs"
+          />
+        </div>
         <Select value={filterCategory} onValueChange={(v) => handleFilterChange(setFilterCategory, v)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Catégorie" />
@@ -295,7 +314,7 @@ export function Expenses() {
       {/* Expenses List */}
       <Card className="shadow-sm">
         <CardContent className="p-0">
-          {expenses.length === 0 ? (
+          {filteredExpenses.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">Aucune dépense</p>
             </div>
@@ -312,7 +331,7 @@ export function Expenses() {
                   </tr>
                 </thead>
                 <tbody>
-                  {expenses.map((expense: any) => {
+                  {filteredExpenses.map((expense: any) => {
                     const statusInfo = STATUS_LABELS[expense.status] || STATUS_LABELS.PENDING;
                     return (
                       <tr key={expense.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">

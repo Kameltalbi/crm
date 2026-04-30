@@ -53,8 +53,8 @@ export function Expenses() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterMonth, setFilterMonth] = useState<string>('all');
-  const [filterYear, setFilterYear] = useState<string>('2026');
+  const [filterMonth, setFilterMonth] = useState<string>(String(new Date().getMonth() + 1));
+  const [filterYear, setFilterYear] = useState<string>(String(new Date().getFullYear()));
 
   const { data: expensesData } = useQuery<{ data: any[], pagination: any }>({
     queryKey: ['expenses', filterCategory, filterStatus, filterMonth, filterYear],
@@ -274,9 +274,9 @@ export function Expenses() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="2025">2025</SelectItem>
             <SelectItem value="2026">2026</SelectItem>
             <SelectItem value="2027">2027</SelectItem>
-            <SelectItem value="2028">2028</SelectItem>
           </SelectContent>
         </Select>
       </div>

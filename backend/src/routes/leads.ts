@@ -11,7 +11,7 @@ leadsRoutes.use(auth);
 // GET /leads - Get all leads for the organization
 leadsRoutes.get('/', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
+    const organizationId = req.organizationId;
     const { status, source, page = 1, limit = 50 } = req.query;
 
     const where: any = { organizationId, deletedAt: null };
@@ -51,7 +51,7 @@ leadsRoutes.get('/', async (req: any, res) => {
 // GET /leads/:id - Get a single lead
 leadsRoutes.get('/:id', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
+    const organizationId = req.organizationId;
     const lead = await prisma.lead.findFirst({
       where: { id: req.params.id, organizationId, deletedAt: null },
       include: {
@@ -77,8 +77,8 @@ leadsRoutes.get('/:id', async (req: any, res) => {
 // POST /leads - Create a new lead
 leadsRoutes.post('/', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
-    const userId = req.user.id;
+    const organizationId = req.organizationId;
+    const userId = req.userId;
 
     const lead = await prisma.lead.create({
       data: {
@@ -102,7 +102,7 @@ leadsRoutes.post('/', async (req: any, res) => {
 // PUT /leads/:id - Update a lead
 leadsRoutes.put('/:id', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
+    const organizationId = req.organizationId;
 
     const existingLead = await prisma.lead.findFirst({
       where: { id: req.params.id, organizationId, deletedAt: null },
@@ -131,7 +131,7 @@ leadsRoutes.put('/:id', async (req: any, res) => {
 // DELETE /leads/:id - Soft delete a lead
 leadsRoutes.delete('/:id', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
+    const organizationId = req.organizationId;
 
     const existingLead = await prisma.lead.findFirst({
       where: { id: req.params.id, organizationId, deletedAt: null },
@@ -156,8 +156,8 @@ leadsRoutes.delete('/:id', async (req: any, res) => {
 // POST /leads/:id/convert - Convert lead to client
 leadsRoutes.post('/:id/convert', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
-    const userId = req.user.id;
+    const organizationId = req.organizationId;
+    const userId = req.userId;
 
     const lead = await prisma.lead.findFirst({
       where: { id: req.params.id, organizationId, deletedAt: null },

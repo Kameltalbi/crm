@@ -11,7 +11,7 @@ calendarRoutes.use(auth);
 // GET /calendar - Get all calendar events for the organization
 calendarRoutes.get('/', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
+    const organizationId = req.organizationId;
     const { startDate, endDate, eventType, page = 1, limit = 50 } = req.query;
 
     const where: any = { organizationId, deletedAt: null };
@@ -53,7 +53,7 @@ calendarRoutes.get('/', async (req: any, res) => {
 // GET /calendar/:id - Get a single calendar event
 calendarRoutes.get('/:id', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
+    const organizationId = req.organizationId;
     const event = await prisma.calendarEvent.findFirst({
       where: { id: req.params.id, organizationId, deletedAt: null },
       include: {
@@ -77,8 +77,8 @@ calendarRoutes.get('/:id', async (req: any, res) => {
 // POST /calendar - Create a new calendar event
 calendarRoutes.post('/', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
-    const userId = req.user.id;
+    const organizationId = req.organizationId;
+    const userId = req.userId;
 
     const event = await prisma.calendarEvent.create({
       data: {
@@ -103,7 +103,7 @@ calendarRoutes.post('/', async (req: any, res) => {
 // PUT /calendar/:id - Update a calendar event
 calendarRoutes.put('/:id', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
+    const organizationId = req.organizationId;
 
     const existingEvent = await prisma.calendarEvent.findFirst({
       where: { id: req.params.id, organizationId, deletedAt: null },
@@ -133,7 +133,7 @@ calendarRoutes.put('/:id', async (req: any, res) => {
 // DELETE /calendar/:id - Soft delete a calendar event
 calendarRoutes.delete('/:id', async (req: any, res) => {
   try {
-    const organizationId = req.user.organizationId;
+    const organizationId = req.organizationId;
 
     const existingEvent = await prisma.calendarEvent.findFirst({
       where: { id: req.params.id, organizationId, deletedAt: null },

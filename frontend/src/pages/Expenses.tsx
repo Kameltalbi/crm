@@ -1,41 +1,31 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Receipt, Filter, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Receipt, Repeat } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/form-controls';
+import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
 type FormData = {
   id?: string;
   title: string;
-  description: string;
   amount: string;
-  currency: string;
   category: string;
   date: string;
-  relatedAffaireId: string;
-  relatedLeadId: string;
-  status: string;
-  receiptUrl: string;
-  notes: string;
+  isRecurrent: boolean;
+  recurrenceMonths: string;
 };
 
 const EMPTY: FormData = {
   title: '',
-  description: '',
   amount: '',
-  currency: 'TND',
   category: 'OPERATIONAL',
   date: new Date().toISOString().split('T')[0],
-  relatedAffaireId: '',
-  relatedLeadId: '',
-  status: 'PENDING',
-  receiptUrl: '',
-  notes: '',
+  isRecurrent: false,
+  recurrenceMonths: '1',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -79,23 +69,35 @@ export function Expenses() {
   });
   const expenses = expensesData?.data || [];
 
-  const { data: affairesData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['affaires'],
-    queryFn: () => api.get('/affaires').then((r) => r.data),
-  });
-  const affaires = affairesData?.data || [];
-
-  const { data: leadsData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['leads'],
-    queryFn: () => api.get('/leads').then((r) => r.data),
-  });
-  const leads = leadsData?.data || [];
-
   const saveMutation = useMutation({
-    mutationFn: (data: FormData) => {
-      const payload = { ...data };
-      delete (payload as any).id;
-      return data.id ? api.put(`/expenses/${data.id}`, payload) : api.post('/expenses', payload);
+    mutationFn: async (data: FormData) => {
+      const payload = {
+        title: data.title,
+        amount: data.amount,
+        category: data.category,
+        date: data.date,
+        currency: 'TND',
+        status: 'PENDING',
+      };
+
+      if (data.id) {
+        return api.put(`/expenses/${data.id}`, payload);
+      }
+
+      // Si récurrent, créer une dépense par mois
+      if (data.isRecurrent && parseInt(data.recurrenceMonths) > 1) {
+        const months = parseInt(data.recurrenceMonths);
+        const startDate = new Date(data.date);
+        const promises = [];
+        for (let i = 0; i < months; i++) {
+          const d = new Date(startDate);
+          d.setMonth(d.getMonth() + i);
+          promises.push(api.post('/expenses', { ...payload, date: d.toISOString().split('T')[0] }));
+        }
+        return Promise.all(promises);
+      }
+
+      return api.post('/expenses', payload);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['expenses'] });
@@ -113,16 +115,11 @@ export function Expenses() {
     setForm({
       id: expense.id,
       title: expense.title,
-      description: expense.description || '',
       amount: String(expense.amount),
-      currency: expense.currency || 'TND',
       category: expense.category,
       date: new Date(expense.date).toISOString().split('T')[0],
-      relatedAffaireId: expense.relatedAffaireId || '',
-      relatedLeadId: expense.relatedLeadId || '',
-      status: expense.status,
-      receiptUrl: expense.receiptUrl || '',
-      notes: expense.notes || '',
+      isRecurrent: false,
+      recurrenceMonths: '1',
     });
     setOpen(true);
   };
@@ -277,30 +274,19 @@ export function Expenses() {
 
       {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{form.id ? 'Modifier' : 'Nouvelle'} dépense</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Titre *</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Loyer bureau, Abonnement..." />
+            </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5 col-span-2">
-                <Label>Titre *</Label>
-                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Titre de la dépense" />
-              </div>
               <div className="space-y-1.5">
-                <Label>Montant *</Label>
+                <Label>Montant (TND) *</Label>
                 <Input type="number" step="0.001" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.000" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Devise</Label>
-                <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="TND">TND</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Catégorie</Label>
@@ -313,58 +299,54 @@ export function Expenses() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label>Statut</Label>
-                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(STATUS_LABELS).map(([key, { label }]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Date</Label>
-                <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Affaire liée</Label>
-                <Select value={form.relatedAffaireId || 'none'} onValueChange={(v) => setForm({ ...form, relatedAffaireId: v === 'none' ? '' : v })}>
-                  <SelectTrigger><SelectValue placeholder="Aucune" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucune</SelectItem>
-                    {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Lead lié</Label>
-                <Select value={form.relatedLeadId || 'none'} onValueChange={(v) => setForm({ ...form, relatedLeadId: v === 'none' ? '' : v })}>
-                  <SelectTrigger><SelectValue placeholder="Aucun" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun</SelectItem>
-                    {leads.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5 col-span-2">
-                <Label>URL du justificatif</Label>
-                <Input value={form.receiptUrl} onChange={(e) => setForm({ ...form, receiptUrl: e.target.value })} placeholder="https://..." />
-              </div>
-              <div className="space-y-1.5 col-span-2">
-                <Label>Description</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description de la dépense..." rows={2} />
-              </div>
-              <div className="space-y-1.5 col-span-2">
-                <Label>Notes</Label>
-                <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes additionnelles..." rows={2} />
-              </div>
             </div>
-            <DialogFooter className="mt-6">
+            <div className="space-y-1.5">
+              <Label>Date de début</Label>
+              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            </div>
+
+            {/* Récurrence */}
+            {!form.id && (
+              <div className="rounded-lg border p-4 space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.isRecurrent}
+                    onChange={(e) => setForm({ ...form, isRecurrent: e.target.checked })}
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <Repeat size={16} className="text-muted-foreground" />
+                  <span className="text-sm font-medium">Dépense récurrente</span>
+                </label>
+                {form.isRecurrent && (
+                  <div className="space-y-1.5">
+                    <Label>Nombre de mois</Label>
+                    <Input
+                      type="number"
+                      min="2"
+                      max="36"
+                      value={form.recurrenceMonths}
+                      onChange={(e) => setForm({ ...form, recurrenceMonths: e.target.value })}
+                      placeholder="Ex: 12"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {parseInt(form.recurrenceMonths) > 1
+                        ? `${form.recurrenceMonths} dépenses de ${form.amount || '0'} TND seront créées (une par mois)`
+                        : 'Minimum 2 mois'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
               <Button type="submit" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                {saveMutation.isPending
+                  ? 'Enregistrement...'
+                  : form.isRecurrent && !form.id && parseInt(form.recurrenceMonths) > 1
+                    ? `Créer ${form.recurrenceMonths} dépenses`
+                    : 'Enregistrer'}
               </Button>
             </DialogFooter>
           </form>

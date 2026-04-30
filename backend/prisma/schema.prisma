@@ -39,6 +39,7 @@ model Organization {
   previsionnels PrevisionMois[]
   notifications Notification[]
   auditLogs   AuditLog[]
+  customCategories CustomCategory[]
 
   @@map("organizations")
 }
@@ -264,6 +265,28 @@ enum ExpenseCategory {
   MARKETING // Marketing
   COMMISSION // Commissions
   OTHER // Autre
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CUSTOM CATEGORY — Catégories personnalisées (dépenses/revenus)
+// ═══════════════════════════════════════════════════════════════
+model CustomCategory {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  type           CategoryType
+  createdAt      DateTime @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, name, type])
+  @@index([organizationId, type])
+  @@map("custom_categories")
+}
+
+enum CategoryType {
+  EXPENSE
+  REVENUE
 }
 
 enum ExpenseStatus {

@@ -117,11 +117,8 @@ export function Dashboard() {
 
   // Revenue by category
   const revenueByCategory: any[] = [];
-  const categoryMap = new Map(revenueCategories.map((c: any) => [c.name, c.name]));
-  categoryMap.set('BILAN_CARBONE', 'Bilan Carbone');
-  categoryMap.set('FORMATION', 'Formation');
   affaires.forEach((a: any) => {
-    const catName = a.type.startsWith('CUSTOM_') ? revenueCategories.find((c: any) => c.id === a.type.replace('CUSTOM_', ''))?.name || a.type : categoryMap.get(a.type) || a.type;
+    const catName = a.type || 'Autre';
     const existing = revenueByCategory.find((r) => r.name === catName);
     if (existing) {
       existing.value += Number(a.montantHT);

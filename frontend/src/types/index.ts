@@ -1,4 +1,4 @@
-export type AffaireType = 'BILAN_CARBONE' | 'FORMATION';
+export type AffaireType = string;
 export type StatutAffaire = 'PROSPECTION' | 'PIPELINE' | 'REALISE' | 'PERDU';
 export type ActiviteType = 'NOTE' | 'APPEL' | 'EMAIL_ENVOYE' | 'EMAIL_RECU' | 'RDV' | 'CHANGEMENT_STATUT' | 'DEVIS_CREE' | 'FACTURE_CREEE' | 'AUTRE';
 export type UserRole = 'OWNER' | 'PARTNER';
@@ -118,8 +118,7 @@ export interface KPIs {
   caPondere: number;
   commissionPartenaireDue: number;
   netRealise: number;
-  caBilans: number;
-  caFormations: number;
+  parType: Record<string, number>;
   counts: { realise: number; pipeline: number; prospect: number; perdu: number };
   parMois: Record<number, { realise: number; pipeline: number; prospect: number }>;
   smartForecast?: SmartForecast;

@@ -8,7 +8,7 @@ interface CreerDocumentParams {
   designation:      string;
   montantHT:        number;
   tvaPct:           number;
-  type:             'BILAN_CARBONE' | 'FORMATION';
+  type:             string;
   devisId?:         string;
 }
 
@@ -65,7 +65,7 @@ class SoftfactureClient {
           prixHT:      params.montantHT,
           tvaPct:      params.tvaPct,
         }],
-        type: params.type === 'BILAN_CARBONE' ? 'Prestation de service' : 'Formation',
+        type: params.type || 'Prestation de service',
       }),
     });
   }
@@ -85,7 +85,7 @@ class SoftfactureClient {
           prixHT:      params.montantHT,
           tvaPct:      params.tvaPct,
         }],
-        type:           params.type === 'BILAN_CARBONE' ? 'Prestation de service' : 'Formation',
+        type:           params.type || 'Prestation de service',
         devisReferenceId: params.devisId,
       }),
     });

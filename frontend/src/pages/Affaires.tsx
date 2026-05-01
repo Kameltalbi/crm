@@ -27,7 +27,7 @@ type FormData = {
 };
 
 const EMPTY: FormData = {
-  clientId: '', productId: '', type: 'BILAN_CARBONE', montantHT: '',
+  clientId: '', productId: '', type: '', montantHT: '',
   statut: 'PROSPECTION', probabilite: '50',
   moisPrevu: String(new Date().getMonth() + 1), anneePrevue: '2026',
   viaPartenaire: false, tauxCommission: '40', notes: '',
@@ -291,10 +291,8 @@ export function Affaires() {
                 <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Catégorie" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes catégories</SelectItem>
-                  <SelectItem value="BILAN_CARBONE">Bilan Carbone</SelectItem>
-                  <SelectItem value="FORMATION">Formation</SelectItem>
                   {revenueCategories.map((cat: any) => (
-                    <SelectItem key={cat.id} value={`CUSTOM_${cat.id}`}>{cat.name}</SelectItem>
+                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -551,10 +549,8 @@ export function Affaires() {
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as AffaireType })}>
                 <SelectTrigger><SelectValue placeholder="Choisir une catégorie" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="BILAN_CARBONE">Bilan Carbone</SelectItem>
-                  <SelectItem value="FORMATION">Formation</SelectItem>
                   {revenueCategories.map((cat: any) => (
-                    <SelectItem key={cat.id} value={`CUSTOM_${cat.id}`}>{cat.name}</SelectItem>
+                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -310,7 +310,7 @@ model Affaire {
   // Détails prestation
   productId     String?
   product       Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
-  type          AffaireType
+  type          String        @default("Autre")
   title         String?       // ex: "Bilan Carbone UBCI 2026" - auto-généré si non fourni
   description   String?       @db.Text
   montantHT     Decimal       @db.Decimal(12, 3) // DT, 3 décimales
@@ -359,10 +359,7 @@ model Affaire {
   @@map("affaires")
 }
 
-enum AffaireType {
-  BILAN_CARBONE
-  FORMATION
-}
+// AffaireType is now a free-form String managed via custom categories
 
 enum StatutAffaire {
   PROSPECTION  // 🟡 Premier contact, négociation

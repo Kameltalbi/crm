@@ -88,9 +88,12 @@ kpisRoutes.get('/', async (req: any, res, next) => {
     // Calculer la prévision intelligente
     const smartForecast = calculateSmartForecast(realise, pipeline, prospect, perdu);
 
-    // Répartition par type
-    const ca_bilans     = sum(affaires.filter(a => a.type === 'BILAN_CARBONE'));
-    const ca_formations = sum(affaires.filter(a => a.type === 'FORMATION'));
+    // Répartition par type (dynamique)
+    const parType: Record<string, number> = {};
+    for (const a of affaires) {
+      const t = a.type || 'Autre';
+      parType[t] = (parType[t] || 0) + Number(a.montantHT);
+    }
 
     // Distribution mensuelle
     const parMois: Record<number, { realise: number; pipeline: number; prospect: number }> = {};
@@ -110,8 +113,7 @@ kpisRoutes.get('/', async (req: any, res, next) => {
       caPondere: netPondere,
       commissionPartenaireDue: commissionDue,
       netRealise,
-      caBilans: ca_bilans,
-      caFormations: ca_formations,
+      parType,
       counts: {
         realise: realise.length,
         pipeline: pipeline.length,

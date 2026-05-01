@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import auth, { AuthRequest } from '../middleware/auth.js';
-import { AffaireType, StatutAffaire } from '@prisma/client';
+import { StatutAffaire } from '@prisma/client';
 import multer from 'multer';
 import xlsx from 'xlsx';
 import path from 'path';
@@ -344,7 +344,7 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
             clientId: client.id,
             productId: product?.id,
             title: title || `${clientName}${productName ? ' - ' + productName : ''}`,
-            type: typeStr as AffaireType,
+            type: typeStr,
             montantHT,
             statut: statutStr as StatutAffaire,
             probabilite,

@@ -36,7 +36,7 @@ const EMPTY: FormData = {
 export function Affaires() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', mois: String(new Date().getMonth() + 1), viaPartenaire: '' });
+  const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', mois: String(new Date().getMonth() + 1), viaPartenaire: '', sortBy: 'score' });
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'table' | 'kanban'>('table');
   const [open, setOpen] = useState(false);
@@ -70,6 +70,18 @@ export function Affaires() {
     a.statut?.toLowerCase().includes(searchTerm) ||
     a.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   ) : affaires;
+
+  // Sort affaires based on sortBy filter
+  const sortedAffaires = [...filteredAffaires].sort((a, b) => {
+    if (filters.sortBy === 'score') {
+      return (b.score || 0) - (a.score || 0);
+    } else if (filters.sortBy === 'montant') {
+      return Number(b.montantHT) - Number(a.montantHT);
+    } else if (filters.sortBy === 'date') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return 0;
+  });
   const { data: clientsData } = useQuery<{ data: Client[], pagination: any }>({
     queryKey: ['clients'],
     queryFn: () => api.get('/clients').then((r) => r.data),
@@ -193,12 +205,12 @@ export function Affaires() {
   const net = ht - comm;
 
   // Calculate summary KPIs from all affaires (not paginated)
-  const totalCA = allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const pipelineCA = allAffaires.filter(a => a.statut === 'PIPELINE').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const realiseCA = allAffaires.filter(a => a.statut === 'REALISE').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const prospectionCA = allAffaires.filter(a => a.statut === 'PROSPECTION').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const winRate = allAffaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length > 0
-    ? Math.round((allAffaires.filter(a => a.statut === 'REALISE').length / allAffaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length) * 100)
+  const totalCA = sortedAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const pipelineCA = sortedAffaires.filter(a => a.statut === 'PIPELINE').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const realiseCA = sortedAffaires.filter(a => a.statut === 'REALISE').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const prospectionCA = sortedAffaires.filter(a => a.statut === 'PROSPECTION').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const winRate = sortedAffaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length > 0
+    ? Math.round((sortedAffaires.filter(a => a.statut === 'REALISE').length / sortedAffaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length) * 100)
     : 0;
 
   return (
@@ -266,7 +278,7 @@ export function Affaires() {
       {view === 'table' && (
         <Card>
           <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-            <CardTitle className="text-base">{filteredAffaires.length} affaires</CardTitle>
+            <CardTitle className="text-base">{sortedAffaires.length} affaires</CardTitle>
             <div className="flex flex-wrap gap-2 items-center">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -313,6 +325,14 @@ export function Affaires() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={filters.sortBy || 'score'} onValueChange={(v) => setFilters({ ...filters, sortBy: v })}>
+                <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Trier par" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="score">📊 Score ↓</SelectItem>
+                  <SelectItem value="montant">💰 Montant ↓</SelectItem>
+                  <SelectItem value="date">📅 Date ↓</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
                 <SelectTrigger className="h-8 w-20 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -329,6 +349,7 @@ export function Affaires() {
                 <thead>
                   <tr className="border-b bg-sage">
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Client / Titre</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Score</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
@@ -340,7 +361,7 @@ export function Affaires() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAffaires.map((a) => {
+                  {sortedAffaires.map((a) => {
                     const ht = Number(a.montantHT);
                     const c = a.viaPartenaire ? Math.round(ht * Number(a.tauxCommission) / 100) : 0;
                     return (
@@ -348,6 +369,15 @@ export function Affaires() {
                         <td className="p-2.5">
                           <div className="font-semibold">{a.client?.name || 'N/A'}</div>
                           <div className="text-[10px] text-muted-foreground">{a.title}</div>
+                        </td>
+                        <td className="p-2.5 text-right">
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
+                            (a.score || 0) >= 70 ? 'bg-green-100 text-green-700' :
+                            (a.score || 0) >= 40 ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {a.score || 0}
+                          </span>
                         </td>
                         <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>
                         <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
@@ -458,7 +488,7 @@ export function Affaires() {
       {view === 'kanban' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(['PROSPECTION', 'PIPELINE', 'REALISE', 'PERDU'] as const).map((statut) => {
-            const statutAffaires = filteredAffaires.filter(a => a.statut === statut);
+            const statutAffaires = sortedAffaires.filter(a => a.statut === statut);
             const statutCA = statutAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
             const statutLabels = {
               PROSPECTION: { label: 'Prospection', color: 'bg-yellow-50 border-yellow-200' },

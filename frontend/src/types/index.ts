@@ -61,6 +61,7 @@ export interface Affaire {
   montantHT: number;
   statut: StatutAffaire;
   probabilite: number;
+  score: number;
   moisPrevu: number;
   anneePrevue: number;
   dateClotureReelle: string | null;

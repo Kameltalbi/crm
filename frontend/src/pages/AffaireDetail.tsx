@@ -132,7 +132,7 @@ export function AffaireDetail() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="border-2 border-emerald-200 bg-emerald-50/30">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
@@ -162,6 +162,29 @@ export function AffaireDetail() {
               <div>
                 <p className="text-xs text-muted-foreground">Probabilité</p>
                 <p className="text-lg font-bold">{affaire.probabilite}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className={`border-2 ${
+          (affaire.score || 0) >= 70 ? 'border-green-200 bg-green-50/30' :
+          (affaire.score || 0) >= 40 ? 'border-yellow-200 bg-yellow-50/30' :
+          'border-red-200 bg-red-50/30'
+        }`}>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Target className={`w-5 h-5 ${
+                (affaire.score || 0) >= 70 ? 'text-green-600' :
+                (affaire.score || 0) >= 40 ? 'text-yellow-600' :
+                'text-red-600'
+              }`} />
+              <div>
+                <p className="text-xs text-muted-foreground">Score</p>
+                <p className={`text-lg font-bold ${
+                  (affaire.score || 0) >= 70 ? 'text-green-600' :
+                  (affaire.score || 0) >= 40 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>{affaire.score || 0}/100</p>
               </div>
             </div>
           </CardContent>

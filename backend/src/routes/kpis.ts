@@ -63,8 +63,20 @@ function calculateSmartForecast(
 // GET /api/kpis
 kpisRoutes.get('/', async (req: any, res, next) => {
   try {
+    const { annee, mois } = req.query;
+    
+    const where: any = { organizationId: req.organizationId };
+    
+    if (annee) {
+      where.anneePrevue = String(annee);
+    }
+    
+    if (mois && mois !== 'all') {
+      where.moisPrevu = String(mois);
+    }
+    
     const affaires = await prisma.affaire.findMany({
-      where: { organizationId: req.organizationId },
+      where,
       include: { client: true },
     });
 

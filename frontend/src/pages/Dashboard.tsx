@@ -148,6 +148,7 @@ export function Dashboard() {
   
   // Filter out categories with 0 revenue
   const filteredRevenueByCategory = revenueByCategory.filter(cat => cat.value > 0);
+  console.log('Filtered revenueByCategory:', filteredRevenueByCategory);
   const revenueColors = ['#22c55e', '#0ea5e9', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
 
   // Expenses by category

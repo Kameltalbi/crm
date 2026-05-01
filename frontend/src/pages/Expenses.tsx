@@ -455,12 +455,10 @@ export function Expenses() {
                   type="checkbox"
                   checked={form.isRecurrent}
                   onChange={(e) => setForm({ ...form, isRecurrent: e.target.checked })}
-                  disabled={!!form.id}
-                  className="rounded border-gray-300 text-primary focus:ring-primary disabled:opacity-50"
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <Repeat size={16} className="text-muted-foreground" />
                 <span className="text-sm font-medium">Dépense récurrente</span>
-                {form.id && form.isRecurrent && <span className="text-xs text-muted-foreground">(verrouillé en modification)</span>}
               </label>
               {form.isRecurrent && !form.id && (
                 <div className="space-y-1.5">

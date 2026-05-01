@@ -29,6 +29,37 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Lead Scoring Calculation
+function calculateLeadScore(affaire: any, clientHistory?: number): number {
+  let score = 0;
+  
+  // Montant HT (0-30 points)
+  const montant = Number(affaire.montantHT);
+  if (montant >= 10000) score += 30;
+  else if (montant >= 5000) score += 20;
+  else if (montant >= 1000) score += 10;
+  else score += 5;
+  
+  // Probabilité (0-30 points)
+  score += (affaire.probabilite / 100) * 30;
+  
+  // Statut (0-25 points)
+  const statusScores: Record<string, number> = {
+    'PROSPECTION': 10,
+    'PIPELINE': 20,
+    'REALISE': 0, // Already won, no need to score
+    'PERDU': 0, // Lost, no need to score
+  };
+  score += statusScores[affaire.statut] || 0;
+  
+  // Historique client (0-15 points)
+  if (clientHistory && clientHistory > 0) {
+    score += Math.min(15, clientHistory * 5); // Up to 15 points based on past deals
+  }
+  
+  return Math.round(Math.min(100, score));
+}
+
 const affaireSchema = z.object({
   clientId: z.string().min(1),
   productId: z.string().optional().transform(v => v === '' ? undefined : v),
@@ -118,8 +149,18 @@ affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
       title = product ? `${product.name} - ${client?.name || 'Client'}` : `${data.type === 'BILAN_CARBONE' ? 'Bilan Carbone' : 'Formation'} - ${client?.name || 'Client'}`;
     }
 
+    // Calculate lead score based on client history
+    const clientHistory = await prisma.affaire.count({
+      where: {
+        clientId: data.clientId,
+        statut: 'REALISE',
+        organizationId: req.organizationId!,
+      },
+    });
+    const score = calculateLeadScore({ ...data, title }, clientHistory);
+
     const affaire = await prisma.affaire.create({
-      data: { ...data, title, createdById: req.userId, organizationId: req.organizationId! },
+      data: { ...data, title, score, createdById: req.userId, organizationId: req.organizationId! },
       include: { client: true, product: true },
     });
     // Log activité
@@ -148,9 +189,23 @@ affairesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
     });
     if (!existing) return res.status(404).json({ error: 'Affaire introuvable' });
 
+    // Recalculate lead score if relevant fields changed
+    const shouldRecalculate = data.montantHT !== undefined || data.probabilite !== undefined || data.statut !== undefined;
+    let score = existing.score;
+    if (shouldRecalculate) {
+      const clientHistory = await prisma.affaire.count({
+        where: {
+          clientId: existing.clientId,
+          statut: 'REALISE',
+          organizationId: req.organizationId!,
+        },
+      });
+      score = calculateLeadScore({ ...existing, ...data }, clientHistory);
+    }
+
     const affaire = await prisma.affaire.update({
       where: { id: req.params.id as string },
-      data,
+      data: { ...data, score },
       include: { client: true, product: true },
     });
 

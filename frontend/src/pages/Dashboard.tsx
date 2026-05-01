@@ -117,13 +117,20 @@ export function Dashboard() {
     { name: 'Prospection', value: kpis.caProspection, color: '#f59e0b' },
   ];
 
-  // Revenue by category
+  // Revenue by category - initialize with all custom categories
   const revenueByCategory: any[] = [];
   // Mapping for old hardcoded values to display names
   const typeMapping: Record<string, string> = {
     'BILAN_CARBONE': 'Bilan Carbone',
     'FORMATION': 'Formation',
   };
+  
+  // Initialize with all custom categories
+  revenueCategories.forEach((cat: any) => {
+    revenueByCategory.push({ name: cat.name, value: 0 });
+  });
+  
+  // Add revenue from affaires
   affaires.forEach((a: any) => {
     const rawType = a.type || 'Autre';
     const catName = typeMapping[rawType] || rawType;
@@ -131,6 +138,7 @@ export function Dashboard() {
     if (existing) {
       existing.value += Number(a.montantHT);
     } else {
+      // If category not in custom categories, add it
       revenueByCategory.push({ name: catName, value: Number(a.montantHT) });
     }
   });

@@ -91,13 +91,11 @@ export function Expenses() {
     e.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   ) : expenses;
 
-  // Fetch all expenses (unfiltered) for total balance - includes month/semester filter so cards update when filter changes
+  // Fetch ALL expenses for the full year (for KPI cards - always annual)
   const { data: allExpensesData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['expenses', 'all', filterYear, filterMonth, filterSemester],
+    queryKey: ['expenses', 'all-year', filterYear],
     queryFn: () => api.get('/expenses', { params: { 
       year: filterYear, 
-      ...(filterMonth !== 'all' && { month: filterMonth }),
-      ...(filterSemester !== 'all' && { semester: filterSemester }),
       limit: 9999 
     } }).then((r) => r.data),
   });

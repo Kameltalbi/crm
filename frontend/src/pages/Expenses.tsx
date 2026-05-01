@@ -479,26 +479,39 @@ export function Expenses() {
               </table>
               {/* Pagination */}
               {expensesData?.pagination && expensesData.pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4 px-4">
-                  <div className="text-sm text-muted-foreground">
-                    Page {expensesData.pagination.page} sur {expensesData.pagination.totalPages} ({expensesData.pagination.total} dépenses)
-                  </div>
-                  <div className="flex gap-2">
+                <div className="flex items-center justify-between py-4 px-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    {expensesData.pagination.total} dépenses
+                  </p>
+                  <div className="flex items-center gap-1">
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant={page === 1 ? 'ghost' : 'default'}
                       onClick={() => setPage(p => Math.max(1, p - 1))}
                       disabled={page === 1}
+                      className="px-3"
                     >
-                      Précédent
+                      ← Précédent
                     </Button>
+                    {Array.from({ length: expensesData.pagination.totalPages }, (_, i) => i + 1).map((p) => (
+                      <Button
+                        key={p}
+                        size="sm"
+                        variant={p === page ? 'default' : 'outline'}
+                        onClick={() => setPage(p)}
+                        className={`w-8 h-8 p-0 ${p === page ? 'font-bold' : ''}`}
+                      >
+                        {p}
+                      </Button>
+                    ))}
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant={page === expensesData.pagination.totalPages ? 'ghost' : 'default'}
                       onClick={() => setPage(p => p + 1)}
                       disabled={page === expensesData.pagination.totalPages}
+                      className="px-3"
                     >
-                      Suivant
+                      Suivant →
                     </Button>
                   </div>
                 </div>

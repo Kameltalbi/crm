@@ -356,8 +356,10 @@ export function Dashboard() {
                   outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ percent }: any) => <text fontSize="8" fill="#666">{(percent * 100).toFixed(1)}%</text>}
+                  label={({ percent }: any) => `${(percent * 100).toFixed(1)}%`}
                   labelLine={false}
+                  fontSize={8}
+                  fill="#666"
                 >
                   {filteredRevenueByCategory.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={revenueColors[index % revenueColors.length]} />
@@ -385,8 +387,10 @@ export function Dashboard() {
                   outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ percent }: any) => <text fontSize="8" fill="#666">{(percent * 100).toFixed(1)}%</text>}
+                  label={({ percent }: any) => `${(percent * 100).toFixed(1)}%`}
                   labelLine={false}
+                  fontSize={8}
+                  fill="#666"
                 >
                   {expensesByCategory.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />

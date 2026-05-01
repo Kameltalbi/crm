@@ -320,6 +320,7 @@ model Affaire {
   // Pipeline
   statut        StatutAffaire @default(PROSPECTION)
   probabilite   Int           @default(50) // 0-100 %
+  score         Int           @default(0) // Lead score 0-100
   
   // Planning
   moisPrevu     Int           // 1-12

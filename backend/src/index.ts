@@ -22,6 +22,7 @@ import { notificationsRouter } from './routes/notifications.js';
 import { calendarRoutes } from './routes/calendar.js';
 import { expensesRoutes } from './routes/expenses.js';
 import { categoriesRoutes } from './routes/categories.js';
+import { emailTemplatesRoutes } from './routes/email-templates.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -102,6 +103,7 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/expenses', expensesRoutes);
 app.use('/api/categories', categoriesRoutes);
+app.use('/api/email-templates', emailTemplatesRoutes);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

@@ -10,12 +10,14 @@ export const authRoutes = Router();
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8),
 });
+
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8).regex(passwordRegex, 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'),
   name: z.string().min(1),
   organizationName: z.string().min(1),
 });
@@ -104,8 +106,38 @@ authRoutes.post('/login', async (req, res, next) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(401).json({ error: 'Identifiants invalides' });
 
+    // Check if account is locked
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const remainingMinutes = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+      return res.status(423).json({ error: `Compte verrouillé. Réessayez dans ${remainingMinutes} minutes.` });
+    }
+
     const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) return res.status(401).json({ error: 'Identifiants invalides' });
+    if (!valid) {
+      // Increment failed attempts
+      const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+      if (failedAttempts >= 5) {
+        // Lock account for 15 minutes
+        const lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginAttempts, lockedUntil },
+        });
+        return res.status(423).json({ error: 'Trop de tentatives échouées. Compte verrouillé pendant 15 minutes.' });
+      } else {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginAttempts },
+        });
+        return res.status(401).json({ error: `Identifiants invalides. ${5 - failedAttempts} tentatives restantes avant verrouillage.` });
+      }
+    }
+
+    // Reset failed attempts on successful login
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
 
     // Generate access token (short-lived: 15 minutes)
     const accessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {

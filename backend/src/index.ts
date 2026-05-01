@@ -29,12 +29,37 @@ const PORT = Number(process.env.PORT) || 4000;
 
 // ─── Middleware ──────────────────────────────────────────
 app.set('trust proxy', 1);
-app.use(helmet());
+
+// Enhanced Helmet configuration
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", process.env.FRONTEND_URL || ''],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true,
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}));
+
 app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
 
-// Rate limit : 100 req/min
+// Rate limit : 100 req/min (general)
 app.use(
   '/api',
   rateLimit({
@@ -45,13 +70,22 @@ app.use(
   })
 );
 
+// Stricter rate limit for auth routes (5 req/min)
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: { error: 'Trop de tentatives de connexion. Réessayez dans 1 minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // ─── Health check ────────────────────────────────────────
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
 // ─── API Routes ──────────────────────────────────────────
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/clients', clientsRoutes);
 app.use('/api/leads', leadsRoutes);
 app.use('/api/affaires', affairesRoutes);

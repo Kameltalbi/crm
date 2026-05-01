@@ -366,7 +366,21 @@ export function Dashboard() {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-                <Legend />
+                <Legend 
+                  wrapperStyle={{ fontSize: '8px' }}
+                  content={(props: any) => (
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0, fontSize: '8px' }}>
+                      {props.payload.map((entry: any, index: number) => (
+                        <li key={index} style={{ display: 'inline-block', marginRight: '10px', marginBottom: '5px' }}>
+                          <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: entry.color, marginRight: '4px', borderRadius: '2px' }} />
+                          <span style={{ display: 'inline-block', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', lineHeight: '1.2', maxHeight: '2.4em' }}>
+                            {entry.value}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                />
               </RechartsPieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -397,7 +411,21 @@ export function Dashboard() {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-                <Legend />
+                <Legend 
+                  wrapperStyle={{ fontSize: '8px' }}
+                  content={(props: any) => (
+                    <ul style={{ listStyle: 'none', margin: 0, padding: 0, fontSize: '8px' }}>
+                      {props.payload.map((entry: any, index: number) => (
+                        <li key={index} style={{ display: 'inline-block', marginRight: '10px', marginBottom: '5px' }}>
+                          <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: entry.color, marginRight: '4px', borderRadius: '2px' }} />
+                          <span style={{ display: 'inline-block', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', lineHeight: '1.2', maxHeight: '2.4em' }}>
+                            {entry.value}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                />
               </RechartsPieChart>
             </ResponsiveContainer>
           </CardContent>

@@ -178,8 +178,8 @@ export function Expenses() {
       amount: String(expense.amount),
       category: expense.category,
       date: new Date(expense.date).toISOString().split('T')[0],
-      isRecurrent: false,
-      recurrenceMonths: '1',
+      isRecurrent: expense.isRecurrent || false,
+      recurrenceMonths: expense.recurrenceMonths || '1',
     });
     setOpen(true);
   };

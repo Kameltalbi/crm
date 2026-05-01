@@ -23,6 +23,7 @@ import { calendarRoutes } from './routes/calendar.js';
 import { expensesRoutes } from './routes/expenses.js';
 import { categoriesRoutes } from './routes/categories.js';
 import { emailTemplatesRoutes } from './routes/email-templates.js';
+import { aiAssistantRoutes } from './routes/ai-assistant.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -104,6 +105,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/expenses', expensesRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/email-templates', emailTemplatesRoutes);
+app.use('/api/ai-assistant', aiAssistantRoutes);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

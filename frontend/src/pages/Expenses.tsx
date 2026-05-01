@@ -460,7 +460,7 @@ export function Expenses() {
                 <Repeat size={16} className="text-muted-foreground" />
                 <span className="text-sm font-medium">Dépense récurrente</span>
               </label>
-              {form.isRecurrent && !form.id && (
+              {form.isRecurrent && (
                 <div className="space-y-1.5">
                   <Label>Nombre de mois</Label>
                   <Input

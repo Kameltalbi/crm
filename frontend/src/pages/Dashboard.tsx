@@ -119,10 +119,14 @@ export function Dashboard() {
 
   // Revenue by category
   const revenueByCategory: any[] = [];
+  // Mapping for old hardcoded values to display names
+  const typeMapping: Record<string, string> = {
+    'BILAN_CARBONE': 'Bilan Carbone',
+    'FORMATION': 'Formation',
+  };
   affaires.forEach((a: any) => {
-    // Use custom category name if exists, otherwise use type or 'Autre'
-    const cat = revenueCategories.find((c: any) => c.id === a.type);
-    const catName = cat?.name || a.type || 'Autre';
+    const rawType = a.type || 'Autre';
+    const catName = typeMapping[rawType] || rawType;
     const existing = revenueByCategory.find((r) => r.name === catName);
     if (existing) {
       existing.value += Number(a.montantHT);

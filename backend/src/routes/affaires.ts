@@ -30,16 +30,16 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const affaireSchema = z.object({
-  clientId: z.string(),
-  productId: z.string().optional(),
+  clientId: z.string().min(1),
+  productId: z.string().optional().transform(v => v === '' ? undefined : v),
   title: z.string().optional(),
   description: z.string().optional(),
-  type: z.nativeEnum(AffaireType),
+  type: z.string().min(1),
   montantHT: z.number().nonnegative(),
-  statut: z.nativeEnum(StatutAffaire).optional(),
+  statut: z.string().optional(),
   probabilite: z.number().min(0).max(100).optional(),
   moisPrevu: z.number().min(1).max(12),
-  anneePrevue: z.number().min(2025).max(2030),
+  anneePrevue: z.number().min(2020).max(2035),
   viaPartenaire: z.boolean().optional(),
   tauxCommission: z.number().min(0).max(100).optional(),
   notes: z.string().optional(),
@@ -102,7 +102,7 @@ affairesRoutes.get('/:id', async (req: AuthRequest, res, next) => {
 // ─── CREATE ──────────────────────────────────────────────────────
 affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
   try {
-    const data = affaireSchema.parse(req.body);
+    const data = affaireSchema.parse(req.body) as any;
 
     // Auto-generate title if not provided
     let title = data.title;
@@ -139,7 +139,7 @@ affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
 // ─── UPDATE ──────────────────────────────────────────────────────
 affairesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   try {
-    const data = affaireSchema.partial().parse(req.body);
+    const data = affaireSchema.partial().parse(req.body) as any;
     const existing = await prisma.affaire.findFirst({ 
       where: { 
         id: req.params.id as string,

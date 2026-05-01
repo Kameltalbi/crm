@@ -5,8 +5,9 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
   console.error('❌ Error:', err);
 
   if (err instanceof ZodError) {
+    const fieldErrors = err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
     return res.status(400).json({
-      error: 'Validation échouée',
+      error: `Validation échouée: ${fieldErrors}`,
       details: err.errors,
     });
   }

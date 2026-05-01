@@ -53,7 +53,8 @@ export function Expenses() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterMonth, setFilterMonth] = useState<string>(String(new Date().getMonth() + 1));
+  const [filterMonth, setFilterMonth] = useState<string>('all');
+  const [filterSemester, setFilterSemester] = useState<string>('all');
   const [filterYear, setFilterYear] = useState<string>(String(new Date().getFullYear()));
   const [page, setPage] = useState<number>(1);
   const limit = 25;
@@ -66,12 +67,13 @@ export function Expenses() {
   };
 
   const { data: expensesData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['expenses', filterCategory, filterStatus, filterMonth, filterYear, page],
+    queryKey: ['expenses', filterCategory, filterStatus, filterMonth, filterSemester, filterYear, page],
     queryFn: () => api.get('/expenses', {
       params: {
         category: filterCategory !== 'all' ? filterCategory : undefined,
         status: filterStatus !== 'all' ? filterStatus : undefined,
         month: filterMonth !== 'all' ? filterMonth : undefined,
+        semester: filterSemester !== 'all' ? filterSemester : undefined,
         year: filterYear,
         page,
         limit,
@@ -89,10 +91,15 @@ export function Expenses() {
     e.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   ) : expenses;
 
-  // Fetch all expenses (unfiltered) for total balance - includes month filter so cards update when month changes
+  // Fetch all expenses (unfiltered) for total balance - includes month/semester filter so cards update when filter changes
   const { data: allExpensesData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['expenses', 'all', filterYear, filterMonth],
-    queryFn: () => api.get('/expenses', { params: { year: filterYear, ...(filterMonth !== 'all' && { month: filterMonth }), limit: 9999 } }).then((r) => r.data),
+    queryKey: ['expenses', 'all', filterYear, filterMonth, filterSemester],
+    queryFn: () => api.get('/expenses', { params: { 
+      year: filterYear, 
+      ...(filterMonth !== 'all' && { month: filterMonth }),
+      ...(filterSemester !== 'all' && { semester: filterSemester }),
+      limit: 9999 
+    } }).then((r) => r.data),
   });
   const allExpenses = allExpensesData?.data || [];
   const totalExpenses = allExpenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
@@ -290,7 +297,17 @@ export function Expenses() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterMonth} onValueChange={(v) => handleFilterChange(setFilterMonth, v)}>
+        <Select value={filterSemester} onValueChange={(v) => { handleFilterChange(setFilterSemester, v); setFilterMonth('all'); }}>
+          <SelectTrigger className="w-28">
+            <SelectValue placeholder="Période" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Année</SelectItem>
+            <SelectItem value="S1">S1 (Jan-Juin)</SelectItem>
+            <SelectItem value="S2">S2 (Juil-Déc)</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterMonth} onValueChange={(v) => { handleFilterChange(setFilterMonth, v); setFilterSemester('all'); }}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Mois" />
           </SelectTrigger>

@@ -21,6 +21,7 @@ expensesRoutes.get('/', async (req, res) => {
     const category = req.query.category as string;
     const status = req.query.status as string;
     const month = req.query.month as string;
+    const semester = req.query.semester as string;
     const year = req.query.year as string;
 
     const where: any = {
@@ -30,11 +31,19 @@ expensesRoutes.get('/', async (req, res) => {
 
     if (category) where.category = category;
     if (status) where.status = status;
-    if (month || year) {
+    if (month || semester || year) {
       const dateFilter: any = {};
       if (month) {
         dateFilter.gte = new Date(parseInt(year || '2026'), parseInt(month) - 1, 1);
         dateFilter.lt = new Date(parseInt(year || '2026'), parseInt(month), 1);
+      } else if (semester === 'S1') {
+        // S1: January to June (months 1-6)
+        dateFilter.gte = new Date(parseInt(year || '2026'), 0, 1);
+        dateFilter.lt = new Date(parseInt(year || '2026'), 6, 1);
+      } else if (semester === 'S2') {
+        // S2: July to December (months 7-12)
+        dateFilter.gte = new Date(parseInt(year || '2026'), 6, 1);
+        dateFilter.lt = new Date(parseInt(year || '2026') + 1, 0, 1);
       } else if (year) {
         dateFilter.gte = new Date(parseInt(year), 0, 1);
         dateFilter.lt = new Date(parseInt(year) + 1, 0, 1);

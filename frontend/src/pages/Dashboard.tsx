@@ -357,6 +357,8 @@ export function Dashboard() {
                   outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
+                  label={(entry: any) => `${((entry.value / kpis.caTotal) * 100).toFixed(1)}%`}
+                  labelLine={false}
                 >
                   {filteredRevenueByCategory.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={revenueColors[index % revenueColors.length]} />
@@ -384,6 +386,8 @@ export function Dashboard() {
                   outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
+                  label={(entry: any) => `${((entry.value / totalExpenses) * 100).toFixed(1)}%`}
+                  labelLine={false}
                 >
                   {expensesByCategory.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />

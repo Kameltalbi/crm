@@ -447,14 +447,15 @@ model Email {
 
 // ═══════════════════════════════════════════════════════════════
 //  GMAIL TOKEN — OAuth tokens pour envoi d'emails
+// SECURITY: Tokens stored in plain text. In production, consider encryption-at-rest (AES-256)
 // ═══════════════════════════════════════════════════════════════
 model GmailToken {
   id           String   @id @default(cuid())
   organizationId String
   userId       String   @unique
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken  String   @db.Text
-  refreshToken String   @db.Text
+  accessToken  String   @db.Text // TODO: encrypt at rest
+  refreshToken String   @db.Text // TODO: encrypt at rest
   expiresAt    DateTime
   scope        String
   createdAt    DateTime @default(now())
@@ -549,12 +550,13 @@ enum NotificationType {
 
 // ═══════════════════════════════════════════════════════════════
 //  REFRESH TOKEN — JWT refresh tokens pour authentification persistante
+// SECURITY: Token stored in plain text. In production, hash with bcrypt for verification
 // ═══════════════════════════════════════════════════════════════
 model RefreshToken {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token        String   @unique
+  token        String   @unique // TODO: hash with bcrypt for production
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 

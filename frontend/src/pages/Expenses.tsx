@@ -411,6 +411,16 @@ export function Expenses() {
                 <tbody>
                   {filteredExpenses.map((expense: any) => {
                     const statusInfo = STATUS_LABELS[expense.status] || STATUS_LABELS.PENDING;
+                    // Compute recurrence position badge (e.g. 3/12)
+                    let recurrenceBadge = '';
+                    if (expense.isRecurrent && expense.recurrenceMonths) {
+                      const total = parseInt(expense.recurrenceMonths);
+                      const sameGroup = allExpenses
+                        .filter((e: any) => e.isRecurrent && e.title === expense.title && e.category === expense.category)
+                        .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                      const idx = sameGroup.findIndex((e: any) => e.id === expense.id);
+                      if (idx >= 0) recurrenceBadge = `${idx + 1}/${total}`;
+                    }
                     return (
                       <tr key={expense.id} className={`border-b last:border-0 hover:bg-muted/30 transition-colors ${selectedIds.has(expense.id) ? 'bg-primary/5' : ''}`}>
                         <td className="py-3 px-2 w-10">
@@ -426,7 +436,12 @@ export function Expenses() {
                         </td>
                         <td className="py-3 px-4 font-medium">
                           <div className="flex items-center gap-2">
-                            {expense.isRecurrent && <Repeat size={14} className="text-purple-500" />}
+                            {expense.isRecurrent && (
+                              <span className="inline-flex items-center gap-1">
+                                <Repeat size={14} className="text-purple-500" />
+                                {recurrenceBadge && <span className="text-[10px] font-semibold text-purple-500 bg-purple-50 px-1 rounded">{recurrenceBadge}</span>}
+                              </span>
+                            )}
                             {expense.title}
                           </div>
                         </td>

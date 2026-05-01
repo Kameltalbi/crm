@@ -1,7 +1,8 @@
 -- Safe migration: convert AffaireType enum to TEXT without data loss
--- Step 1: Convert column from enum to text (preserves existing values like BILAN_CARBONE, FORMATION)
-ALTER TABLE "affaires" ALTER COLUMN "type" SET DEFAULT 'Autre';
+-- Step 1: Drop enum default first, convert to text, then set new default
+ALTER TABLE "affaires" ALTER COLUMN "type" DROP DEFAULT;
 ALTER TABLE "affaires" ALTER COLUMN "type" TYPE TEXT USING "type"::TEXT;
+ALTER TABLE "affaires" ALTER COLUMN "type" SET DEFAULT 'Autre';
 
 -- Step 2: Add expense recurrence fields if they don't exist
 DO $$

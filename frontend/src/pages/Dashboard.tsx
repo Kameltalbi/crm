@@ -148,7 +148,20 @@ export function Dashboard() {
   
   // Filter out categories with 0 revenue
   const filteredRevenueByCategory = revenueByCategory.filter(cat => cat.value > 0);
-  const revenueColors = ['#065f46', '#10b981', '#34d399', '#0369a1', '#0ea5e9', '#38bdf8'];
+  
+  // Generate unique colors based on category name
+  const generateUniqueColor = (name: string, isRevenue: boolean): string => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = Math.abs(hash) % 360;
+    const s = isRevenue ? '70%' : '80%';
+    const l = isRevenue ? '45%' : '50%';
+    return `hsl(${h}, ${s}, ${l})`;
+  };
+  
+  const revenueColors = filteredRevenueByCategory.map((cat: any) => generateUniqueColor(cat.name, true));
 
   // Expenses by category
   const expensesByCategory: any[] = [];
@@ -160,7 +173,7 @@ export function Dashboard() {
       expensesByCategory.push({ name: e.category, value: Number(e.amount) });
     }
   });
-  const expenseColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#06b6d4', '#6366f1'];
+  const expenseColors = expensesByCategory.map((cat: any) => generateUniqueColor(cat.name, false));
 
   const winRate = kpis.counts.realise + kpis.counts.perdu > 0
     ? Math.round((kpis.counts.realise / (kpis.counts.realise + kpis.counts.perdu)) * 100)

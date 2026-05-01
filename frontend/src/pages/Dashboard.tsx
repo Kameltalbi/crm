@@ -142,6 +142,9 @@ export function Dashboard() {
       revenueByCategory.push({ name: catName, value: Number(a.montantHT) });
     }
   });
+  
+  // Filter out categories with 0 revenue
+  const filteredRevenueByCategory = revenueByCategory.filter(cat => cat.value > 0);
   const revenueColors = ['#22c55e', '#0ea5e9', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
 
   // Expenses by category
@@ -343,7 +346,7 @@ export function Dashboard() {
             <ResponsiveContainer width="100%" height={250}>
               <RechartsPieChart>
                 <Pie
-                  data={revenueByCategory}
+                  data={filteredRevenueByCategory}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -351,7 +354,7 @@ export function Dashboard() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {revenueByCategory.map((entry: any, index: number) => (
+                  {filteredRevenueByCategory.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={revenueColors[index % revenueColors.length]} />
                   ))}
                 </Pie>

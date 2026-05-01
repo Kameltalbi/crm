@@ -17,6 +17,7 @@ type FormData = {
   date: string;
   isRecurrent: boolean;
   recurrenceMonths: string;
+  recurrenceType: string;
 };
 
 const EMPTY: FormData = {
@@ -25,7 +26,8 @@ const EMPTY: FormData = {
   category: '',
   date: new Date().toISOString().split('T')[0],
   isRecurrent: false,
-  recurrenceMonths: '1',
+  recurrenceMonths: '12',
+  recurrenceType: 'mensuel',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -139,31 +141,34 @@ export function Expenses() {
         recurrenceMonths: data.recurrenceMonths,
       };
 
+      // Intervalle en mois selon le type de récurrence
+      const intervalMap: Record<string, number> = { mensuel: 1, trimestriel: 3, semestriel: 6, personnalise: 1 };
+      const interval = intervalMap[data.recurrenceType] || 1;
+
       if (data.id) {
-        // Si on marque une dépense existante comme récurrente, créer les copies pour les mois suivants
+        // Si on marque une dépense existante comme récurrente, créer les copies pour les périodes suivantes
         if (data.isRecurrent && parseInt(data.recurrenceMonths) > 1) {
-          const months = parseInt(data.recurrenceMonths);
+          const count = parseInt(data.recurrenceMonths);
           const startDate = new Date(data.date);
           const promises = [api.put(`/expenses/${data.id}`, payload)];
-          for (let i = 1; i < months; i++) {
+          for (let i = 1; i < count; i++) {
             const d = new Date(startDate);
-            d.setMonth(d.getMonth() + i);
-            const { ...newPayload } = payload;
-            promises.push(api.post('/expenses', { ...newPayload, date: d.toISOString().split('T')[0] }));
+            d.setMonth(d.getMonth() + (i * interval));
+            promises.push(api.post('/expenses', { ...payload, date: d.toISOString().split('T')[0] }));
           }
           return Promise.all(promises);
         }
         return api.put(`/expenses/${data.id}`, payload);
       }
 
-      // Si récurrent, créer une dépense par mois
+      // Si récurrent, créer une dépense par période
       if (data.isRecurrent && parseInt(data.recurrenceMonths) > 1) {
-        const months = parseInt(data.recurrenceMonths);
+        const count = parseInt(data.recurrenceMonths);
         const startDate = new Date(data.date);
         const promises = [];
-        for (let i = 0; i < months; i++) {
+        for (let i = 0; i < count; i++) {
           const d = new Date(startDate);
-          d.setMonth(d.getMonth() + i);
+          d.setMonth(d.getMonth() + (i * interval));
           promises.push(api.post('/expenses', { ...payload, date: d.toISOString().split('T')[0] }));
         }
         return Promise.all(promises);
@@ -211,6 +216,11 @@ export function Expenses() {
   };
 
   const openEdit = (expense: any) => {
+    const months = expense.recurrenceMonths || '12';
+    let recType = 'personnalise';
+    if (months === '12') recType = 'mensuel';
+    else if (months === '4') recType = 'trimestriel';
+    else if (months === '2') recType = 'semestriel';
     setForm({
       id: expense.id,
       title: expense.title,
@@ -218,7 +228,8 @@ export function Expenses() {
       category: expense.category,
       date: new Date(expense.date).toISOString().split('T')[0],
       isRecurrent: expense.isRecurrent || false,
-      recurrenceMonths: expense.recurrenceMonths || '1',
+      recurrenceMonths: months,
+      recurrenceType: recType,
     });
     setOpen(true);
   };
@@ -543,20 +554,40 @@ export function Expenses() {
                 <span className="text-sm font-medium">Dépense récurrente</span>
               </label>
               {form.isRecurrent && (
-                <div className="space-y-1.5">
-                  <Label>Nombre de mois</Label>
-                  <Input
-                    type="number"
-                    min="2"
-                    max="36"
-                    value={form.recurrenceMonths}
-                    onChange={(e) => setForm({ ...form, recurrenceMonths: e.target.value })}
-                    placeholder="Ex: 12"
-                  />
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label>Fréquence</Label>
+                    <Select value={form.recurrenceType} onValueChange={(v) => {
+                      const monthsMap: Record<string, string> = { mensuel: '12', trimestriel: '4', semestriel: '2', personnalise: form.recurrenceMonths };
+                      setForm({ ...form, recurrenceType: v, recurrenceMonths: monthsMap[v] || form.recurrenceMonths });
+                    }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mensuel">Mensuel (12 mois)</SelectItem>
+                        <SelectItem value="trimestriel">Trimestriel (4 trimestres)</SelectItem>
+                        <SelectItem value="semestriel">Semestriel (2 semestres)</SelectItem>
+                        <SelectItem value="personnalise">Personnalisé</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {form.recurrenceType === 'personnalise' && (
+                    <div className="space-y-1.5">
+                      <Label>Nombre de répétitions</Label>
+                      <Input
+                        type="number"
+                        min="2"
+                        max="36"
+                        value={form.recurrenceMonths}
+                        onChange={(e) => setForm({ ...form, recurrenceMonths: e.target.value })}
+                        placeholder="Ex: 6"
+                      />
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">
-                    {parseInt(form.recurrenceMonths) > 1
-                      ? `${form.recurrenceMonths} dépenses de ${form.amount || '0'} TND seront créées (une par mois)`
-                      : 'Minimum 2 mois'}
+                    {form.recurrenceType === 'mensuel' && `12 dépenses de ${form.amount || '0'} TND (une par mois)`}
+                    {form.recurrenceType === 'trimestriel' && `4 dépenses de ${form.amount || '0'} TND (une par trimestre)`}
+                    {form.recurrenceType === 'semestriel' && `2 dépenses de ${form.amount || '0'} TND (une par semestre)`}
+                    {form.recurrenceType === 'personnalise' && parseInt(form.recurrenceMonths) > 1 && `${form.recurrenceMonths} dépenses de ${form.amount || '0'} TND`}
                   </p>
                 </div>
               )}

@@ -357,7 +357,7 @@ export function Dashboard() {
                   outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ percent }: any) => `${(percent * 100).toFixed(1)}%`}
+                  label={({ percent }: any) => <text fontSize="9" fill="#666">{(percent * 100).toFixed(1)}%</text>}
                   labelLine={false}
                 >
                   {filteredRevenueByCategory.map((entry: any, index: number) => (
@@ -386,7 +386,7 @@ export function Dashboard() {
                   outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ percent }: any) => `${(percent * 100).toFixed(1)}%`}
+                  label={({ percent }: any) => <text fontSize="9" fill="#666">{(percent * 100).toFixed(1)}%</text>}
                   labelLine={false}
                 >
                   {expensesByCategory.map((entry: any, index: number) => (

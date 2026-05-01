@@ -332,7 +332,7 @@ export function Affaires() {
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
-                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Commission</th>
+                    <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Catégorie</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mon net</th>
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mois</th>
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Devis/Fac</th>
@@ -352,7 +352,7 @@ export function Affaires() {
                         <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>
                         <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
                         <td className="p-2.5"><StatutBadge statut={a.statut} /></td>
-                        <td className="p-2.5 text-right font-mono text-purple">{a.viaPartenaire ? fmtDT(c) : '—'}</td>
+                        <td className="p-2.5 text-xs font-medium">{a.type || 'N/A'}</td>
                         <td className="p-2.5 text-right font-mono font-semibold text-leaf">{fmtDT(ht - c)}</td>
                         <td className="p-2.5 text-muted-foreground">{MOIS[a.moisPrevu]}</td>
                         <td className="p-2.5">

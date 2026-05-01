@@ -1,11 +1,11 @@
-import { PrismaClient } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
 // Mapping des anciennes valeurs vers les nouvelles catégories
-const categoryMapping: Record<string, string> = {
+const categoryMapping = {
   'BILAN_CARBONE': 'Comptabilité Carbone',
-  'FORMATION': 'Abonnement', // ou une autre catégorie selon vos besoins
+  'FORMATION': 'Abonnement',
 };
 
 async function migrateCategories() {

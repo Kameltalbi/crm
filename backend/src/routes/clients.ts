@@ -107,7 +107,10 @@ clientsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   try {
     const data = clientSchema.parse(req.body);
     const id = req.params.id as string;
-    const oldClient = await prisma.client.findUnique({ where: { id } });
+    const oldClient = await prisma.client.findFirst({
+      where: { id, organizationId: req.organizationId! },
+    });
+    if (!oldClient) return res.status(404).json({ error: 'Client introuvable' });
     const client = await prisma.client.update({
       where: { id },
       data,
@@ -135,7 +138,10 @@ clientsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 clientsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
     const id = req.params.id as string;
-    const oldClient = await prisma.client.findUnique({ where: { id } });
+    const oldClient = await prisma.client.findFirst({
+      where: { id, organizationId: req.organizationId! },
+    });
+    if (!oldClient) return res.status(404).json({ error: 'Client introuvable' });
     await prisma.client.update({
       where: { id },
       data: { deletedAt: new Date() },

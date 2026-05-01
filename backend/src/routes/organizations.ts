@@ -35,18 +35,11 @@ const organizationSchema = z.object({
   logoUrl: z.string().optional(),
 });
 
-// GET /api/organizations - List all organizations (owner only)
+// GET /api/organizations - Get current user's organization
 organizationsRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
-    const currentUser = await prisma.user.findUnique({
-      where: { id: req.userId },
-    });
-
-    if (!currentUser || currentUser.role !== 'OWNER') {
-      return res.status(403).json({ error: 'Accès refusé' });
-    }
-
-    const organizations = await prisma.organization.findMany({
+    const organization = await prisma.organization.findUnique({
+      where: { id: req.organizationId },
       include: {
         _count: {
           select: {
@@ -56,21 +49,17 @@ organizationsRoutes.get('/', async (req: AuthRequest, res, next) => {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
     });
 
-    res.json(organizations);
+    if (!organization) return res.status(404).json({ error: 'Organisation introuvable' });
+    res.json(organization);
   } catch (e) { next(e); }
 });
 
-// GET /api/organizations/:id - Get single organization (owner only)
+// GET /api/organizations/:id - Get single organization (must belong to user)
 organizationsRoutes.get('/:id', async (req: AuthRequest, res, next) => {
   try {
-    const currentUser = await prisma.user.findUnique({
-      where: { id: req.userId },
-    });
-
-    if (!currentUser || currentUser.role !== 'OWNER') {
+    if (req.params.id !== req.organizationId) {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
@@ -122,14 +111,10 @@ organizationsRoutes.post('/', async (req: AuthRequest, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/organizations/:id - Update organization (owner only)
+// PUT /api/organizations/:id - Update organization (must belong to user)
 organizationsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   try {
-    const currentUser = await prisma.user.findUnique({
-      where: { id: req.userId },
-    });
-
-    if (!currentUser || currentUser.role !== 'OWNER') {
+    if (req.params.id !== req.organizationId) {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
@@ -144,14 +129,10 @@ organizationsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   } catch (e) { next(e); }
 });
 
-// DELETE /api/organizations/:id - Delete organization (owner only)
+// DELETE /api/organizations/:id - Delete organization (must belong to user)
 organizationsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
-    const currentUser = await prisma.user.findUnique({
-      where: { id: req.userId },
-    });
-
-    if (!currentUser || currentUser.role !== 'OWNER') {
+    if (req.params.id !== req.organizationId) {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
@@ -174,14 +155,10 @@ organizationsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   } catch (e) { next(e); }
 });
 
-// POST /api/organizations/:id/logo - Upload organization logo (owner only)
+// POST /api/organizations/:id/logo - Upload organization logo (must belong to user)
 organizationsRoutes.post('/:id/logo', upload.single('logo'), async (req: AuthRequest, res, next) => {
   try {
-    const currentUser = await prisma.user.findUnique({
-      where: { id: req.userId },
-    });
-
-    if (!currentUser || currentUser.role !== 'OWNER') {
+    if (req.params.id !== req.organizationId) {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 

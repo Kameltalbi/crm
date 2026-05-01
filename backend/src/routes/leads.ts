@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
 import auth from '../middleware/auth.js';
 
@@ -7,6 +8,22 @@ const prisma = new PrismaClient();
 
 // Apply auth middleware to all routes
 leadsRoutes.use(auth);
+
+const leadSchema = z.object({
+  name: z.string().min(1),
+  contactName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  source: z.string().optional(),
+  status: z.string().optional(),
+  score: z.number().min(0).max(100).optional(),
+  estimatedValue: z.number().optional(),
+  notes: z.string().optional(),
+  clientId: z.string().optional(),
+});
+
+const leadUpdateSchema = leadSchema.partial();
 
 // GET /leads - Get all leads for the organization
 leadsRoutes.get('/', async (req: any, res) => {
@@ -80,27 +97,20 @@ leadsRoutes.post('/', async (req: any, res) => {
     const organizationId = req.organizationId;
     const userId = req.userId;
 
-    const { name, contactName, email, phone, company, source, status, score, estimatedValue, notes, clientId } = req.body;
+    const data = leadSchema.parse(req.body);
 
     const lead = await prisma.lead.create({
       data: {
+        ...data,
         organizationId,
         createdById: userId,
-        name,
-        contactName: contactName || null,
-        email: email || null,
-        phone: phone || null,
-        company: company || null,
-        source: source || 'AUTRE',
-        status: status || 'NEW',
-        score: score ? Number(score) : 0,
-        estimatedValue: estimatedValue ? parseFloat(estimatedValue) : null,
-        notes: notes || null,
-        clientId: clientId || null,
-      },
+      } as any,
       include: {
         client: true,
         createdBy: { select: { id: true, name: true, email: true } },
+        activites: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
 
@@ -124,9 +134,11 @@ leadsRoutes.put('/:id', async (req: any, res) => {
       return res.status(404).json({ error: 'Lead not found' });
     }
 
+    const data = leadUpdateSchema.parse(req.body);
+
     const lead = await prisma.lead.update({
       where: { id: req.params.id },
-      data: req.body,
+      data: data as any,
       include: {
         client: true,
         createdBy: { select: { id: true, name: true, email: true } },

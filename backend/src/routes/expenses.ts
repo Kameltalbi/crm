@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
 import auth from '../middleware/auth.js';
 
@@ -7,6 +8,24 @@ const prisma = new PrismaClient();
 
 // Apply auth middleware to all routes
 expensesRoutes.use(auth);
+
+const expenseSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  amount: z.number().nonnegative(),
+  currency: z.string().default('TND'),
+  category: z.string().default('Autre'),
+  date: z.string().optional(),
+  relatedAffaireId: z.string().optional(),
+  relatedLeadId: z.string().optional(),
+  status: z.string().default('PENDING'),
+  receiptUrl: z.string().optional(),
+  isRecurrent: z.boolean().optional(),
+  recurrenceMonths: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+const expenseUpdateSchema = expenseSchema.partial();
 
 // GET /expenses - List expenses with pagination
 expensesRoutes.get('/', async (req, res) => {
@@ -115,26 +134,15 @@ expensesRoutes.post('/', async (req, res) => {
     const userId = (req as any).userId;
     const organizationId = (req as any).organizationId;
 
-    const { title, description, amount, currency, category, date, relatedAffaireId, relatedLeadId, status, receiptUrl, isRecurrent, recurrenceMonths, notes } = req.body;
+    const data = expenseSchema.parse(req.body);
 
     const expense = await prisma.expense.create({
       data: {
         organizationId,
-        title,
-        description,
-        amount: parseFloat(amount),
-        currency: currency || 'TND',
-        category: category || 'Autre',
-        date: date ? new Date(date) : new Date(),
-        relatedAffaireId,
-        relatedLeadId,
-        status: status || 'PENDING',
-        receiptUrl,
-        isRecurrent: isRecurrent === true || isRecurrent === 'true',
-        recurrenceMonths: recurrenceMonths || null,
-        notes,
+        ...data,
+        date: data.date ? new Date(data.date) : new Date(),
         createdById: userId,
-      },
+      } as any,
       include: {
         relatedAffaire: { include: { client: true } },
         relatedLead: true,
@@ -154,25 +162,19 @@ expensesRoutes.put('/:id', async (req, res) => {
     const userId = (req as any).userId;
     const organizationId = (req as any).organizationId;
 
-    const { title, description, amount, currency, category, date, relatedAffaireId, relatedLeadId, status, receiptUrl, isRecurrent, recurrenceMonths, notes } = req.body;
+    const existing = await prisma.expense.findFirst({
+      where: { id: req.params.id, organizationId, deletedAt: null },
+    });
+    if (!existing) return res.status(404).json({ error: 'Dépense non trouvée' });
+
+    const data = expenseUpdateSchema.parse(req.body);
 
     const expense = await prisma.expense.update({
       where: { id: req.params.id },
       data: {
-        title,
-        description,
-        amount: amount ? parseFloat(amount) : undefined,
-        currency,
-        category,
-        date: date ? new Date(date) : undefined,
-        relatedAffaireId,
-        relatedLeadId,
-        status,
-        receiptUrl,
-        isRecurrent: isRecurrent !== undefined ? (isRecurrent === true || isRecurrent === 'true') : undefined,
-        recurrenceMonths,
-        notes,
-      },
+        ...data,
+        date: data.date ? new Date(data.date) : undefined,
+      } as any,
       include: {
         relatedAffaire: { include: { client: true } },
         relatedLead: true,
@@ -190,6 +192,11 @@ expensesRoutes.put('/:id', async (req, res) => {
 expensesRoutes.delete('/:id', async (req, res) => {
   try {
     const organizationId = (req as any).organizationId;
+
+    const existing = await prisma.expense.findFirst({
+      where: { id: req.params.id, organizationId, deletedAt: null },
+    });
+    if (!existing) return res.status(404).json({ error: 'Dépense non trouvée' });
 
     await prisma.expense.update({
       where: { id: req.params.id },

@@ -117,7 +117,7 @@ export function Dashboard() {
     { name: 'Prospection', value: kpis.caProspection, color: '#f59e0b' },
   ];
 
-  // Revenue by category - initialize with all custom categories
+  // Revenue by category - use backend parType data
   const revenueByCategory: any[] = [];
   // Mapping for old hardcoded values to display names
   const typeMapping: Record<string, string> = {
@@ -130,16 +130,14 @@ export function Dashboard() {
     revenueByCategory.push({ name: cat.name, value: 0 });
   });
   
-  // Add revenue from affaires
-  affaires.forEach((a: any) => {
-    const rawType = a.type || 'Autre';
-    const catName = typeMapping[rawType] || rawType;
+  // Add revenue from backend parType data
+  Object.entries(kpis.parType || {}).forEach(([type, value]) => {
+    const catName = typeMapping[type] || type;
     const existing = revenueByCategory.find((r) => r.name === catName);
     if (existing) {
-      existing.value += Number(a.montantHT);
+      existing.value += Number(value);
     } else {
-      // If category not in custom categories, add it
-      revenueByCategory.push({ name: catName, value: Number(a.montantHT) });
+      revenueByCategory.push({ name: catName, value: Number(value) });
     }
   });
   

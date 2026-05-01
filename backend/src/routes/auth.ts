@@ -124,13 +124,13 @@ authRoutes.post('/login', async (req, res, next) => {
         const lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
         await prisma.user.update({
           where: { id: user.id },
-          data: { failedLoginAttempts, lockedUntil },
+          data: { failedLoginAttempts: failedAttempts, lockedUntil },
         });
         return res.status(423).json({ error: 'Trop de tentatives échouées. Compte verrouillé pendant 15 minutes.' });
       } else {
         await prisma.user.update({
           where: { id: user.id },
-          data: { failedLoginAttempts },
+          data: { failedLoginAttempts: failedAttempts },
         });
         return res.status(401).json({ error: `Identifiants invalides. ${5 - failedAttempts} tentatives restantes avant verrouillage.` });
       }

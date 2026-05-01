@@ -53,11 +53,20 @@ export function AffaireDetail() {
   const qc = useQueryClient();
   const [activityOpen, setActivityOpen] = useState(false);
   const [activityForm, setActivityForm] = useState<ActivityFormData>(EMPTY_ACTIVITY);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState({ subject: '', body: '' });
 
   const { data: affaire, isLoading } = useQuery<Affaire>({
     queryKey: ['affaire', id],
     queryFn: () => api.get(`/affaires/${id}`).then((r) => r.data),
     enabled: !!id,
+  });
+
+  const { data: emailTemplates } = useQuery({
+    queryKey: ['email-templates'],
+    queryFn: () => api.get('/email-templates').then((r) => r.data),
   });
 
   const saveActivityMutation = useMutation({
@@ -70,6 +79,31 @@ export function AffaireDetail() {
       setActivityForm(EMPTY_ACTIVITY);
     },
   });
+
+  const sendEmailMutation = useMutation({
+    mutationFn: (templateId: string) =>
+      api.post(`/email-templates/${templateId}/send`, { affaireId: id }).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['affaire', id] });
+      setTemplateOpen(false);
+      setSelectedTemplateId('');
+      alert('Email envoyé avec succès !');
+    },
+  });
+
+  const handlePreviewTemplate = async () => {
+    if (!selectedTemplateId || !id) return;
+    const data = await api.post(`/email-templates/${selectedTemplateId}/preview`, { affaireId: id }).then((r) => r.data);
+    setPreviewData(data);
+    setPreviewOpen(true);
+  };
+
+  const handleSendTemplate = () => {
+    if (!selectedTemplateId) return;
+    if (confirm('Envoyer cet email ?')) {
+      sendEmailMutation.mutate(selectedTemplateId);
+    }
+  };
 
   const deleteActivityMutation = useMutation({
     mutationFn: (activityId: string) => api.delete(`/activites/${activityId}`),
@@ -125,6 +159,9 @@ export function AffaireDetail() {
               <Mail size={16} className="mr-2" /> Email
             </Button>
           )}
+          <Button variant="outline" size="sm" onClick={() => setTemplateOpen(true)}>
+            <Send size={16} className="mr-2" /> Template Email
+          </Button>
           <Button size="sm" onClick={() => setActivityOpen(true)}>
             <Plus size={16} className="mr-2" /> Ajouter activité
           </Button>
@@ -425,6 +462,59 @@ export function AffaireDetail() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Template Selector Dialog */}
+      <Dialog open={templateOpen} onOpenChange={setTemplateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Envoyer email via template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Sélectionner un template</Label>
+              <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                <SelectTrigger><SelectValue placeholder="Choisir un template..." /></SelectTrigger>
+                <SelectContent>
+                  {emailTemplates?.map((t: any) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => setTemplateOpen(false)}>Annuler</Button>
+            <Button type="button" variant="outline" onClick={handlePreviewTemplate} disabled={!selectedTemplateId}>
+              Aperçu
+            </Button>
+            <Button type="button" onClick={handleSendTemplate} disabled={!selectedTemplateId || sendEmailMutation.isPending}>
+              {sendEmailMutation.isPending ? 'Envoi...' : 'Envoyer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Aperçu de l'email</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Sujet</p>
+              <p className="font-medium">{previewData.subject}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Corps</p>
+              <div className="p-4 bg-gray-50 rounded text-sm whitespace-pre-wrap">{previewData.body}</div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setPreviewOpen(false)}>Fermer</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

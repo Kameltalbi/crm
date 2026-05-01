@@ -71,10 +71,10 @@ app.use(
   })
 );
 
-// Stricter rate limit for auth routes (5 req/min)
+// Stricter rate limit for auth routes (20 req/min)
 const authLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 20,
   message: { error: 'Trop de tentatives de connexion. Réessayez dans 1 minute.' },
   standardHeaders: true,
   legacyHeaders: false,

@@ -59,6 +59,7 @@ export function Expenses() {
   const [page, setPage] = useState<number>(1);
   const limit = 25;
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Reset page to 1 when filters change
   const handleFilterChange = (setter: (val: string) => void, value: string) => {
@@ -179,8 +180,35 @@ export function Expenses() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/expenses/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] });
+      setSelectedIds(prev => { const next = new Set(prev); next.forEach(id => next.delete(id)); return new Set(); });
+    },
   });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => Promise.all(ids.map(id => api.delete(`/expenses/${id}`))),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] });
+      setSelectedIds(new Set());
+    },
+  });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredExpenses.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredExpenses.map((e: any) => e.id)));
+    }
+  };
 
   const openEdit = (expense: any) => {
     setForm({
@@ -350,9 +378,29 @@ export function Expenses() {
             </div>
           ) : (
             <div className="overflow-x-auto">
+              {selectedIds.size > 0 && (
+                <div className="flex items-center gap-3 px-4 py-2 bg-red-50 border-b">
+                  <span className="text-sm font-medium text-red-700">{selectedIds.size} sélectionnée(s)</span>
+                  <Button size="sm" variant="destructive" onClick={() => bulkDeleteMutation.mutate(Array.from(selectedIds))} disabled={bulkDeleteMutation.isPending}>
+                    <Trash2 size={14} className="mr-1" />
+                    {bulkDeleteMutation.isPending ? 'Suppression...' : `Supprimer (${selectedIds.size})`}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+                    Annuler
+                  </Button>
+                </div>
+              )}
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
+                    <th className="py-3 px-2 w-10">
+                      <input
+                        type="checkbox"
+                        checked={filteredExpenses.length > 0 && selectedIds.size === filteredExpenses.length}
+                        onChange={toggleSelectAll}
+                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                    </th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Titre</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Catégorie</th>
@@ -364,7 +412,15 @@ export function Expenses() {
                   {filteredExpenses.map((expense: any) => {
                     const statusInfo = STATUS_LABELS[expense.status] || STATUS_LABELS.PENDING;
                     return (
-                      <tr key={expense.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                      <tr key={expense.id} className={`border-b last:border-0 hover:bg-muted/30 transition-colors ${selectedIds.has(expense.id) ? 'bg-primary/5' : ''}`}>
+                        <td className="py-3 px-2 w-10">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(expense.id)}
+                            onChange={() => toggleSelect(expense.id)}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                        </td>
                         <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
                           {new Date(expense.date).toLocaleDateString('fr-FR')}
                         </td>

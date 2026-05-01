@@ -191,7 +191,7 @@ affairesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 
     // Recalculate lead score if relevant fields changed
     const shouldRecalculate = data.montantHT !== undefined || data.probabilite !== undefined || data.statut !== undefined;
-    let score = existing.score;
+    let score = (existing as any).score || 0;
     if (shouldRecalculate) {
       const clientHistory = await prisma.affaire.count({
         where: {

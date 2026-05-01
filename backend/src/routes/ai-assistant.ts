@@ -131,14 +131,19 @@ async function executeQuery(intent: string, organizationId: string) {
         where: { 
           organizationId,
           statut: 'REALISE',
-          anneePrevue: currentYear,
         },
       });
-      const caRealise = realiseAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+      // Filter by actual close date or current year
+      const caRealiseCurrentYear = realiseAffaires
+        .filter(a => {
+          const date = a.dateClotureReelle ? new Date(a.dateClotureReelle) : new Date(a.createdAt);
+          return date.getFullYear() === currentYear;
+        })
+        .reduce((sum, a) => sum + Number(a.montantHT), 0);
       return {
         type: 'metric',
         title: `CA réalisé ${currentYear}`,
-        value: caRealise.toLocaleString('fr-TN') + ' DT',
+        value: caRealiseCurrentYear.toLocaleString('fr-TN') + ' DT',
       };
       
     case 'ca_pipeline':

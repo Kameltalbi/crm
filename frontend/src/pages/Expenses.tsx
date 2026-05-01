@@ -141,6 +141,19 @@ export function Expenses() {
       };
 
       if (data.id) {
+        // Si on marque une dépense existante comme récurrente, créer les copies pour les mois suivants
+        if (data.isRecurrent && parseInt(data.recurrenceMonths) > 1) {
+          const months = parseInt(data.recurrenceMonths);
+          const startDate = new Date(data.date);
+          const promises = [api.put(`/expenses/${data.id}`, payload)];
+          for (let i = 1; i < months; i++) {
+            const d = new Date(startDate);
+            d.setMonth(d.getMonth() + i);
+            const { ...newPayload } = payload;
+            promises.push(api.post('/expenses', { ...newPayload, date: d.toISOString().split('T')[0] }));
+          }
+          return Promise.all(promises);
+        }
         return api.put(`/expenses/${data.id}`, payload);
       }
 

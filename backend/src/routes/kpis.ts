@@ -68,11 +68,11 @@ kpisRoutes.get('/', async (req: any, res, next) => {
     const where: any = { organizationId: req.organizationId };
     
     if (annee) {
-      where.anneePrevue = String(annee);
+      where.anneePrevue = Number(annee);
     }
     
     if (mois && mois !== 'all') {
-      where.moisPrevu = String(mois);
+      where.moisPrevu = Number(mois);
     }
     
     const affaires = await prisma.affaire.findMany({

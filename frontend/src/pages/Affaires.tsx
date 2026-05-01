@@ -344,7 +344,7 @@ export function Affaires() {
                     const ht = Number(a.montantHT);
                     const c = a.viaPartenaire ? Math.round(ht * Number(a.tauxCommission) / 100) : 0;
                     return (
-                      <tr key={a.id} className={`border-b hover:bg-sage/50 ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`}>
+                      <tr key={a.id} className={`border-b hover:bg-sage/50 cursor-pointer ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`} onClick={() => navigate(`/affaires/${a.id}`)}>
                         <td className="p-2.5">
                           <div className="font-semibold">{a.client?.name || 'N/A'}</div>
                           <div className="text-[10px] text-muted-foreground">{a.title}</div>
@@ -361,7 +361,7 @@ export function Affaires() {
                             {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
                           </div>
                         </td>
-                        <td className="p-2.5 text-right">
+                        <td className="p-2.5 text-right" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTriggerButton asChild>
                               <Button

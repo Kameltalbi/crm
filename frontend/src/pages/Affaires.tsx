@@ -417,24 +417,37 @@ export function Affaires() {
             <CardContent className="border-t pt-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Page {pagination.currentPage} sur {pagination.totalPages} ({pagination.total} affaires)
+                  {pagination.total} affaires
                 </p>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-1">
                   <Button
-                    variant="outline"
                     size="sm"
+                    variant={page === 1 ? 'ghost' : 'default'}
                     onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={pagination.currentPage === 1}
+                    disabled={page === 1}
+                    className="px-3"
                   >
-                    Précédent
+                    ← Précédent
                   </Button>
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
+                    <Button
+                      key={p}
+                      size="sm"
+                      variant={p === page ? 'default' : 'outline'}
+                      onClick={() => setPage(p)}
+                      className={`w-8 h-8 p-0 ${p === page ? 'font-bold' : ''}`}
+                    >
+                      {p}
+                    </Button>
+                  ))}
                   <Button
-                    variant="outline"
                     size="sm"
+                    variant={page === pagination.totalPages ? 'ghost' : 'default'}
                     onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
-                    disabled={pagination.currentPage === pagination.totalPages}
+                    disabled={page === pagination.totalPages}
+                    className="px-3"
                   >
-                    Suivant
+                    Suivant →
                   </Button>
                 </div>
               </div>

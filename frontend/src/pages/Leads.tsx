@@ -63,10 +63,11 @@ export function Leads() {
   const [filterSource, setFilterSource] = useState<string>('all');
   const [filterMonth, setFilterMonth] = useState<string>('all');
   const [filterYear, setFilterYear] = useState<string>('2026');
+  const [page, setPage] = useState(1);
 
   const { data: leadsData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['leads', filterStatus, filterSource],
-    queryFn: () => api.get('/leads', { params: { status: filterStatus !== 'all' ? filterStatus : undefined, source: filterSource !== 'all' ? filterSource : undefined } }).then((r) => r.data),
+    queryKey: ['leads', filterStatus, filterSource, page],
+    queryFn: () => api.get('/leads', { params: { status: filterStatus !== 'all' ? filterStatus : undefined, source: filterSource !== 'all' ? filterSource : undefined, page } }).then((r) => r.data),
   });
   const leads = leadsData?.data || [];
   const pagination = leadsData?.pagination;
@@ -267,14 +268,37 @@ export function Leads() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Page {pagination.currentPage} sur {pagination.totalPages} ({pagination.total} leads)
+            {pagination.total} leads
           </p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" disabled={pagination.currentPage === 1}>
-              Précédent
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant={page === 1 ? 'ghost' : 'default'}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3"
+            >
+              ← Précédent
             </Button>
-            <Button variant="outline" size="sm" disabled={pagination.currentPage === pagination.totalPages}>
-              Suivant
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
+              <Button
+                key={p}
+                size="sm"
+                variant={p === page ? 'default' : 'outline'}
+                onClick={() => setPage(p)}
+                className={`w-8 h-8 p-0 ${p === page ? 'font-bold' : ''}`}
+              >
+                {p}
+              </Button>
+            ))}
+            <Button
+              size="sm"
+              variant={page === pagination.totalPages ? 'ghost' : 'default'}
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={page === pagination.totalPages}
+              className="px-3"
+            >
+              Suivant →
             </Button>
           </div>
         </div>

@@ -135,3 +135,59 @@ emailTemplatesRoutes.post('/:id/preview', async (req: AuthRequest, res, next) =>
     res.json({ subject, body });
   } catch (e) { next(e); }
 });
+
+// POST /api/email-templates/:id/send - Send email using template
+emailTemplatesRoutes.post('/:id/send', async (req: AuthRequest, res, next) => {
+  try {
+    const { affaireId, toEmail } = req.body;
+    
+    const template = await prisma.emailTemplate.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId: req.organizationId,
+        isActive: true,
+      },
+    });
+    if (!template) return res.status(404).json({ error: 'Template introuvable ou désactivé' });
+    
+    const affaire = await prisma.affaire.findFirst({
+      where: {
+        id: affaireId,
+        organizationId: req.organizationId,
+      },
+      include: { client: true },
+    });
+    if (!affaire) return res.status(404).json({ error: 'Affaire introuvable' });
+    
+    // Replace variables
+    let subject = template.subject;
+    let body = template.body;
+    
+    const variables = {
+      client: affaire.client?.name || 'N/A',
+      montant: Number(affaire.montantHT).toLocaleString('fr-TN') + ' DT',
+      date: new Date().toLocaleDateString('fr-FR'),
+      statut: affaire.statut,
+      titre: affaire.title || 'N/A',
+      probabilite: `${affaire.probabilite}%`,
+    };
+    
+    Object.entries(variables).forEach(([key, value]) => {
+      subject = subject.replace(new RegExp(`{${key}}`, 'g'), value);
+      body = body.replace(new RegExp(`{${key}}`, 'g'), value);
+    });
+    
+    // Log email activity
+    await prisma.activite.create({
+      data: {
+        affaireId,
+        organizationId: req.organizationId!,
+        type: 'EMAIL_ENVOYE',
+        title: 'Email envoyé via template',
+        content: `Template: ${template.name}\nDestinataire: ${toEmail || affaire.client?.email}`,
+      },
+    });
+    
+    res.json({ success: true, subject, body, to: toEmail || affaire.client?.email });
+  } catch (e) { next(e); }
+});

@@ -148,8 +148,7 @@ export function Dashboard() {
   
   // Filter out categories with 0 revenue
   const filteredRevenueByCategory = revenueByCategory.filter(cat => cat.value > 0);
-  console.log('Filtered revenueByCategory:', filteredRevenueByCategory);
-  const revenueColors = ['#22c55e', '#0ea5e9', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
+  const revenueColors = ['#065f46', '#10b981', '#34d399', '#0369a1', '#0ea5e9', '#38bdf8'];
 
   // Expenses by category
   const expensesByCategory: any[] = [];
@@ -357,7 +356,7 @@ export function Dashboard() {
                   outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ percent }: any) => <text fontSize="9" fill="#666">{(percent * 100).toFixed(1)}%</text>}
+                  label={({ percent }: any) => <text fontSize="8" fill="#666">{(percent * 100).toFixed(1)}%</text>}
                   labelLine={false}
                 >
                   {filteredRevenueByCategory.map((entry: any, index: number) => (
@@ -386,7 +385,7 @@ export function Dashboard() {
                   outerRadius={90}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ percent }: any) => <text fontSize="9" fill="#666">{(percent * 100).toFixed(1)}%</text>}
+                  label={({ percent }: any) => <text fontSize="8" fill="#666">{(percent * 100).toFixed(1)}%</text>}
                   labelLine={false}
                 >
                   {expensesByCategory.map((entry: any, index: number) => (

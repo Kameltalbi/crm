@@ -56,6 +56,14 @@ function processQuery(message: string, organizationId: string): string {
     return 'risks_alerts';
   }
   
+  if (lowerMessage.includes('breakeven') || lowerMessage.includes('point mort') || lowerMessage.includes('équilibre')) {
+    return 'breakeven_analysis';
+  }
+  
+  if (lowerMessage.includes('dépense') || lowerMessage.includes('dépense') && (lowerMessage.includes('ca') || lowerMessage.includes('comparer'))) {
+    return 'ca_vs_expenses';
+  }
+  
   return 'unknown';
 }
 
@@ -218,11 +226,54 @@ async function executeQuery(intent: string, organizationId: string) {
       return {
         type: 'list',
         title: `Alertes opportunités à risque (${oldPipeline.length})`,
-        data: oldPipeline.map(a => ({
+        data: (oldPipeline as any[]).map(a => ({
           client: a.client?.name || 'N/A',
           montant: Number(a.montantHT).toLocaleString('fr-TN') + ' DT',
           alerte: 'En pipeline depuis plus de 30 jours',
         })),
+      };
+      
+    case 'breakeven_analysis':
+      const allAffairesBE = await prisma.affaire.findMany({
+        where: { organizationId, statut: 'REALISE' },
+      });
+      const caTotalBE = allAffairesBE.reduce((sum, a) => sum + Number(a.montantHT), 0);
+      
+      const allExpenses = await prisma.expense.findMany({
+        where: { organizationId },
+      });
+      const expensesTotal = allExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
+      
+      const profit = caTotalBE - expensesTotal;
+      const margin = caTotalBE > 0 ? ((profit / caTotalBE) * 100).toFixed(1) : 0;
+      const breakevenStatus = profit >= 0 ? 'Rentable' : 'Déficitaire';
+      
+      return {
+        type: 'text',
+        title: 'Analyse Breakeven',
+        value: `CA Total: ${caTotalBE.toLocaleString('fr-TN')} DT\nDépenses: ${expensesTotal.toLocaleString('fr-TN')} DT\nProfit/Perte: ${profit.toLocaleString('fr-TN')} DT\nMarge: ${margin}%\nStatut: ${breakevenStatus}`,
+      };
+      
+    case 'ca_vs_expenses':
+      const affairesYear = await prisma.affaire.findMany({
+        where: { organizationId, anneePrevue: currentYear },
+      });
+      const caYear = affairesYear.reduce((sum, a) => sum + Number(a.montantHT), 0);
+      
+      const expensesYear = await prisma.expense.findMany({
+        where: { 
+          organizationId,
+          date: { gte: new Date(currentYear, 0, 1) },
+        },
+      });
+      const expensesYearTotal = expensesYear.reduce((sum, e) => sum + Number(e.amount), 0);
+      
+      const ratio = caYear > 0 ? ((expensesYearTotal / caYear) * 100).toFixed(1) : 0;
+      
+      return {
+        type: 'text',
+        title: `Comparaison CA/Dépenses ${currentYear}`,
+        value: `CA: ${caYear.toLocaleString('fr-TN')} DT\nDépenses: ${expensesYearTotal.toLocaleString('fr-TN')} DT\nRatio dépenses/CA: ${ratio}%`,
       };
       
     default:

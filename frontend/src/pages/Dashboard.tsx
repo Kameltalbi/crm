@@ -120,7 +120,9 @@ export function Dashboard() {
   // Revenue by category
   const revenueByCategory: any[] = [];
   affaires.forEach((a: any) => {
-    const catName = a.type || 'Autre';
+    // Use custom category name if exists, otherwise use type or 'Autre'
+    const cat = revenueCategories.find((c: any) => c.id === a.type);
+    const catName = cat?.name || a.type || 'Autre';
     const existing = revenueByCategory.find((r) => r.name === catName);
     if (existing) {
       existing.value += Number(a.montantHT);

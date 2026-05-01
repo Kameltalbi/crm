@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import auth, { AuthRequest } from '../middleware/auth.js';
 import { gmailService } from '../services/gmail.js';
+import { encrypt, decrypt } from '../lib/encryption.js';
 
 export const gmailRoutes = Router();
 
@@ -34,16 +35,16 @@ gmailRoutes.get('/callback', auth, async (req, res, next) => {
       where: { userId },
       update: {
         organizationId: user.organizationId,
-        accessToken:  tokens.access_token!,
-        refreshToken: tokens.refresh_token!,
+        accessToken:  encrypt(tokens.access_token!),
+        refreshToken: encrypt(tokens.refresh_token!),
         expiresAt:    new Date(tokens.expiry_date!),
         scope:        tokens.scope || '',
       },
       create: {
         organizationId: user.organizationId,
         userId,
-        accessToken:  tokens.access_token!,
-        refreshToken: tokens.refresh_token!,
+        accessToken:  encrypt(tokens.access_token!),
+        refreshToken: encrypt(tokens.refresh_token!),
         expiresAt:    new Date(tokens.expiry_date!),
         scope:        tokens.scope || '',
       },

@@ -1,6 +1,7 @@
 import { google, gmail_v1 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import type { GmailToken } from '@prisma/client';
+import { decrypt } from '../lib/encryption.js';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.send',
@@ -35,8 +36,8 @@ class GmailService {
   private async getClient(token: GmailToken): Promise<OAuth2Client> {
     const oauth2 = this.createOAuthClient();
     oauth2.setCredentials({
-      access_token:  token.accessToken,
-      refresh_token: token.refreshToken,
+      access_token:  decrypt(token.accessToken),
+      refresh_token: decrypt(token.refreshToken),
       expiry_date:   token.expiresAt.getTime(),
     });
     return oauth2;

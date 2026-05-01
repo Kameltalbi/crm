@@ -62,12 +62,15 @@ authRoutes.post('/register', async (req, res, next) => {
       expiresIn: '30d',
     });
 
-    // Store refresh token in database
+    // Hash refresh token before storing
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+
+    // Store refresh token hash in database
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
     await prisma.refreshToken.create({
       data: {
         userId: user.id,
-        token: refreshToken,
+        token: refreshTokenHash,
         expiresAt,
       },
     });
@@ -149,12 +152,15 @@ authRoutes.post('/login', async (req, res, next) => {
       expiresIn: '30d',
     });
 
-    // Store refresh token in database
+    // Hash refresh token before storing
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+
+    // Store refresh token hash in database
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
     await prisma.refreshToken.create({
       data: {
         userId: user.id,
-        token: refreshToken,
+        token: refreshTokenHash,
         expiresAt,
       },
     });
@@ -211,20 +217,29 @@ authRoutes.post('/refresh', async (req, res, next) => {
       return res.status(400).json({ error: 'Refresh token manquant' });
     }
 
-    // Verify refresh token
+    // Verify refresh token JWT
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as { userId: string };
 
-    // Check if refresh token exists in database and is not expired
-    const storedToken = await prisma.refreshToken.findUnique({
-      where: { token: refreshToken },
+    // Find all refresh tokens for user and compare hashes
+    const allTokens = await prisma.refreshToken.findMany({
+      where: { userId: decoded.userId },
       include: { user: true },
     });
 
-    if (!storedToken || storedToken.expiresAt < new Date()) {
-      // Delete expired token if exists
-      if (storedToken) {
-        await prisma.refreshToken.delete({ where: { id: storedToken.id } });
+    // Find matching token by hash comparison
+    let storedToken = null;
+    for (const token of allTokens) {
+      if (await bcrypt.compare(refreshToken, token.token)) {
+        storedToken = token;
+        break;
       }
+    }
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      // Delete expired tokens
+      await prisma.refreshToken.deleteMany({
+        where: { userId: decoded.userId, expiresAt: { lt: new Date() } },
+      });
       return res.status(401).json({ error: 'Refresh token invalide ou expiré' });
     }
 

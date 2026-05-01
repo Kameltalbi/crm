@@ -48,6 +48,10 @@ export function Clients() {
       qc.invalidateQueries({ queryKey: ['clients'] });
       setOpen(false);
     },
+    onError: (error: any) => {
+      const msg = error.response?.data?.error || error.message || 'Erreur inconnue';
+      alert(msg);
+    },
   });
 
   const deleteMutation = useMutation({

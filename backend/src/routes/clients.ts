@@ -70,6 +70,19 @@ clientsRoutes.get('/:id', async (req: AuthRequest, res, next) => {
 clientsRoutes.post('/', async (req: AuthRequest, res, next) => {
   try {
     const data = clientSchema.parse(req.body);
+
+    // Check for duplicate client name in the same organization
+    const existing = await prisma.client.findFirst({
+      where: {
+        organizationId: req.organizationId!,
+        name: { equals: data.name, mode: 'insensitive' },
+        deletedAt: null,
+      },
+    });
+    if (existing) {
+      return res.status(409).json({ error: `Un client avec le nom "${data.name}" existe déjà.` });
+    }
+
     const client = await prisma.client.create({
       data: { ...data, createdById: req.userId, organizationId: req.organizationId! },
     });

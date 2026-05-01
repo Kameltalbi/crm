@@ -17,6 +17,7 @@ import { Products } from './pages/Products';
 import { Activites } from './pages/Activites';
 import { Organizations } from './pages/Organizations';
 import { Landing } from './pages/Landing';
+import { EmailTemplates } from './pages/EmailTemplates';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const accessToken = useAuth((s) => s.accessToken);
@@ -54,6 +55,7 @@ export default function App() {
                 <Route path="/users" element={<Users />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/activites" element={<Activites />} />
+                <Route path="/email-templates" element={<EmailTemplates />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>

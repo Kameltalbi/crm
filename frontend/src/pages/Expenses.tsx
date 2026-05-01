@@ -449,38 +449,38 @@ export function Expenses() {
             </div>
 
             {/* Récurrence */}
-            {!form.id && (
-              <div className="rounded-lg border p-4 space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.isRecurrent}
-                    onChange={(e) => setForm({ ...form, isRecurrent: e.target.checked })}
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
+            <div className="rounded-lg border p-4 space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isRecurrent}
+                  onChange={(e) => setForm({ ...form, isRecurrent: e.target.checked })}
+                  disabled={!!form.id}
+                  className="rounded border-gray-300 text-primary focus:ring-primary disabled:opacity-50"
+                />
+                <Repeat size={16} className="text-muted-foreground" />
+                <span className="text-sm font-medium">Dépense récurrente</span>
+                {form.id && form.isRecurrent && <span className="text-xs text-muted-foreground">(verrouillé en modification)</span>}
+              </label>
+              {form.isRecurrent && !form.id && (
+                <div className="space-y-1.5">
+                  <Label>Nombre de mois</Label>
+                  <Input
+                    type="number"
+                    min="2"
+                    max="36"
+                    value={form.recurrenceMonths}
+                    onChange={(e) => setForm({ ...form, recurrenceMonths: e.target.value })}
+                    placeholder="Ex: 12"
                   />
-                  <Repeat size={16} className="text-muted-foreground" />
-                  <span className="text-sm font-medium">Dépense récurrente</span>
-                </label>
-                {form.isRecurrent && (
-                  <div className="space-y-1.5">
-                    <Label>Nombre de mois</Label>
-                    <Input
-                      type="number"
-                      min="2"
-                      max="36"
-                      value={form.recurrenceMonths}
-                      onChange={(e) => setForm({ ...form, recurrenceMonths: e.target.value })}
-                      placeholder="Ex: 12"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {parseInt(form.recurrenceMonths) > 1
-                        ? `${form.recurrenceMonths} dépenses de ${form.amount || '0'} TND seront créées (une par mois)`
-                        : 'Minimum 2 mois'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+                  <p className="text-xs text-muted-foreground">
+                    {parseInt(form.recurrenceMonths) > 1
+                      ? `${form.recurrenceMonths} dépenses de ${form.amount || '0'} TND seront créées (une par mois)`
+                      : 'Minimum 2 mois'}
+                  </p>
+                </div>
+              )}
+            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>

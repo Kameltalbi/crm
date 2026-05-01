@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { KPIs, Affaire } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
 
-function KpiCard({ title, subtitle, value, icon, color }: {
+function KpiCard({ title, subtitle, value, icon, color, ttcValue }: {
   title: string;
   subtitle: string;
   value: string;
   icon: React.ReactNode;
   color: string;
+  ttcValue?: string;
 }) {
   const colorClasses: Record<string, { bg: string; text: string; border: string; iconBg: string }> = {
     emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', iconBg: 'bg-emerald-100' },
@@ -32,6 +33,7 @@ function KpiCard({ title, subtitle, value, icon, color }: {
         </div>
         <div className="mt-4">
           <p className="text-3xl font-bold text-gray-900">{value}</p>
+          {ttcValue && <p className="text-xs text-muted-foreground mt-1">{ttcValue} TTC</p>}
           <p className="text-sm font-semibold text-gray-700 mt-1">{title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
         </div>
@@ -185,6 +187,7 @@ export function Dashboard() {
           title="CA Total"
           subtitle={`${affaires.length} opportunités`}
           value={fmtDT(kpis.caTotal)}
+          ttcValue={fmtDT(kpis.caTotal * 1.19)}
           icon={<DollarSign className="w-6 h-6" />}
           color="emerald"
         />
@@ -192,6 +195,7 @@ export function Dashboard() {
           title="CA Pipeline"
           subtitle={`${kpis.counts.pipeline + kpis.counts.prospect} opportunités`}
           value={fmtDT(kpis.caPipeline + kpis.caProspection)}
+          ttcValue={fmtDT((kpis.caPipeline + kpis.caProspection) * 1.19)}
           icon={<Target className="w-6 h-6" />}
           color="blue"
         />
@@ -199,6 +203,7 @@ export function Dashboard() {
           title="CA Gagné"
           subtitle={`${kpis.counts.realise} opportunités`}
           value={fmtDT(kpis.caRealise)}
+          ttcValue={fmtDT(kpis.caRealise * 1.19)}
           icon={<Wallet className="w-6 h-6" />}
           color="emerald"
         />

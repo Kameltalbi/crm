@@ -219,8 +219,8 @@ export function Dashboard() {
         <KpiCard
           title="CA Total"
           subtitle={`${affaires.length} opportunités`}
-          value={fmtDT(kpis.caTotal)}
-          ttcValue={fmtDT(kpis.caTotal * 1.19)}
+          value={fmtDT(kpis.caTotalAll)}
+          ttcValue={fmtDT(kpis.caTotalAll * 1.19)}
           icon={<DollarSign className="w-6 h-6" />}
           color="emerald"
         />

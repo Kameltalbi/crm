@@ -116,6 +116,7 @@ export interface KPIs {
   caPipeline: number;
   caProspection: number;
   caTotal: number;
+  caTotalAll: number; // All statuses including PERDU
   caPondere: number;
   commissionPartenaireDue: number;
   netRealise: number;

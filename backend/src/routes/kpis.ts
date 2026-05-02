@@ -88,6 +88,8 @@ kpisRoutes.get('/', async (req: any, res, next) => {
     const sum = (arr: typeof affaires) =>
       arr.reduce((s, a) => s + Number(a.montantHT), 0);
 
+    const caTotalAll = sum(affaires); // All statuses including PERDU
+
     const commissionDue = realise
       .filter(a => a.viaPartenaire)
       .reduce((s, a) => s + Number(a.montantHT) * (Number(a.tauxCommission) / 100), 0);
@@ -122,6 +124,7 @@ kpisRoutes.get('/', async (req: any, res, next) => {
       caPipeline: sum(pipeline),
       caProspection: sum(prospect),
       caTotal: caRealise + sum(pipeline) + sum(prospect),
+      caTotalAll, // All statuses including PERDU
       caPondere: netPondere,
       commissionPartenaireDue: commissionDue,
       netRealise,

@@ -69,17 +69,6 @@ app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(morgan('dev'));
 
-// Rate limit : 100 req/min (general)
-app.use(
-  '/api',
-  rateLimit({
-    windowMs: 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-  })
-);
-
 // Stricter rate limit for auth routes (20 req/min)
 const authLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -89,16 +78,28 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// ─── Health check ────────────────────────────────────────
+// ─── Health check (before /api rate limit) ────────────────
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// ─── Static files for uploads ───────────────────────────
+// ─── Static files for uploads (before /api rate limit) ───
+// Must be registered before app.use('/api', rateLimit) so GET /api/uploads/* is not shadowed.
 const uploadsDir = getUploadsDir();
 app.use('/api/uploads', express.static(uploadsDir));
 // Backward compatibility for already stored /uploads URLs
 app.use('/uploads', express.static(uploadsDir));
+
+// Rate limit : 100 req/min (general) — applies to other /api routes only after static mounts above
+app.use(
+  '/api',
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 
 // ─── API Routes ──────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);

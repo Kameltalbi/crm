@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/form-controls';
@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Organization } from '@/types';
 
 export function OrganizationSettings() {
-  const { data: organization, refetch } = useQuery<Organization[]>({
+  const qc = useQueryClient();
+  const { data: organization } = useQuery<Organization[]>({
     queryKey: ['organizations'],
     queryFn: () => api.get('/organizations').then((r) => r.data),
   });
@@ -22,21 +23,38 @@ export function OrganizationSettings() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState(org?.logoUrl || '');
 
+  useEffect(() => {
+    if (!org) return;
+    setName(org.name || '');
+    setEmail(org.email || '');
+    setPhone(org.phone || '');
+    setAddress(org.address || '');
+    setTva(org.tva || '');
+    setLogoPreview(org.logoUrl || '');
+    setLogoFile(null);
+  }, [org]);
+
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/organizations/${org?.id}`, data),
+    mutationFn: async (data: any) => {
+      if (!org?.id) {
+        throw new Error("Organisation introuvable");
+      }
+      await api.put(`/organizations/${org.id}`, data);
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('logo', logoFile);
+        await api.post(`/organizations/${org.id}/logo`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+    },
     onSuccess: () => {
-      refetch();
+      qc.invalidateQueries({ queryKey: ['organizations'] });
+      setLogoFile(null);
       alert('Organisation mise à jour avec succès');
     },
-  });
-
-  const uploadMutation = useMutation({
-    mutationFn: (formData: FormData) => api.post(`/organizations/${org?.id}/logo`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
-    onSuccess: () => {
-      refetch();
-      alert('Logo téléchargé avec succès');
+    onError: (error: any) => {
+      alert(`Erreur lors de l'enregistrement: ${error?.response?.data?.error || error?.message || 'Erreur inconnue'}`);
     },
   });
 
@@ -48,15 +66,15 @@ export function OrganizationSettings() {
     }
   };
 
-  const handleLogoUpload = () => {
-    if (logoFile) {
-      const formData = new FormData();
-      formData.append('logo', logoFile);
-      uploadMutation.mutate(formData);
-    }
-  };
-
   const handleSave = () => {
+    if (!org?.id) {
+      alert("Organisation introuvable");
+      return;
+    }
+    if (!name.trim()) {
+      alert("Le nom de l'organisation est obligatoire");
+      return;
+    }
     updateMutation.mutate({ name, email, phone, address, tva });
   };
 
@@ -130,16 +148,11 @@ export function OrganizationSettings() {
               onChange={handleLogoChange}
               className="flex-1"
             />
-            {logoFile && (
-              <Button onClick={handleLogoUpload} disabled={uploadMutation.isPending}>
-                {uploadMutation.isPending ? 'Téléchargement...' : 'Télécharger'}
-              </Button>
-            )}
           </div>
         </div>
 
         <div className="flex justify-end pt-4">
-          <Button onClick={handleSave} disabled={updateMutation.isPending}>
+          <Button onClick={handleSave} disabled={updateMutation.isPending || !org?.id}>
             {updateMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
           </Button>
         </div>

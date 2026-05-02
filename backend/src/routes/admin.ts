@@ -54,8 +54,8 @@ adminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
     const totalClients = await prisma.client.count();
     console.log('[Admin Stats] Total clients:', totalClients);
     
-    const activeSubscriptions = (prisma as any).subscription.count({ where: { statut: 'ACTIF' } });
-    const pendingSubscriptions = (prisma as any).subscription.count({ where: { statut: 'EN_ATTENTE' } });
+    const activeSubscriptions = await (prisma as any).subscription.count({ where: { paymentStatus: 'PAID' } });
+    const pendingSubscriptions = await (prisma as any).subscription.count({ where: { paymentStatus: 'PENDING' } });
 
     // Get database size (PostgreSQL specific query)
     const dbSizeResult = await prisma.$queryRaw`

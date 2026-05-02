@@ -21,7 +21,12 @@ export function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
+      // Redirect admin to admin dashboard
+      if (email === 'admin@ktoptima.com') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erreur de connexion');
     } finally {

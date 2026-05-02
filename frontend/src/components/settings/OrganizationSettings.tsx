@@ -8,12 +8,12 @@ import type { Organization } from '@/types';
 
 export function OrganizationSettings() {
   const qc = useQueryClient();
-  const { data: organization } = useQuery<Organization[]>({
+  const { data: organizationData } = useQuery<Organization | Organization[]>({
     queryKey: ['organizations'],
     queryFn: () => api.get('/organizations').then((r) => r.data),
   });
 
-  const org = organization?.[0];
+  const org = Array.isArray(organizationData) ? organizationData[0] : organizationData;
 
   const [name, setName] = useState(org?.name || '');
   const [email, setEmail] = useState(org?.email || '');

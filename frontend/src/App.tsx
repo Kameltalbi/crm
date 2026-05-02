@@ -20,6 +20,7 @@ import { Landing } from './pages/Landing';
 import { LandingSales } from './pages/LandingSales';
 import { Legal } from './pages/Legal';
 import { Onboarding } from './pages/Onboarding';
+import { Pricing } from './pages/Pricing';
 import { EmailTemplates } from './pages/EmailTemplates';
 import { AIAssistant } from './pages/AIAssistant';
 
@@ -43,6 +44,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/legal/:type" element={<Legal />} />
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/pricing" element={<Pricing />} />
       <Route
         path="/*"
         element={

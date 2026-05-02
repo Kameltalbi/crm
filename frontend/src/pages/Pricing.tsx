@@ -12,28 +12,46 @@ const plans = [
     monthlyPrice: 30,
     annualPrice: 360,
     features: [
-      '3 opportunités',
+      'Jusqu\'à 100 prospects',
       '1 utilisateur',
-      'Email templates de base',
+      'Pipeline simple (kanban)',
+      'Gestion des clients',
+      'Templates email de base',
       'Support email',
     ],
-    maxUsers: 1,
+    cta: 'Commencer',
+  },
+  {
+    name: 'Growth',
+    monthlyPrice: 40,
+    annualPrice: 480,
+    features: [
+      'Jusqu\'à 300 prospects',
+      '3 utilisateurs',
+      'Pipeline personnalisable',
+      'Reporting simple',
+      'Automatisations basiques',
+      'Support prioritaire',
+    ],
+    cta: 'Choisir ce plan',
+    popular: true,
   },
   {
     name: 'Pro',
     monthlyPrice: 50,
     annualPrice: 600,
     features: [
-      'Opportunités illimitées',
+      'Prospects illimités',
       '5 utilisateurs',
       'Assistant IA conversationnel',
       'Lead scoring automatique',
+      'Automatisations avancées',
       'Intégration Softfacture',
-      'Support prioritaire',
+      'Dashboard avancé + KPI',
       'Backup quotidien',
+      'Support prioritaire',
     ],
-    maxUsers: 5,
-    popular: true,
+    cta: 'Passer au niveau supérieur',
   },
 ];
 
@@ -66,37 +84,47 @@ export function Pricing() {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="font-serif text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Choisissez votre plan
           </h1>
-          <p className="text-xl text-gray-600">
-            Paiement annuel uniquement par virement ou espèces
+          <p className="text-xl text-gray-600 mb-2">
+            Paiement annuel uniquement
+          </p>
+          <p className="text-sm text-gray-500">
+            Sans engagement – support inclus – mise en place rapide
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan) => (
-            <Card key={plan.name} className={`border-2 ${plan.popular ? 'border-leaf shadow-lg' : ''}`}>
+            <Card 
+              key={plan.name} 
+              className={`border-2 transition-all hover:shadow-xl ${
+                plan.popular 
+                  ? 'border-leaf shadow-xl relative scale-105 z-10' 
+                  : 'border-gray-200'
+              }`}
+            >
               {plan.popular && (
-                <div className="bg-leaf text-white text-sm font-semibold text-center py-2 rounded-t-lg">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-leaf text-white text-sm font-semibold px-4 py-1 rounded-full shadow-md">
                   Plus populaire
                 </div>
               )}
-              <CardHeader>
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+              <CardHeader className="pt-8">
+                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <p className="text-sm text-gray-500">Prix annuel</p>
-                  <p className="text-4xl font-bold">{plan.annualPrice} DT</p>
-                  <p className="text-sm text-gray-500">{plan.monthlyPrice} DT/mois</p>
+                  <p className="text-4xl font-bold text-gray-900">{plan.annualPrice} DT</p>
+                  <p className="text-sm text-gray-500">par an</p>
+                  <p className="text-xs text-gray-400">{plan.monthlyPrice} DT/mois</p>
                 </div>
 
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <Check className="text-leaf flex-shrink-0 mt-0.5" size={16} />
-                      <span className="text-sm">{feature}</span>
+                    <li key={idx} className="flex items-start gap-3">
+                      <Check className="text-leaf flex-shrink-0 mt-0.5" size={20} />
+                      <span className="text-sm text-gray-700">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -105,8 +133,9 @@ export function Pricing() {
                   className="w-full"
                   variant={plan.popular ? 'default' : 'outline'}
                   onClick={() => handleSubscribe(plan.name)}
+                  size="lg"
                 >
-                  S'abonner <ArrowRight size={16} className="ml-2" />
+                  {plan.cta}
                 </Button>
               </CardContent>
             </Card>

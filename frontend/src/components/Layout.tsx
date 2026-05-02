@@ -25,6 +25,16 @@ const adminNav = [
   { to: '/settings/organizations', label: 'Organisations', icon: Building2 },
 ];
 
+function resolveOrganizationLogoUrl(logoUrl: string | null | undefined): string {
+  if (!logoUrl) return '';
+  if (/^https?:\/\//i.test(logoUrl)) return logoUrl;
+  let path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`;
+  if (path.startsWith('/uploads/')) {
+    path = path.replace('/uploads/', '/api/uploads/');
+  }
+  return `${window.location.origin}${path}`;
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -36,12 +46,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     return () => clearInterval(timer);
   }, []);
 
-  const { data: organizations } = useQuery<Organization[]>({
+  const { data: organizationsData } = useQuery<Organization | Organization[]>({
     queryKey: ['organizations'],
     queryFn: () => api.get('/organizations').then((r) => r.data),
   });
 
-  const organization = organizations?.[0];
+  const organization = Array.isArray(organizationsData) ? organizationsData[0] : organizationsData;
+  const organizationLogoUrl = resolveOrganizationLogoUrl(organization?.logoUrl);
 
   const handleLogout = async () => {
     await logout();
@@ -67,8 +78,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <div className="flex items-center gap-2">
-            {organization && organization.logoUrl ? (
-              <img src={organization.logoUrl} alt={organization.name} className="h-10 w-auto max-w-[200px] object-contain" />
+            {organization && organizationLogoUrl ? (
+              <img src={organizationLogoUrl} alt={organization.name} className="h-10 w-auto max-w-[200px] object-contain" />
             ) : organization ? (
               <div className="flex items-center gap-2">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -117,8 +128,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         >
           {/* Organization Logo */}
           <div className="p-4 border-b border-white/10">
-            {organization && organization.logoUrl ? (
-              <img src={organization.logoUrl} alt={organization.name} className="h-12 w-auto max-w-[200px] object-contain" />
+            {organization && organizationLogoUrl ? (
+              <img src={organizationLogoUrl} alt={organization.name} className="h-12 w-auto max-w-[200px] object-contain" />
             ) : organization ? (
               <div className="h-12 w-12 rounded-lg bg-white/10 flex items-center justify-center">
                 <Building2 size={24} className="text-white" />

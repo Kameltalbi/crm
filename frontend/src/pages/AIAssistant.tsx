@@ -12,12 +12,12 @@ interface Message {
   data?: any;
 }
 
-const SUGGESTIONS = [
-  'Combien d\'opportunités cette semaine ?',
-  'CA réalisé cette année',
-  'Actions prioritaires',
-  'Alertes opportunités à risque',
-  'Total clients',
+const suggestions = [
+  "Prédire CA fin d'année",
+  "Conseils pour atteindre mes objectifs",
+  "Analyse des objectifs mensuels",
+  "Actions prioritaires",
+  "Alertes opportunités à risque",
 ];
 
 export function AIAssistant() {
@@ -141,7 +141,7 @@ export function AIAssistant() {
         </CardContent>
         <div className="border-t p-4 space-y-3">
           <div className="flex flex-wrap gap-2">
-            {SUGGESTIONS.map((suggestion) => (
+            {suggestions.map((suggestion: string) => (
               <Button
                 key={suggestion}
                 variant="outline"

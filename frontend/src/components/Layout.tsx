@@ -68,7 +68,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Building2 size={20} className="text-primary" />
               </div>
             ) : (
-              <img src="/logo.png" alt="ktOptima" className="h-12 w-auto" />
+              <>
+                <img src="/logo.png" alt="ktOptima" className="h-12 w-auto" />
+                <span className="text-xl font-bold text-foreground">CRM</span>
+              </>
             )}
           </div>
         </div>

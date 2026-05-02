@@ -11,6 +11,7 @@ export function Landing() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-foreground">CRM</span>
             </div>
             <nav className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-lg text-muted-foreground hover:text-foreground transition-colors">

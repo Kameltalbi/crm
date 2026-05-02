@@ -5,6 +5,7 @@ import auth, { AuthRequest } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import { getUploadsDir } from '../lib/uploadsDir.js';
+import { mapOrganizationLogoInPlace, normalizeOrganizationLogoUrlForApi } from '../lib/organizationLogoUrl.js';
 
 export const organizationsRoutes = Router();
 organizationsRoutes.use(auth);
@@ -48,7 +49,7 @@ organizationsRoutes.get('/', async (req: AuthRequest, res, next) => {
     });
 
     if (!organization) return res.status(404).json({ error: 'Organisation introuvable' });
-    res.json(organization);
+    res.json(mapOrganizationLogoInPlace(organization));
   } catch (e) { next(e); }
 });
 
@@ -82,7 +83,7 @@ organizationsRoutes.get('/:id', async (req: AuthRequest, res, next) => {
     });
 
     if (!organization) return res.status(404).json({ error: 'Organisation introuvable' });
-    res.json(organization);
+    res.json(mapOrganizationLogoInPlace(organization));
   } catch (e) { next(e); }
 });
 
@@ -103,7 +104,7 @@ organizationsRoutes.post('/', async (req: AuthRequest, res, next) => {
       data,
     });
 
-    res.status(201).json(organization);
+    res.status(201).json(mapOrganizationLogoInPlace(organization));
   } catch (e) { next(e); }
 });
 
@@ -121,7 +122,7 @@ organizationsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
       data,
     });
 
-    res.json(organization);
+    res.json(mapOrganizationLogoInPlace(organization));
   } catch (e) { next(e); }
 });
 
@@ -169,6 +170,10 @@ organizationsRoutes.post('/:id/logo', upload.single('logo'), async (req: AuthReq
       data: { logoUrl },
     });
 
-    res.json({ logoUrl, organization });
+    const normalized = normalizeOrganizationLogoUrlForApi(logoUrl);
+    res.json({
+      logoUrl: normalized,
+      organization: mapOrganizationLogoInPlace(organization),
+    });
   } catch (e) { next(e); }
 });

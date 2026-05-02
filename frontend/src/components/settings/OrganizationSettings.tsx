@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { resolveOrganizationLogoUrl } from '@/lib/organizationLogo';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/form-controls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,14 +15,6 @@ export function OrganizationSettings() {
   });
 
   const org = Array.isArray(organizationData) ? organizationData[0] : organizationData;
-  const resolveLogoUrl = (url?: string | null) => {
-    if (!url) return '';
-    if (/^https?:\/\//i.test(url)) return url;
-    const normalized = url.startsWith('/uploads/')
-      ? url.replace('/uploads/', '/api/uploads/')
-      : url;
-    return `${window.location.origin}${normalized.startsWith('/') ? '' : '/'}${normalized}`;
-  };
 
   const [name, setName] = useState(org?.name || '');
   const [email, setEmail] = useState(org?.email || '');
@@ -29,7 +22,7 @@ export function OrganizationSettings() {
   const [address, setAddress] = useState(org?.address || '');
   const [tva, setTva] = useState(org?.tva || '');
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState(resolveLogoUrl(org?.logoUrl));
+  const [logoPreview, setLogoPreview] = useState(resolveOrganizationLogoUrl(org?.logoUrl));
 
   useEffect(() => {
     if (!org) return;
@@ -38,7 +31,7 @@ export function OrganizationSettings() {
     setPhone(org.phone || '');
     setAddress(org.address || '');
     setTva(org.tva || '');
-    setLogoPreview(resolveLogoUrl(org.logoUrl));
+    setLogoPreview(resolveOrganizationLogoUrl(org.logoUrl));
     setLogoFile(null);
   }, [org]);
 
@@ -61,7 +54,7 @@ export function OrganizationSettings() {
     },
     onSuccess: (result) => {
       if (result?.savedLogoUrl) {
-        setLogoPreview(resolveLogoUrl(result.savedLogoUrl));
+        setLogoPreview(resolveOrganizationLogoUrl(result.savedLogoUrl));
       }
       qc.invalidateQueries({ queryKey: ['organizations'] });
       setLogoFile(null);

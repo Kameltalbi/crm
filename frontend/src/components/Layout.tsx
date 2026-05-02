@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { resolveOrganizationLogoUrl } from '@/lib/organizationLogo';
 import type { Organization } from '@/types';
 import { Notifications } from './Notifications';
 
@@ -19,16 +20,6 @@ const nav = [
   { to: '/email-templates', label: 'Templates Emails', icon: Mail },
   { to: '/ai-assistant', label: 'Assistant IA', icon: Sparkles },
 ];
-
-function resolveOrganizationLogoUrl(logoUrl: string | null | undefined): string {
-  if (!logoUrl) return '';
-  if (/^https?:\/\//i.test(logoUrl)) return logoUrl;
-  let path = logoUrl.startsWith('/') ? logoUrl : `/${logoUrl}`;
-  if (path.startsWith('/uploads/')) {
-    path = path.replace('/uploads/', '/api/uploads/');
-  }
-  return `${window.location.origin}${path}`;
-}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();

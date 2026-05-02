@@ -28,7 +28,7 @@ const adminNav = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -48,6 +48,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
     navigate('/login');
   };
 
+  const closeSidebarOnMobile = () => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background flex-col">
       {/* Header */}
@@ -55,7 +61,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
+            className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
+            title={sidebarOpen ? 'Fermer la sidebar' : 'Ouvrir la sidebar'}
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -104,8 +111,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'fixed lg:static inset-y-0 left-0 z-40 w-64 bg-primary text-white flex flex-col transition-transform duration-300 lg:translate-x-0 shadow-xl',
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            'fixed lg:relative inset-y-0 left-0 z-40 bg-primary text-white flex flex-col transition-all duration-300 shadow-xl overflow-hidden',
+            sidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full lg:w-0 lg:translate-x-0'
           )}
         >
           {/* Organization Logo */}
@@ -130,7 +137,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 key={to}
                 to={to}
                 end={to === '/'}
-                onClick={() => setSidebarOpen(false)}
+                onClick={closeSidebarOnMobile}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
@@ -149,7 +156,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="border-t border-white/20 my-4" />
                 <NavLink
                   to="/settings"
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={closeSidebarOnMobile}
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
@@ -164,7 +171,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </NavLink>
                 <NavLink
                   to="/admin"
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={closeSidebarOnMobile}
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',

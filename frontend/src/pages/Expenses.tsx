@@ -118,9 +118,9 @@ export function Expenses() {
   });
   const affaires = affairesData?.data || [];
   const TVA = 0.19;
-  const caRealiseHT = affaires.filter((a: any) => a.statut === 'REALISE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
-  const caPipelineHT = affaires.filter((a: any) => a.statut === 'PIPELINE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
-  const caProspectionHT = affaires.filter((a: any) => a.statut === 'PROSPECTION').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caRealiseHT = affaires.filter((a: any) => a.statut === 'GAGNE').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caPipelineHT = affaires.filter((a: any) => ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'].includes(a.statut)).reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
+  const caProspectionHT = affaires.filter((a: any) => a.statut === 'PROSPECT').reduce((sum: number, a: any) => sum + Number(a.montantHT), 0);
   const caTotalHT = caRealiseHT + caPipelineHT + caProspectionHT;
   const caTotalTTC = caTotalHT * (1 + TVA);
   const caRealiseTTC = caRealiseHT * (1 + TVA);

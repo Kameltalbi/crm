@@ -18,7 +18,6 @@ const nav = [
   { to: '/activites',    label: 'Activités',     icon: FileText        },
   { to: '/email-templates', label: 'Templates Emails', icon: Mail },
   { to: '/ai-assistant', label: 'Assistant IA', icon: Sparkles },
-  { to: '/pricing',      label: 'Tarifs',        icon: CreditCard      },
 ];
 
 const adminNav = [

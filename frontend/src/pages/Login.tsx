@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 export function Login() {
   const navigate = useNavigate();
   const login = useAuth((s) => s.login);
+  const user = useAuth((s) => s.user);
   const [email, setEmail] = useState('admin@bilan-crm.tn');
   const [password, setPassword] = useState('changeme123');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,12 +22,15 @@ export function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      // Redirect admin to admin dashboard
-      if (email === 'admin@ktoptima.com') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+      // Wait for user data to be loaded
+      setTimeout(() => {
+        const currentUser = useAuth.getState().user;
+        if (currentUser?.email === 'admin@ktoptima.com') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
+      }, 100);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erreur de connexion');
     } finally {

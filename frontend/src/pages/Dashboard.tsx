@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Plus, DollarSign, Target, Wallet } from 'lucide-react';
+import { TrendingUp, Plus, DollarSign, Target, Wallet, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS_S } from '@/lib/utils';
@@ -76,6 +76,8 @@ export function Dashboard() {
   });
   const expenses = expensesData?.data || [];
   const totalExpenses = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
+  const caTotalTTC = kpis ? Number(kpis.caTotalAll) * 1.19 : 0;
+  const tauxCouverture = totalExpenses > 0 ? Math.round((caTotalTTC / totalExpenses) * 100) : null;
 
   if (!kpis || !affaires || !expenses) {
     return <div className="text-center py-20 text-muted-foreground">Chargement...</div>;
@@ -230,9 +232,9 @@ export function Dashboard() {
           color="emerald"
         />
         <KpiCard
-          title="Opportunités en cours"
-          subtitle={`${kpis.counts.enCours + kpis.counts.prospect} opportunités`}
-          value={`${kpis.counts.enCours + kpis.counts.prospect}`}
+          title="Taux de couverture"
+          subtitle="CA total TTC / Dépenses"
+          value={tauxCouverture !== null ? `${tauxCouverture}%` : '—'}
           icon={<TrendingUp className="w-6 h-6" />}
           color="amber"
         />

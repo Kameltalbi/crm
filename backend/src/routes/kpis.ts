@@ -127,8 +127,8 @@ kpisRoutes.get('/', async (req: any, res, next) => {
       netRealise,
       parType,
       counts: {
-        realise: realise.length,
-        pipeline: pipeline.length,
+        gagne: realise.length,
+        enCours: pipeline.length,
         prospect: prospect.length,
         perdu: perdu.length,
       },

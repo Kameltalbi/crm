@@ -22,10 +22,6 @@ DROP TYPE "StatutAffaire_old";
 ALTER TABLE "affaires" ALTER COLUMN "statut" SET DEFAULT 'PROSPECT';
 COMMIT;
 
--- AlterTable
-ALTER TABLE "affaires" ADD COLUMN     "score" INTEGER NOT NULL DEFAULT 0,
-ALTER COLUMN "statut" SET DEFAULT 'PROSPECT';
-
 -- CreateTable
 CREATE TABLE "email_templates" (
     "id" TEXT NOT NULL,

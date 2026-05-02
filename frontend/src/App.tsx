@@ -67,10 +67,17 @@ export default function App() {
                 <Route path="/activites" element={<Activites />} />
                 <Route path="/email-templates" element={<EmailTemplates />} />
                 <Route path="/ai-assistant" element={<AIAssistant />} />
-                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />

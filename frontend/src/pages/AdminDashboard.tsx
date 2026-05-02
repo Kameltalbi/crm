@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Briefcase, CreditCard, Database, Activity, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Users, Briefcase, CreditCard, Database, Activity, AlertTriangle, CheckCircle, Clock, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth';
 
 interface SystemStats {
   totalUsers: number;
@@ -15,6 +17,8 @@ interface SystemStats {
 }
 
 export function AdminDashboard() {
+  const navigate = useNavigate();
+  const logout = useAuth((s) => s.logout);
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: () => api.get('/admin/stats').then((r) => r.data),
@@ -25,12 +29,37 @@ export function AdminDashboard() {
     queryFn: () => api.get('/admin/activity').then((r) => r.data),
   });
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   if (isLoading) {
     return <div className="p-8">Chargement...</div>;
   }
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Admin Header */}
+      <header className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
+              <span className="text-xl font-bold">Admin</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut size={16} />
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Dashboard Admin</h1>
         <p className="text-muted-foreground">Monitoring système et statistiques</p>
@@ -152,6 +181,7 @@ export function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

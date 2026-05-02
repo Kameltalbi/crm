@@ -14,11 +14,11 @@ const querySchema = z.object({
 async function predictYearEndCA(organizationId: string) {
   const currentYear = new Date().getFullYear();
   
-  // Get historical CA by month
+  // Get historical CA by month (including won and in-progress for prediction)
   const affaires = await prisma.affaire.findMany({
     where: { 
       organizationId,
-      statut: 'GAGNE',
+      statut: { in: ['GAGNE', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
       anneePrevue: { lte: currentYear },
     },
   });

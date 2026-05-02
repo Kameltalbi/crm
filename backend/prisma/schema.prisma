@@ -41,6 +41,7 @@ model Organization {
   auditLogs   AuditLog[]
   customCategories CustomCategory[]
   emailTemplates EmailTemplate[]
+  subscriptions Subscription[]
 
   @@map("organizations")
 }
@@ -644,4 +645,26 @@ model BackupLog {
   @@index([status])
   @@index([createdAt])
   @@map("backup_logs")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SUBSCRIPTION — Gestion des abonnements
+// ═══════════════════════════════════════════════════════════════
+model Subscription {
+  id            String   @id @default(cuid())
+  organizationId String
+  plan          String   // STARTER, PRO
+  price         Int      // Prix annuel en DT
+  paymentMethod String   // VIREMENT, ESPECES
+  paymentStatus String   // PENDING, PAID, EXPIRED
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([paymentStatus])
+  @@map("subscriptions")
 }

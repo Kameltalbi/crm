@@ -11,21 +11,21 @@ export function LandingSales() {
   const plans = [
     {
       name: 'Starter',
-      price: '0 DT',
-      period: '/mois',
+      price: '360 DT',
+      period: '/an',
       features: [
         '3 opportunités',
         '1 utilisateur',
         'Email templates de base',
         'Support email',
       ],
-      cta: 'Commencer gratuit',
+      cta: 'S\'abonner',
       popular: false,
     },
     {
       name: 'Pro',
-      price: '30 DT',
-      period: '/mois',
+      price: '600 DT',
+      period: '/an',
       features: [
         'Opportunités illimitées',
         '5 utilisateurs',
@@ -35,7 +35,7 @@ export function LandingSales() {
         'Support prioritaire',
         'Backup quotidien',
       ],
-      cta: 'Essai gratuit 14 jours',
+      cta: 'S\'abonner',
       popular: true,
     },
     {

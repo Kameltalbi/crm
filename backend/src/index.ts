@@ -24,6 +24,7 @@ import { expensesRoutes } from './routes/expenses.js';
 import { categoriesRoutes } from './routes/categories.js';
 import { emailTemplatesRoutes } from './routes/email-templates.js';
 import { aiAssistantRoutes } from './routes/ai-assistant.js';
+import { subscriptionsRoutes } from './routes/subscriptions.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -106,6 +107,7 @@ app.use('/api/expenses', expensesRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/email-templates', emailTemplatesRoutes);
 app.use('/api/ai-assistant', aiAssistantRoutes);
+app.use('/api/subscriptions', subscriptionsRoutes);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

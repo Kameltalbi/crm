@@ -376,7 +376,14 @@ export function Affaires() {
                     return (
                       <tr key={a.id} className={`border-b hover:bg-sage/50 cursor-pointer ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`} onClick={() => navigate(`/affaires/${a.id}`)}>
                         <td className="p-2.5">
-                          <div className="font-semibold">{a.client?.name || 'N/A'}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="font-semibold">{a.client?.name || 'N/A'}</div>
+                            {affaires.filter(aff => aff.clientId === a.clientId).length > 1 && (
+                              <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                                {affaires.filter(aff => aff.clientId === a.clientId).length}
+                              </span>
+                            )}
+                          </div>
                           <div className="text-[10px] text-muted-foreground">{a.title}</div>
                         </td>
                         <td className="p-2.5 text-right">

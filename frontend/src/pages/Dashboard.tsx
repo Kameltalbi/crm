@@ -83,9 +83,9 @@ export function Dashboard() {
   }
 
   const calculateMetrics = (affairesList: Affaire[]) => {
-    const realise = affairesList.filter(a => a.statut === 'REALISE');
-    const pipeline = affairesList.filter(a => a.statut === 'PIPELINE');
-    const prospection = affairesList.filter(a => a.statut === 'PROSPECTION');
+    const realise = affairesList.filter(a => a.statut === 'GAGNE');
+    const pipeline = affairesList.filter(a => ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'].includes(a.statut));
+    const prospection = affairesList.filter(a => a.statut === 'PROSPECT');
     const perdu = affairesList.filter(a => a.statut === 'PERDU');
     
     return {
@@ -104,10 +104,10 @@ export function Dashboard() {
   // Prepare chart data
   const monthlyData = Object.entries(kpis.parMois).map(([month, data]) => ({
     month: MOIS_S[parseInt(month)],
-    realise: Number(data.realise),
-    pipeline: Number(data.pipeline),
+    gagne: Number(data.gagne),
+    enCours: Number(data.enCours),
     prospect: Number(data.prospect),
-    total: Number(data.realise) + Number(data.pipeline) + Number(data.prospect),
+    total: Number(data.gagne) + Number(data.enCours) + Number(data.prospect),
   }));
 
   // Status distribution for pie chart
@@ -175,8 +175,8 @@ export function Dashboard() {
   });
   const expenseColors = expensesByCategory.map((cat: any) => generateUniqueColor(cat.name, false));
 
-  const winRate = kpis.counts.realise + kpis.counts.perdu > 0
-    ? Math.round((kpis.counts.realise / (kpis.counts.realise + kpis.counts.perdu)) * 100)
+  const winRate = kpis.counts.gagne + kpis.counts.perdu > 0
+    ? Math.round((kpis.counts.gagne / (kpis.counts.gagne + kpis.counts.perdu)) * 100)
     : 0;
 
   return (
@@ -226,7 +226,7 @@ export function Dashboard() {
         />
         <KpiCard
           title="CA Pipeline"
-          subtitle={`${kpis.counts.pipeline + kpis.counts.prospect} opportunités`}
+          subtitle={`${kpis.counts.enCours + kpis.counts.prospect} opportunités`}
           value={fmtDT(kpis.caPipeline + kpis.caProspection)}
           ttcValue={fmtDT((kpis.caPipeline + kpis.caProspection) * 1.19)}
           icon={<Target className="w-6 h-6" />}
@@ -234,7 +234,7 @@ export function Dashboard() {
         />
         <KpiCard
           title="CA Gagné"
-          subtitle={`${kpis.counts.realise} opportunités`}
+          subtitle={`${kpis.counts.gagne} opportunités`}
           value={fmtDT(kpis.caRealise)}
           ttcValue={fmtDT(kpis.caRealise * 1.19)}
           icon={<Wallet className="w-6 h-6" />}
@@ -242,21 +242,21 @@ export function Dashboard() {
         />
         <KpiCard
           title="Opportunités en cours"
-          subtitle={`${kpis.counts.pipeline + kpis.counts.prospect} opportunités`}
-          value={`${kpis.counts.pipeline + kpis.counts.prospect}`}
+          subtitle={`${kpis.counts.enCours + kpis.counts.prospect} opportunités`}
+          value={`${kpis.counts.enCours + kpis.counts.prospect}`}
           icon={<TrendingUp className="w-6 h-6" />}
           color="amber"
         />
         <KpiCard
           title="Opportunités gagnées"
-          subtitle={`${kpis.counts.realise} opportunités`}
-          value={`${kpis.counts.realise}`}
+          subtitle={`${kpis.counts.gagne} opportunités`}
+          value={`${kpis.counts.gagne}`}
           icon={<Wallet className="w-6 h-6" />}
           color="emerald"
         />
         <KpiCard
           title="Conversion"
-          subtitle={`${kpis.counts.realise + kpis.counts.perdu} conclues`}
+          subtitle={`${kpis.counts.gagne + kpis.counts.perdu} conclues`}
           value={`${winRate}%`}
           icon={<Target className="w-6 h-6" />}
           color="purple"

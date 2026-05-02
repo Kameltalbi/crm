@@ -99,6 +99,8 @@ const uploadsDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
+// Backward compatibility for already stored /uploads URLs
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ─── API Routes ──────────────────────────────────────────

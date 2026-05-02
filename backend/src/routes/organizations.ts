@@ -12,7 +12,7 @@ organizationsRoutes.use(auth);
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), '../frontend/public/uploads');
+    const uploadDir = path.join(process.cwd(), 'uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -166,7 +166,7 @@ organizationsRoutes.post('/:id/logo', upload.single('logo'), async (req: AuthReq
       return res.status(400).json({ error: 'Aucun fichier fourni' });
     }
 
-    const logoUrl = `/uploads/${req.file.filename}`;
+    const logoUrl = `/api/uploads/${req.file.filename}`;
 
     const organization = await prisma.organization.update({
       where: { id: req.params.id as string },

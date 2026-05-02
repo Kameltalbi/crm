@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import auth from '../middleware/auth.js';
 
 export const uploadRoutes = Router();
@@ -9,7 +10,10 @@ uploadRoutes.use(auth);
 // Configure multer for file storage
 const storage = multer.diskStorage({
   destination: (req: any, file: any, cb: any) => {
-    const uploadDir = path.join(process.cwd(), '../frontend/public/uploads');
+    const uploadDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
     console.log('Upload directory:', uploadDir);
     cb(null, uploadDir);
   },
@@ -42,7 +46,7 @@ uploadRoutes.post('/', upload.single('file'), (req: any, res: any) => {
     return res.status(400).json({ error: 'No file uploaded' });
   }
   console.log('File saved:', req.file);
-  const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/uploads/${req.file.filename}`;
+  const url = `/api/uploads/${req.file.filename}`;
   console.log('Returning URL:', url);
   res.json({ url });
 });

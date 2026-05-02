@@ -17,7 +17,10 @@ export function OrganizationSettings() {
   const resolveLogoUrl = (url?: string | null) => {
     if (!url) return '';
     if (/^https?:\/\//i.test(url)) return url;
-    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+    const normalized = url.startsWith('/uploads/')
+      ? url.replace('/uploads/', '/api/uploads/')
+      : url;
+    return `${window.location.origin}${normalized.startsWith('/') ? '' : '/'}${normalized}`;
   };
 
   const [name, setName] = useState(org?.name || '');

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon, Receipt, Mail, Sparkles, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon, Receipt, Mail, Sparkles, CreditCard, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -143,6 +143,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 >
                   <Settings size={18} />
                   Paramètres
+                </NavLink>
+                <NavLink
+                  to="/admin"
+                  onClick={() => setSidebarOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      isActive
+                        ? 'bg-white/20 text-white shadow-md'
+                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                    )
+                  }
+                >
+                  <Shield size={18} />
+                  Admin
                 </NavLink>
               </>
             )}

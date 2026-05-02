@@ -23,6 +23,7 @@ import { Onboarding } from './pages/Onboarding';
 import { Pricing } from './pages/Pricing';
 import { EmailTemplates } from './pages/EmailTemplates';
 import { AIAssistant } from './pages/AIAssistant';
+import { AdminDashboard } from './pages/AdminDashboard';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const accessToken = useAuth((s) => s.accessToken);
@@ -66,6 +67,7 @@ export default function App() {
                 <Route path="/activites" element={<Activites />} />
                 <Route path="/email-templates" element={<EmailTemplates />} />
                 <Route path="/ai-assistant" element={<AIAssistant />} />
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>

@@ -14,6 +14,11 @@ export function OrganizationSettings() {
   });
 
   const org = Array.isArray(organizationData) ? organizationData[0] : organizationData;
+  const resolveLogoUrl = (url?: string | null) => {
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url)) return url;
+    return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   const [name, setName] = useState(org?.name || '');
   const [email, setEmail] = useState(org?.email || '');
@@ -21,7 +26,7 @@ export function OrganizationSettings() {
   const [address, setAddress] = useState(org?.address || '');
   const [tva, setTva] = useState(org?.tva || '');
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState(org?.logoUrl || '');
+  const [logoPreview, setLogoPreview] = useState(resolveLogoUrl(org?.logoUrl));
 
   useEffect(() => {
     if (!org) return;
@@ -30,7 +35,7 @@ export function OrganizationSettings() {
     setPhone(org.phone || '');
     setAddress(org.address || '');
     setTva(org.tva || '');
-    setLogoPreview(org.logoUrl || '');
+    setLogoPreview(resolveLogoUrl(org.logoUrl));
     setLogoFile(null);
   }, [org]);
 
@@ -40,15 +45,21 @@ export function OrganizationSettings() {
         throw new Error("Organisation introuvable");
       }
       await api.put(`/organizations/${org.id}`, data);
+      let savedLogoUrl: string | null = null;
       if (logoFile) {
         const formData = new FormData();
         formData.append('logo', logoFile);
-        await api.post(`/organizations/${org.id}/logo`, formData, {
+        const logoResponse = await api.post(`/organizations/${org.id}/logo`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
+        savedLogoUrl = logoResponse.data?.logoUrl || null;
       }
+      return { savedLogoUrl };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (result?.savedLogoUrl) {
+        setLogoPreview(resolveLogoUrl(result.savedLogoUrl));
+      }
       qc.invalidateQueries({ queryKey: ['organizations'] });
       setLogoFile(null);
       alert('Organisation mise à jour avec succès');

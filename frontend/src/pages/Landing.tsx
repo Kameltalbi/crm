@@ -1,10 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowPopup(true);
+    }, 2000);
+    
+    const closeTimer = setTimeout(() => {
+      setShowPopup(false);
+    }, 7000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(closeTimer);
+    };
+  }, []);
   
   return (
     <div className="min-h-screen bg-background">
@@ -346,6 +362,39 @@ export function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* Softfacture Popup */}
+      {showPopup && (
+        <div className="fixed bottom-4 right-4 z-[100] animate-in slide-in-from-right duration-500">
+          <div className="bg-white rounded-lg shadow-2xl border p-6 max-w-sm">
+            <button
+              onClick={() => setShowPopup(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <TrendingUp size={20} className="text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Softfacture</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Gérez votre facturation facilement avec notre solution Softfacture.
+                </p>
+                <a
+                  href="https://softfacture.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Découvrir <ArrowRight size={14} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

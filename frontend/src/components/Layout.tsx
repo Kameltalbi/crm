@@ -105,7 +105,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
-          <div className="flex-1 py-6 px-4 space-y-1">
+          {/* Organization Logo */}
+          <div className="p-4 border-b border-white/10">
+            {organization && organization.logoUrl ? (
+              <img src={organization.logoUrl} alt={organization.name} className="h-12 w-auto max-w-[200px] object-contain" />
+            ) : organization ? (
+              <div className="h-12 w-12 rounded-lg bg-white/10 flex items-center justify-center">
+                <Building2 size={24} className="text-white" />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <img src="/logo.png" alt="ktOptima" className="h-10 w-auto" />
+                <span className="text-lg font-bold">CRM</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 py-4 px-4 space-y-1">
             {nav.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}

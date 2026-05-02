@@ -19,6 +19,9 @@ export function Landing() {
               <a href="#why" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
                 Pourquoi nous ?
               </a>
+              <Link to="/pricing" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
+                Tarifs
+              </Link>
               <a href="#contact" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
                 Contact
               </a>

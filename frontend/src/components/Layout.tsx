@@ -52,7 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-background flex-col">
       {/* Header */}
-      <header className="h-16 bg-white border-b border-border flex items-center justify-between px-4 md:px-6 shadow-sm relative z-[100] flex-shrink-0">
+      <header className="h-16 bg-white border-b border-border flex items-center justify-between px-4 md:px-6 shadow-sm relative z-[100] flex-shrink-0 block">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}

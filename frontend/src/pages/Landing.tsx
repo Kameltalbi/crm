@@ -8,18 +8,38 @@ export function Landing() {
   const [showPopup, setShowPopup] = useState(false);
   
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowPopup(true);
-    }, 2000);
+    const today = new Date().toDateString();
+    const storageKey = 'softfacture_popup_count';
+    const storageDateKey = 'softfacture_popup_date';
     
-    const closeTimer = setTimeout(() => {
-      setShowPopup(false);
-    }, 9000);
+    const storedDate = localStorage.getItem(storageDateKey);
+    const storedCount = parseInt(localStorage.getItem(storageKey) || '0', 10);
     
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(closeTimer);
-    };
+    // Reset count if it's a new day
+    if (storedDate !== today) {
+      localStorage.setItem(storageKey, '0');
+      localStorage.setItem(storageDateKey, today);
+    }
+    
+    const currentCount = storedDate === today ? storedCount : 0;
+    
+    // Only show if less than 2 times today
+    if (currentCount < 2) {
+      const timer = setTimeout(() => {
+        setShowPopup(true);
+        localStorage.setItem(storageKey, String(currentCount + 1));
+        localStorage.setItem(storageDateKey, today);
+      }, 2000);
+      
+      const closeTimer = setTimeout(() => {
+        setShowPopup(false);
+      }, 9000);
+      
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(closeTimer);
+      };
+    }
   }, []);
   
   return (

@@ -56,8 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors flex items-center justify-center"
-            style={{ display: 'flex' }}
+            className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>

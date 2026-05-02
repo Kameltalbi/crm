@@ -629,3 +629,19 @@ model EmailTemplate {
   @@index([organizationId])
   @@map("email_templates")
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  BACKUP LOG — Historique des sauvegardes
+// ═══════════════════════════════════════════════════════════════
+model BackupLog {
+  id        String   @id @default(cuid())
+  path      String
+  size      BigInt
+  status    String   // SUCCESS, FAILED
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("backup_logs")
+}

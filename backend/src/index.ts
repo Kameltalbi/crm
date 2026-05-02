@@ -6,7 +6,6 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +32,7 @@ import { aiAssistantRoutes } from './routes/ai-assistant.js';
 import { subscriptionsRoutes } from './routes/subscriptions.js';
 import { adminRoutes } from './routes/admin.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { getUploadsDir } from './lib/uploadsDir.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;
@@ -95,13 +95,10 @@ app.get('/api/health', (_, res) => {
 });
 
 // ─── Static files for uploads ───────────────────────────
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
+const uploadsDir = getUploadsDir();
+app.use('/api/uploads', express.static(uploadsDir));
 // Backward compatibility for already stored /uploads URLs
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(uploadsDir));
 
 // ─── API Routes ──────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);

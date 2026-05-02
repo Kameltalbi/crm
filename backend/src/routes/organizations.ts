@@ -4,19 +4,15 @@ import { prisma } from '../db/prisma.js';
 import auth, { AuthRequest } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
+import { getUploadsDir } from '../lib/uploadsDir.js';
 
 export const organizationsRoutes = Router();
 organizationsRoutes.use(auth);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
+  destination: (_req, _file, cb) => {
+    cb(null, getUploadsDir());
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

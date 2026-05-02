@@ -1,19 +1,16 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 import auth from '../middleware/auth.js';
+import { getUploadsDir } from '../lib/uploadsDir.js';
 
 export const uploadRoutes = Router();
 uploadRoutes.use(auth);
 
 // Configure multer for file storage
 const storage = multer.diskStorage({
-  destination: (req: any, file: any, cb: any) => {
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+  destination: (_req: any, _file: any, cb: any) => {
+    const uploadDir = getUploadsDir();
     console.log('Upload directory:', uploadDir);
     cb(null, uploadDir);
   },

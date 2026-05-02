@@ -4,6 +4,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import { authRoutes } from './routes/auth.js';
 import { clientsRoutes } from './routes/clients.js';
@@ -87,6 +93,13 @@ const authLimiter = rateLimit({
 app.get('/api/health', (_, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
+
+// ─── Static files for uploads ───────────────────────────
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ─── API Routes ──────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);

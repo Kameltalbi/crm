@@ -7,21 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Organization } from '@/types';
 
 export function OrganizationSettings() {
-  const { data: organization, refetch } = useQuery<Organization>({
-    queryKey: ['organization'],
-    queryFn: () => api.get('/organizations').then((r) => r.data[0]),
+  const { data: organization, refetch } = useQuery<Organization[]>({
+    queryKey: ['organizations'],
+    queryFn: () => api.get('/organizations').then((r) => r.data),
   });
 
-  const [name, setName] = useState(organization?.name || '');
-  const [email, setEmail] = useState(organization?.email || '');
-  const [phone, setPhone] = useState(organization?.phone || '');
-  const [address, setAddress] = useState(organization?.address || '');
-  const [tva, setTva] = useState(organization?.tva || '');
+  const org = organization?.[0];
+
+  const [name, setName] = useState(org?.name || '');
+  const [email, setEmail] = useState(org?.email || '');
+  const [phone, setPhone] = useState(org?.phone || '');
+  const [address, setAddress] = useState(org?.address || '');
+  const [tva, setTva] = useState(org?.tva || '');
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState(organization?.logoUrl || '');
+  const [logoPreview, setLogoPreview] = useState(org?.logoUrl || '');
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/organizations/${organization?.id}`, data),
+    mutationFn: (data: any) => api.put(`/organizations/${org?.id}`, data),
     onSuccess: () => {
       refetch();
       alert('Organisation mise à jour avec succès');
@@ -29,7 +31,7 @@ export function OrganizationSettings() {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: (formData: FormData) => api.post(`/organizations/${organization?.id}/logo`, formData, {
+    mutationFn: (formData: FormData) => api.post(`/organizations/${org?.id}/logo`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
     onSuccess: () => {

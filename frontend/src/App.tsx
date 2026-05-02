@@ -17,6 +17,7 @@ import { Products } from './pages/Products';
 import { Activites } from './pages/Activites';
 import { Organizations } from './pages/Organizations';
 import { Landing } from './pages/Landing';
+import { LandingSales } from './pages/LandingSales';
 import { EmailTemplates } from './pages/EmailTemplates';
 import { AIAssistant } from './pages/AIAssistant';
 
@@ -35,6 +36,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/sales" element={<LandingSales />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route

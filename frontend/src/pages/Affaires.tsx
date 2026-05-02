@@ -494,7 +494,7 @@ export function Affaires() {
             <CardContent className="border-t pt-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {fmtDT(allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0))} HT total ({allAffaires.length} affaires) • Page {page} : {fmtDT(affaires.reduce((sum, a) => sum + Number(a.montantHT), 0))} HT ({affaires.length} affaires)
+                  {fmtDT(allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0))} HT total ({allAffaires.length} affaires)
                 </p>
                 <div className="flex items-center gap-1">
                   <Button

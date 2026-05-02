@@ -231,6 +231,59 @@ affairesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   } catch (e) { next(e); }
 });
 
+// POST /:id/duplicate - Duplicate affaire with new date
+affairesRoutes.post('/:id/duplicate', async (req: AuthRequest, res, next) => {
+  try {
+    const { moisPrevu, anneePrevue } = req.body;
+    
+    const existing = await prisma.affaire.findFirst({
+      where: { id: req.params.id as string, organizationId: req.organizationId },
+      include: { client: true },
+    });
+    if (!existing) return res.status(404).json({ error: 'Affaire introuvable' });
+    
+    // Get client history for lead scoring
+    const clientHistory = await prisma.affaire.findMany({
+      where: { clientId: existing.clientId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+    
+    const duplicated = await prisma.affaire.create({
+      data: {
+        organizationId: req.organizationId!,
+        clientId: existing.clientId,
+        productId: existing.productId,
+        type: existing.type,
+        title: existing.title ? `${existing.title} (copie)` : null,
+        description: existing.description,
+        montantHT: existing.montantHT,
+        statut: 'PROSPECTION',
+        probabilite: existing.probabilite,
+        moisPrevu: moisPrevu || existing.moisPrevu,
+        anneePrevue: anneePrevue || existing.anneePrevue,
+        viaPartenaire: existing.viaPartenaire,
+        tauxCommission: existing.tauxCommission,
+        notes: existing.notes,
+      },
+      include: { client: true, product: true },
+    });
+    
+    // Log activity
+    await prisma.activite.create({
+      data: {
+        affaireId: duplicated.id,
+        organizationId: req.organizationId!,
+        type: 'AUTRE',
+        title: 'Affaire dupliquée',
+        content: `Dupliquée depuis ${existing.title || 'affaire #' + existing.id}`,
+      },
+    });
+    
+    res.status(201).json(duplicated);
+  } catch (e) { next(e); }
+});
+
 // ─── DELETE ──────────────────────────────────────────────────────
 affairesRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {

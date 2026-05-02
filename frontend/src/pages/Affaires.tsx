@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertical, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertical, Search, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
@@ -40,6 +40,9 @@ export function Affaires() {
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'table' | 'kanban'>('table');
   const [open, setOpen] = useState(false);
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [duplicateAffaireId, setDuplicateAffaireId] = useState<string>('');
+  const [duplicateDate, setDuplicateDate] = useState({ mois: String(new Date().getMonth() + 1), annee: '2026' });
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -139,6 +142,18 @@ export function Affaires() {
     },
   });
 
+  const duplicateMutation = useMutation({
+    mutationFn: ({ id, mois, annee }: { id: string; mois: string; annee: string }) =>
+      api.post(`/affaires/${id}/duplicate`, { moisPrevu: mois, anneePrevue: annee }).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['affaires'] });
+      qc.invalidateQueries({ queryKey: ['kpis'] });
+      setDuplicateOpen(false);
+      setDuplicateAffaireId('');
+      alert('Affaire dupliquée avec succès !');
+    },
+  });
+
   const createDevisMutation = useMutation({
     mutationFn: (id: string) => api.post(`/softfacture/devis/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['affaires'] }),
@@ -201,6 +216,19 @@ export function Affaires() {
       if (!confirm('Supprimer cette affaire ?')) return;
     }
     deleteMutation.mutate(id);
+  };
+
+  const handleDuplicate = (id: string) => {
+    setDuplicateAffaireId(id);
+    setDuplicateOpen(true);
+  };
+
+  const handleDuplicateSubmit = () => {
+    duplicateMutation.mutate({
+      id: duplicateAffaireId,
+      mois: duplicateDate.mois,
+      annee: duplicateDate.annee,
+    });
   };
 
   const openNew = () => {
@@ -443,6 +471,9 @@ export function Affaires() {
                               )}
                               <DropdownMenuItemStyled onClick={() => handleEdit(a)}>
                                 <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
+                              </DropdownMenuItemStyled>
+                              <DropdownMenuItemStyled onClick={() => handleDuplicate(a.id)}>
+                                <Copy size={16} className="mr-2 text-muted-foreground" /> Dupliquer
                               </DropdownMenuItemStyled>
                               <DropdownMenuItemStyled onClick={() => handleDelete(a.id, a.clientId)} className="text-destructive">
                                 <Trash2 size={16} className="mr-2" /> Supprimer
@@ -752,6 +783,45 @@ export function Affaires() {
             <Button variant="outline" onClick={() => setImportOpen(false)}>Annuler</Button>
             <Button onClick={() => importFile && importMutation.mutate(importFile)} disabled={importMutation.isPending || !importFile}>
               {importMutation.isPending ? 'Import...' : 'Importer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicate Dialog */}
+      <Dialog open={duplicateOpen} onOpenChange={setDuplicateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dupliquer l'opportunité</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Mois prévu</Label>
+              <Select value={duplicateDate.mois} onValueChange={(v) => setDuplicateDate({ ...duplicateDate, mois: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MOIS.map((label, idx) => (
+                    <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Année prévue</Label>
+              <Select value={duplicateDate.annee} onValueChange={(v) => setDuplicateDate({ ...duplicateDate, annee: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2026">2026</SelectItem>
+                  <SelectItem value="2027">2027</SelectItem>
+                  <SelectItem value="2028">2028</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDuplicateOpen(false)}>Annuler</Button>
+            <Button onClick={handleDuplicateSubmit} disabled={duplicateMutation.isPending}>
+              {duplicateMutation.isPending ? 'Duplication...' : 'Dupliquer'}
             </Button>
           </DialogFooter>
         </DialogContent>

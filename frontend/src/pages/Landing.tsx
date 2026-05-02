@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
+import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Landing() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -13,7 +16,14 @@ export function Landing() {
               <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
               <span className="text-xl font-bold text-foreground">CRM</span>
             </div>
-            <nav className="hidden md:flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              >
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+              <nav className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
                 Fonctionnalités
               </a>
@@ -27,20 +37,53 @@ export function Landing() {
                 Contact
               </a>
             </nav>
-            <div className="flex items-center gap-3">
-              <Link to="/login">
-                <Button variant="ghost" size="lg">
-                  Connexion
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button size="lg" className="bg-leaf hover:bg-leaf/90">
-                  S'inscrire
-                </Button>
-              </Link>
+              <div className="hidden md:flex items-center gap-3">
+                <Link to="/login">
+                  <Button variant="ghost" size="lg">
+                    Connexion
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="lg" className="bg-leaf hover:bg-leaf/90">
+                    S'inscrire
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t bg-white">
+            <div className="px-4 py-4 space-y-3">
+              <a href="#features" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                Fonctionnalités
+              </a>
+              <a href="#why" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                Pourquoi nous ?
+              </a>
+              <Link to="/pricing" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                Tarifs
+              </Link>
+              <a href="#contact" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                Contact
+              </a>
+              <div className="pt-4 space-y-2">
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" size="lg" className="w-full">
+                    Connexion
+                  </Button>
+                </Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                  <Button size="lg" className="w-full bg-leaf hover:bg-leaf/90">
+                    S'inscrire
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}

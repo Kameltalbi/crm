@@ -7,9 +7,13 @@ adminRoutes.use(auth);
 
 // Middleware to check if user is admin
 const checkAdmin = (req: any, res: any, next: any) => {
+  console.log('[Admin Check] User email:', req.user?.email);
+  console.log('[Admin Check] Expected: admin@ktoptima.com');
   if (req.user?.email !== 'admin@ktoptima.com') {
+    console.log('[Admin Check] Access denied');
     return res.status(403).json({ error: 'Access denied' });
   }
+  console.log('[Admin Check] Access granted');
   next();
 };
 

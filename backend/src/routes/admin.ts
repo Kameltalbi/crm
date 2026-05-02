@@ -6,15 +6,33 @@ export const adminRoutes = Router();
 adminRoutes.use(auth);
 
 // Middleware to check if user is admin
-const checkAdmin = (req: any, res: any, next: any) => {
-  console.log('[Admin Check] User email:', req.user?.email);
-  console.log('[Admin Check] Expected: admin@ktoptima.com');
-  if (req.user?.email !== 'admin@ktoptima.com') {
-    console.log('[Admin Check] Access denied');
-    return res.status(403).json({ error: 'Access denied' });
+const checkAdmin = async (req: any, res: any, next: any) => {
+  try {
+    const userId = req.userId;
+    console.log('[Admin Check] userId:', userId);
+    
+    if (!userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    
+    console.log('[Admin Check] User email:', user?.email);
+    
+    if (user?.email !== 'admin@ktoptima.com') {
+      console.log('[Admin Check] Access denied');
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    console.log('[Admin Check] Access granted');
+    next();
+  } catch (error) {
+    console.error('[Admin Check] Error:', error);
+    return res.status(500).json({ error: 'Internal error' });
   }
-  console.log('[Admin Check] Access granted');
-  next();
 };
 
 adminRoutes.use(checkAdmin);

@@ -18,21 +18,22 @@ adminRoutes.use(checkAdmin);
 // GET /api/admin/stats
 adminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
   try {
-    const [
-      totalUsers,
-      totalOrganizations,
-      totalAffaires,
-      totalClients,
-      activeSubscriptions,
-      pendingSubscriptions,
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.organization.count(),
-      prisma.affaire.count(),
-      prisma.client.count(),
-      (prisma as any).subscription.count({ where: { statut: 'ACTIF' } }),
-      (prisma as any).subscription.count({ where: { statut: 'EN_ATTENTE' } }),
-    ]);
+    console.log('[Admin Stats] Fetching stats...');
+    
+    const totalUsers = await prisma.user.count();
+    console.log('[Admin Stats] Total users:', totalUsers);
+    
+    const totalOrganizations = await prisma.organization.count();
+    console.log('[Admin Stats] Total organizations:', totalOrganizations);
+    
+    const totalAffaires = await prisma.affaire.count();
+    console.log('[Admin Stats] Total affaires:', totalAffaires);
+    
+    const totalClients = await prisma.client.count();
+    console.log('[Admin Stats] Total clients:', totalClients);
+    
+    const activeSubscriptions = (prisma as any).subscription.count({ where: { statut: 'ACTIF' } });
+    const pendingSubscriptions = (prisma as any).subscription.count({ where: { statut: 'EN_ATTENTE' } });
 
     // Get database size (PostgreSQL specific query)
     const dbSizeResult = await prisma.$queryRaw`
@@ -46,17 +47,21 @@ adminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
     const minutes = Math.floor((uptime % 3600) / 60);
     const systemUptime = `${hours}h ${minutes}m`;
 
-    res.json({
+    const stats = {
       totalUsers,
       totalOrganizations,
       totalAffaires,
       totalClients,
-      activeSubscriptions,
-      pendingSubscriptions,
+      activeSubscriptions: await activeSubscriptions,
+      pendingSubscriptions: await pendingSubscriptions,
       databaseSize,
       systemUptime,
-    });
+    };
+    
+    console.log('[Admin Stats] Returning:', stats);
+    res.json(stats);
   } catch (error) {
+    console.error('[Admin Stats] Error:', error);
     next(error);
   }
 });

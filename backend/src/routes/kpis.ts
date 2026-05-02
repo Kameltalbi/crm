@@ -88,7 +88,7 @@ kpisRoutes.get('/', async (req: any, res, next) => {
     const sum = (arr: typeof affaires) =>
       arr.reduce((s, a) => s + Number(a.montantHT), 0);
 
-    const caTotalAll = sum(affaires); // All statuses including PERDU
+    const caTotalAll = sum(affaires.filter(a => a.statut !== 'PERDU')); // All statuses except PERDU
 
     const commissionDue = realise
       .filter(a => a.viaPartenaire)

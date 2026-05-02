@@ -63,8 +63,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {organization && organization.logoUrl ? (
               <img src={organization.logoUrl} alt={organization.name} className="h-10 w-auto max-w-[200px] object-contain" />
             ) : organization ? (
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Building2 size={20} className="text-primary" />
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Building2 size={20} className="text-primary" />
+                </div>
+                <span className="text-lg font-bold text-foreground">{organization.name}</span>
               </div>
             ) : (
               <>

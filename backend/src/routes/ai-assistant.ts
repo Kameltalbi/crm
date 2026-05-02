@@ -60,7 +60,7 @@ async function predictYearEndCA(organizationId: string) {
   const pipelineCA = await prisma.affaire.findMany({
     where: {
       organizationId,
-      statut: { in: ['PIPELINE', 'CONFIRME'] },
+      statut: { in: ['PIPELINE', 'CONFIRME'] as const },
       anneePrevue: String(currentYear),
       moisPrevu: { in: remainingMonths.map(m => parseInt(m.split('-')[1])) },
     },

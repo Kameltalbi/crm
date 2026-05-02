@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { resolveOrganizationLogoUrl } from '@/lib/organizationLogo';
+import { useOrganizationLogoSrc } from '@/hooks/useOrganizationLogoSrc';
 import type { Organization } from '@/types';
 import { Notifications } from './Notifications';
 
@@ -38,7 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   });
 
   const organization = Array.isArray(organizationsData) ? organizationsData[0] : organizationsData;
-  const organizationLogoUrl = resolveOrganizationLogoUrl(organization?.logoUrl);
+  const orgLogoSrc = useOrganizationLogoSrc(organization?.logoUrl);
 
   const handleLogout = async () => {
     await logout();
@@ -65,9 +65,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {sidebarOpen ? <X size={20} strokeWidth={2} /> : <Menu size={20} strokeWidth={2} />}
           </button>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            {organization && organizationLogoUrl ? (
+            {organization && orgLogoSrc ? (
               <img
-                src={organizationLogoUrl}
+                src={orgLogoSrc}
                 alt={organization.name}
                 className="h-9 max-h-9 w-auto max-w-[min(200px,42vw)] object-contain sm:h-10 sm:max-h-10"
               />
@@ -128,9 +128,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         >
           {/* Brand / org */}
           <div className="border-b border-white/10 bg-black/10 px-4 py-4">
-            {organization && organizationLogoUrl ? (
+            {organization && orgLogoSrc ? (
               <div className="flex min-h-[3rem] items-center justify-center rounded-xl bg-white/5 p-2 ring-1 ring-white/10">
-                <img src={organizationLogoUrl} alt={organization.name} className="max-h-11 w-auto max-w-full object-contain" />
+                <img src={orgLogoSrc} alt={organization.name} className="max-h-11 w-auto max-w-full object-contain" />
               </div>
             ) : organization ? (
               <div className="flex items-center gap-3 rounded-xl bg-white/5 p-2 ring-1 ring-white/10">

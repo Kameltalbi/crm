@@ -4,8 +4,13 @@ import { prisma } from '../db/prisma.js';
 import auth, { AuthRequest } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { getUploadsDir } from '../lib/uploadsDir.js';
-import { mapOrganizationLogoInPlace, normalizeOrganizationLogoUrlForApi } from '../lib/organizationLogoUrl.js';
+import {
+  mapOrganizationLogoInPlace,
+  normalizeOrganizationLogoUrlForApi,
+  organizationLogoFilenameFromStored,
+} from '../lib/organizationLogoUrl.js';
 
 export const organizationsRoutes = Router();
 organizationsRoutes.use(auth);
@@ -51,6 +56,33 @@ organizationsRoutes.get('/', async (req: AuthRequest, res, next) => {
     if (!organization) return res.status(404).json({ error: 'Organisation introuvable' });
     res.json(mapOrganizationLogoInPlace(organization));
   } catch (e) { next(e); }
+});
+
+// GET /api/organizations/logo — authenticated binary logo (must be registered BEFORE /:id)
+organizationsRoutes.get('/logo', async (req: AuthRequest, res, next) => {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { id: req.organizationId as string },
+      select: { logoUrl: true },
+    });
+    const filename = organizationLogoFilenameFromStored(org?.logoUrl ?? null);
+    if (!filename) {
+      return res.status(404).end();
+    }
+    const filePath = path.resolve(path.join(getUploadsDir(), filename));
+    if (!filePath.startsWith(path.resolve(getUploadsDir()))) {
+      return res.status(400).end();
+    }
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).end();
+    }
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    res.sendFile(filePath, (err) => {
+      if (err) next(err);
+    });
+  } catch (e) {
+    next(e);
+  }
 });
 
 // GET /api/organizations/:id - Get single organization (must belong to user)

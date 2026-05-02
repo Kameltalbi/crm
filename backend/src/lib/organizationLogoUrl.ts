@@ -30,3 +30,10 @@ export function mapOrganizationLogoInPlace<T extends { logoUrl?: string | null }
   const next = normalizeOrganizationLogoUrlForApi(org.logoUrl ?? null);
   return { ...org, logoUrl: next };
 }
+
+/** Safe filename for disk lookup (basename of normalized `/api/uploads/...`). */
+export function organizationLogoFilenameFromStored(stored: string | null | undefined): string | null {
+  const n = normalizeOrganizationLogoUrlForApi(stored);
+  if (!n) return null;
+  return path.basename(n);
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { resolveOrganizationLogoUrl } from '@/lib/organizationLogo';
+import { useOrganizationLogoSrc } from '@/hooks/useOrganizationLogoSrc';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/form-controls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +24,7 @@ export function OrganizationSettings() {
   const [tva, setTva] = useState(org?.tva || '');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState(resolveOrganizationLogoUrl(org?.logoUrl));
+  const serverLogoSrc = useOrganizationLogoSrc(!logoFile ? org?.logoUrl : null);
 
   useEffect(() => {
     if (!org) return;
@@ -145,8 +147,12 @@ export function OrganizationSettings() {
         <div className="border-t pt-4">
           <Label htmlFor="logo">Logo</Label>
           <div className="flex items-center gap-4 mt-2">
-            {logoPreview && (
-              <img src={logoPreview} alt="Logo" className="h-16 w-auto" />
+            {(logoFile ? logoPreview : serverLogoSrc || logoPreview) && (
+              <img
+                src={logoFile ? logoPreview : serverLogoSrc || logoPreview}
+                alt="Logo"
+                className="h-16 w-auto"
+              />
             )}
             <input
               id="logo"

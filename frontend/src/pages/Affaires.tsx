@@ -247,13 +247,13 @@ export function Affaires() {
   const comm = form.viaPartenaire ? Math.round(ht * Number(form.tauxCommission) / 100) : 0;
   const net = ht - comm;
 
-  // Calculate summary KPIs from all affaires (not paginated)
-  const totalCA = sortedAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const pipelineCA = sortedAffaires.filter(a => ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'].includes(a.statut)).reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const realiseCA = sortedAffaires.filter(a => a.statut === 'GAGNE').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const prospectionCA = sortedAffaires.filter(a => a.statut === 'PROSPECT').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const winRate = sortedAffaires.filter(a => a.statut === 'GAGNE' || a.statut === 'PERDU').length > 0
-    ? Math.round((sortedAffaires.filter(a => a.statut === 'GAGNE').length / sortedAffaires.filter(a => a.statut === 'GAGNE' || a.statut === 'PERDU').length) * 100)
+  // Calculate summary KPIs from all affaires matching current filters (not paginated)
+  const totalCA = allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const pipelineCA = allAffaires.filter(a => ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'].includes(a.statut)).reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const realiseCA = allAffaires.filter(a => a.statut === 'GAGNE').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const prospectionCA = allAffaires.filter(a => a.statut === 'PROSPECT').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const winRate = allAffaires.filter(a => a.statut === 'GAGNE' || a.statut === 'PERDU').length > 0
+    ? Math.round((allAffaires.filter(a => a.statut === 'GAGNE').length / allAffaires.filter(a => a.statut === 'GAGNE' || a.statut === 'PERDU').length) * 100)
     : 0;
 
   return (

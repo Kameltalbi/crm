@@ -7,7 +7,7 @@ adminRoutes.use(auth);
 
 // Middleware to check if user is admin
 const checkAdmin = (req: any, res: any, next: any) => {
-  if (req.user?.role !== 'OWNER') {
+  if (req.user?.email !== 'admin@ktoptima.com') {
     return res.status(403).json({ error: 'Access denied' });
   }
   next();

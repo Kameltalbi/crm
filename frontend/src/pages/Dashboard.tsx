@@ -285,8 +285,8 @@ export function Dashboard() {
                   contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="realise" stroke="#22c55e" strokeWidth={3} name="Réalisé" dot={{ r: 5 }} />
-                <Line type="monotone" dataKey="pipeline" stroke="#0ea5e9" strokeWidth={3} name="Pipeline" dot={{ r: 5 }} />
+                <Line type="monotone" dataKey="gagne" stroke="#22c55e" strokeWidth={3} name="Réalisé" dot={{ r: 5 }} />
+                <Line type="monotone" dataKey="enCours" stroke="#0ea5e9" strokeWidth={3} name="Pipeline" dot={{ r: 5 }} />
                 <Line type="monotone" dataKey="prospect" stroke="#f59e0b" strokeWidth={3} name="Prospection" dot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>

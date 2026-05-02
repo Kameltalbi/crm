@@ -8,18 +8,15 @@ import xlsx from 'xlsx';
 import path from 'path';
 import fs from 'fs';
 import { parsePagination } from '../lib/pagination.js';
+import { getUploadsDir } from '../lib/uploadsDir.js';
 
 export const affairesRoutes = Router();
 affairesRoutes.use(auth);
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), '../frontend/public/uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
+  destination: (_req, _file, cb) => {
+    cb(null, getUploadsDir());
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

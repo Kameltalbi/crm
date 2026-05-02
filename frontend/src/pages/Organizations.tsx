@@ -26,13 +26,15 @@ export function Organizations() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
-  const { data: organizations = [] } = useQuery<Organization[]>({
+  const { data: organizationsData } = useQuery<Organization | Organization[]>({
     queryKey: ['organizations'],
     queryFn: () => api.get('/organizations').then((r) => r.data),
   });
 
-  // Show only the user's organization
-  const userOrganization = organizations.length > 0 ? organizations[0] : null;
+  // Show only the user's organization (API returns a single object or a legacy array)
+  const userOrganization = Array.isArray(organizationsData)
+    ? organizationsData[0] ?? null
+    : organizationsData ?? null;
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {

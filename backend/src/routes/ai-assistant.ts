@@ -62,7 +62,7 @@ async function predictYearEndCA(organizationId: string) {
       organizationId,
       statut: { in: ['PIPELINE', 'CONFIRME'] },
       anneePrevue: String(currentYear),
-      moisPrevu: { in: remainingMonths.map(m => m.split('-')[1]) },
+      moisPrevu: { in: remainingMonths.map(m => parseInt(m.split('-')[1])) },
     },
   });
   

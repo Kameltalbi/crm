@@ -155,7 +155,7 @@ affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
     const clientHistory = await prisma.affaire.count({
       where: {
         clientId: data.clientId,
-        statut: 'REALISE',
+        statut: 'GAGNE',
         organizationId: req.organizationId!,
       },
     });
@@ -198,7 +198,7 @@ affairesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
       const clientHistory = await prisma.affaire.count({
         where: {
           clientId: existing.clientId,
-          statut: 'REALISE',
+          statut: 'GAGNE',
           organizationId: req.organizationId!,
         },
       });
@@ -260,7 +260,7 @@ affairesRoutes.post('/:id/duplicate', async (req: AuthRequest, res, next) => {
         title: existing.title ? `${existing.title} (copie)` : null,
         description: existing.description,
         montantHT: existing.montantHT,
-        statut: 'PROSPECTION',
+        statut: 'PROSPECT',
         probabilite: existing.probabilite,
         moisPrevu: moisPrevu || existing.moisPrevu,
         anneePrevue: anneePrevue || existing.anneePrevue,

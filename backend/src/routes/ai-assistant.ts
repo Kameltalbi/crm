@@ -345,7 +345,7 @@ async function executeQuery(intent: string, organizationId: string) {
       const pipelineAffaires = await prisma.affaire.findMany({
         where: { 
           organizationId,
-          statut: 'PIPELINE',
+          statut: { in: ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
           moisPrevu: currentMonth,
           anneePrevue: currentYear,
         },
@@ -422,7 +422,7 @@ async function executeQuery(intent: string, organizationId: string) {
       const oldPipeline = await prisma.affaire.findMany({
         where: { 
           organizationId,
-          statut: 'PIPELINE',
+          statut: { in: ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
           createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }, // 30 days
         },
         include: { client: true },
@@ -440,7 +440,7 @@ async function executeQuery(intent: string, organizationId: string) {
     
     case 'breakeven_analysis': {
       const allAffairesBE = await prisma.affaire.findMany({
-        where: { organizationId, statut: 'REALISE' },
+        where: { organizationId, statut: 'GAGNE' },
       });
       const caTotalBE = allAffairesBE.reduce((sum, a) => sum + Number(a.montantHT), 0);
       

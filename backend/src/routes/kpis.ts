@@ -111,9 +111,9 @@ kpisRoutes.get('/', async (req: any, res, next) => {
     const parMois: Record<number, { realise: number; pipeline: number; prospect: number }> = {};
     for (let m = 1; m <= 12; m++) parMois[m] = { realise: 0, pipeline: 0, prospect: 0 };
     for (const a of affaires) {
-      const k = a.statut === 'REALISE' ? 'realise' :
-                a.statut === 'PIPELINE' ? 'pipeline' :
-                a.statut === 'PROSPECTION' ? 'prospect' : null;
+      const k = a.statut === 'GAGNE' ? 'realise' :
+                ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'].includes(a.statut) ? 'pipeline' :
+                a.statut === 'PROSPECT' ? 'prospect' : null;
       if (k) parMois[a.moisPrevu][k] += Number(a.montantHT);
     }
 

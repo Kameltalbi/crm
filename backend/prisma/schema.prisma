@@ -328,6 +328,8 @@ model Affaire {
   moisPrevu     Int           // 1-12
   anneePrevue   Int           // 2026, 2027, 2028
   dateClotureReelle DateTime?
+  prochaineAction String?      // ex: "Appeler client", "Envoyer devis"
+  dateProchaineAction DateTime?
   
   // Partenaire & commission
   viaPartenaire Boolean       @default(false)

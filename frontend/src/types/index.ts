@@ -65,6 +65,8 @@ export interface Affaire {
   moisPrevu: number;
   anneePrevue: number;
   dateClotureReelle: string | null;
+  prochaineAction: string | null;
+  dateProchaineAction: string | null;
   viaPartenaire: boolean;
   tauxCommission: number;
   devisId: string | null;

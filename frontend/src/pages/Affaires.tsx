@@ -24,6 +24,8 @@ type FormData = {
   viaPartenaire: boolean;
   tauxCommission: string;
   notes: string;
+  prochaineAction: string;
+  dateProchaineAction: string;
 };
 
 const EMPTY: FormData = {
@@ -31,6 +33,7 @@ const EMPTY: FormData = {
   statut: 'PROSPECT', probabilite: '50',
   moisPrevu: String(new Date().getMonth() + 1), anneePrevue: '2026',
   viaPartenaire: false, tauxCommission: '40', notes: '',
+  prochaineAction: '', dateProchaineAction: '',
 };
 
 export function Affaires() {
@@ -106,10 +109,9 @@ export function Affaires() {
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
-      console.log('Saving affaire with data:', data);
       const payload = {
         clientId: data.clientId,
-        productId: data.productId || undefined,
+        productId: data.productId || null,
         type: data.type,
         montantHT: Number(data.montantHT),
         statut: data.statut,
@@ -119,6 +121,8 @@ export function Affaires() {
         viaPartenaire: data.viaPartenaire,
         tauxCommission: Number(data.tauxCommission),
         notes: data.notes,
+        prochaineAction: data.prochaineAction || null,
+        dateProchaineAction: data.dateProchaineAction || null,
       };
       delete (payload as any).id;
       return data.id ? api.put(`/affaires/${data.id}`, payload) : api.post('/affaires', payload);
@@ -200,6 +204,8 @@ export function Affaires() {
       viaPartenaire: a.viaPartenaire,
       tauxCommission: String(a.tauxCommission),
       notes: a.notes || '',
+      prochaineAction: a.prochaineAction || '',
+      dateProchaineAction: a.dateProchaineAction ? a.dateProchaineAction.split('T')[0] : '',
     });
     setClientSearch(a.client?.name || '');
     setOpen(true);
@@ -393,9 +399,10 @@ export function Affaires() {
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Catégorie</th>
+                    <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Prochaine action</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mon net</th>
-                    <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mois</th>
-                    <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Devis/Fac</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Mois</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Devis/Fac</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -429,6 +436,16 @@ export function Affaires() {
                         <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
                         <td className="p-2.5"><StatutBadge statut={a.statut} /></td>
                         <td className="p-2.5 text-xs font-medium">{a.type || 'N/A'}</td>
+                        <td className="p-2.5">
+                          {a.prochaineAction && (
+                            <div className="text-xs">
+                              <div className="font-medium">{a.prochaineAction}</div>
+                              {a.dateProchaineAction && (
+                                <div className="text-muted-foreground">{new Date(a.dateProchaineAction).toLocaleDateString('fr-FR')}</div>
+                              )}
+                            </div>
+                          )}
+                        </td>
                         <td className="p-2.5 text-right font-mono font-semibold text-leaf">{fmtDT(ht - c)}</td>
                         <td className="p-2.5 text-muted-foreground">{MOIS[a.moisPrevu]}</td>
                         <td className="p-2.5">
@@ -739,6 +756,24 @@ export function Affaires() {
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               placeholder="Contacts, prochaine étape..."
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Prochaine action</Label>
+            <Input
+              value={form.prochaineAction}
+              onChange={(e) => setForm({ ...form, prochaineAction: e.target.value })}
+              placeholder="Ex: Appeler client, Envoyer devis..."
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Date de la prochaine action</Label>
+            <Input
+              type="date"
+              value={form.dateProchaineAction}
+              onChange={(e) => setForm({ ...form, dateProchaineAction: e.target.value })}
             />
           </div>
 

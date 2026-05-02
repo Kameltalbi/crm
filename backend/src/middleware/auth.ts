@@ -5,6 +5,13 @@ import { prisma } from '../db/prisma.js';
 export interface AuthRequest extends Request {
   userId?: string;
   organizationId?: string;
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    organizationId: string;
+  };
 }
 
 const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -17,10 +24,10 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
     req.userId = decoded.userId;
     
-    // Fetch user to get organizationId
+    // Fetch user to get organizationId and full user data
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { organizationId: true }
+      select: { id: true, email: true, name: true, role: true, organizationId: true }
     });
     
     if (!user) {
@@ -28,6 +35,7 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
     }
     
     req.organizationId = user.organizationId;
+    req.user = user;
     next();
   } catch {
     return res.status(401).json({ error: 'Token invalide ou expiré' });

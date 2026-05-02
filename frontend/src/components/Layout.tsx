@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon, Receipt, Mail, Sparkles, CreditCard, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, Calendar, Settings, LogOut, Leaf, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon, Receipt, Mail, Sparkles, CreditCard, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -29,7 +29,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -102,22 +101,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'fixed lg:static inset-y-0 left-0 z-40 bg-primary text-white flex flex-col transition-all duration-300 shadow-xl',
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-            sidebarCollapsed ? 'lg:w-16' : 'lg:w-64',
-            'w-64'
+            'fixed lg:static inset-y-0 left-0 z-40 w-64 bg-primary text-white flex flex-col transition-transform duration-300 lg:translate-x-0 shadow-xl',
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
-          {/* Collapse toggle button */}
-          <div className="hidden lg:flex justify-end p-2">
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-              {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            </button>
-          </div>
-
           <div className="flex-1 py-6 px-4 space-y-1">
             {nav.map(({ to, label, icon: Icon }) => (
               <NavLink
@@ -130,14 +117,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                     isActive
                       ? 'bg-white/20 text-white shadow-md'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white',
-                    sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
                   )
                 }
-                title={sidebarCollapsed ? label : undefined}
               >
                 <Icon size={18} />
-                {!sidebarCollapsed && <span>{label}</span>}
+                {label}
               </NavLink>
             ))}
             {user?.role === 'OWNER' && user?.email === 'admin@ktoptima.com' && (
@@ -151,14 +136,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                       isActive
                         ? 'bg-white/20 text-white shadow-md'
-                        : 'text-white/80 hover:bg-white/10 hover:text-white',
-                      sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''
+                        : 'text-white/80 hover:bg-white/10 hover:text-white'
                     )
                   }
-                  title={sidebarCollapsed ? 'Paramètres' : undefined}
                 >
                   <Settings size={18} />
-                  {!sidebarCollapsed && <span>Paramètres</span>}
+                  Paramètres
                 </NavLink>
                 <NavLink
                   to="/admin"
@@ -168,14 +151,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       'flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                       isActive
                         ? 'bg-white/20 text-white shadow-md'
-                        : 'text-white/80 hover:bg-white/10 hover:text-white',
-                      sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''
+                        : 'text-white/80 hover:bg-white/10 hover:text-white'
                     )
                   }
-                  title={sidebarCollapsed ? 'Admin' : undefined}
                 >
                   <Shield size={18} />
-                  {!sidebarCollapsed && <span>Admin</span>}
+                  Admin
                 </NavLink>
               </>
             )}

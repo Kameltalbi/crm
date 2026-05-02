@@ -14,7 +14,7 @@ export function Landing() {
     
     const closeTimer = setTimeout(() => {
       setShowPopup(false);
-    }, 7000);
+    }, 9000);
     
     return () => {
       clearTimeout(timer);
@@ -366,33 +366,39 @@ export function Landing() {
       {/* Softfacture Popup */}
       {showPopup && (
         <div className="fixed bottom-4 right-4 z-[100] animate-in slide-in-from-right duration-500">
-          <div className="bg-white rounded-lg shadow-2xl border p-6 max-w-sm">
-            <button
-              onClick={() => setShowPopup(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-            >
-              <X size={16} />
-            </button>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <TrendingUp size={20} className="text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Softfacture</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Gérez votre facturation facilement avec notre solution Softfacture.
-                </p>
-                <a
-                  href="https://softfacture.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-blue-600 hover:text-blue-700"
-                >
-                  Découvrir <ArrowRight size={14} />
-                </a>
+          <a
+            href="https://softfacture.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div className="bg-white rounded-lg shadow-2xl border p-6 max-w-sm hover:shadow-3xl transition-shadow cursor-pointer">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowPopup(false);
+                }}
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp size={20} className="text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Softfacture</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Gérez votre facturation facilement avec notre solution Softfacture.
+                  </p>
+                  <span className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-blue-600 hover:text-blue-700">
+                    Découvrir <ArrowRight size={14} />
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          </a>
         </div>
       )}
     </div>

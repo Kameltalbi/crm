@@ -190,8 +190,17 @@ export function Affaires() {
     setOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Supprimer cette affaire ?')) deleteMutation.mutate(id);
+  const handleDelete = (id: string, clientId: string) => {
+    // Check if client has other opportunities
+    const clientAffaires = affaires.filter(a => a.clientId === clientId);
+    if (clientAffaires.length > 1) {
+      const otherAffaires = clientAffaires.filter(a => a.id !== id);
+      const confirmMsg = `Ce client a ${otherAffaires.length} autre(s) opportunité(s).\n\nÊtes-vous sûr de vouloir supprimer celle-ci ?`;
+      if (!confirm(confirmMsg)) return;
+    } else {
+      if (!confirm('Supprimer cette affaire ?')) return;
+    }
+    deleteMutation.mutate(id);
   };
 
   const openNew = () => {
@@ -428,7 +437,7 @@ export function Affaires() {
                               <DropdownMenuItemStyled onClick={() => handleEdit(a)}>
                                 <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
                               </DropdownMenuItemStyled>
-                              <DropdownMenuItemStyled onClick={() => handleDelete(a.id)} className="text-destructive">
+                              <DropdownMenuItemStyled onClick={() => handleDelete(a.id, a.clientId)} className="text-destructive">
                                 <Trash2 size={16} className="mr-2" /> Supprimer
                               </DropdownMenuItemStyled>
                             </DropdownMenuContentWrapper>

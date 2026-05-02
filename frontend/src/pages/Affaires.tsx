@@ -576,6 +576,20 @@ export function Affaires() {
                   )}
                 </SelectContent>
               </Select>
+              {form.clientId && affaires.filter(a => a.clientId === form.clientId && a.id !== form.id).length > 0 && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                  <p className="text-xs font-semibold text-blue-700">
+                    {affaires.filter(a => a.clientId === form.clientId && a.id !== form.id).length} autre(s) opportunité(s) pour ce client
+                  </p>
+                  <div className="mt-1 text-xs text-blue-600">
+                    {affaires.filter(a => a.clientId === form.clientId && a.id !== form.id).map(a => (
+                      <div key={a.id} className="truncate">
+                        • {a.title} ({Number(a.montantHT).toLocaleString('fr-TN')} DT) - {a.statut}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Produit *</Label>

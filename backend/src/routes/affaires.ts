@@ -45,9 +45,11 @@ function calculateLeadScore(affaire: any, clientHistory?: number): number {
   
   // Statut (0-25 points)
   const statusScores: Record<string, number> = {
-    'PROSPECTION': 10,
-    'PIPELINE': 20,
-    'REALISE': 0, // Already won, no need to score
+    'PROSPECT': 10,
+    'QUALIFIE': 20,
+    'PROPOSITION': 30,
+    'NEGOCIATION': 40,
+    'GAGNE': 0, // Already won, no need to score
     'PERDU': 0, // Lost, no need to score
   };
   score += statusScores[affaire.statut] || 0;

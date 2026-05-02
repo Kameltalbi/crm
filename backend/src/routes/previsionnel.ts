@@ -32,7 +32,7 @@ previsionnelRoutes.get('/:annee', async (req: AuthRequest, res, next) => {
     const affairesFutures = await prisma.affaire.findMany({
       where: { 
         anneePrevue: annee, 
-        statut: { in: ['PROSPECTION', 'PIPELINE'] },
+        statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
         organizationId: req.organizationId 
       },
     });

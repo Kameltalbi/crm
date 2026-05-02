@@ -79,7 +79,7 @@ softfactureRoutes.post('/facture/:affaireId', async (req, res, next) => {
         factureId:     result.id,
         factureNumero: result.numero,
         facturePdfUrl: result.pdfUrl,
-        statut:        affaire.statut === 'PIPELINE' ? 'REALISE' : affaire.statut,
+        statut:        affaire.statut === 'GAGNE' ? 'GAGNE' : affaire.statut,
         dateClotureReelle: affaire.dateClotureReelle || new Date(),
       },
     });

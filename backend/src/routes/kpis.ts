@@ -80,9 +80,9 @@ kpisRoutes.get('/', async (req: any, res, next) => {
       include: { client: true },
     });
 
-    const realise  = affaires.filter(a => a.statut === 'REALISE');
-    const pipeline = affaires.filter(a => a.statut === 'PIPELINE');
-    const prospect = affaires.filter(a => a.statut === 'PROSPECTION');
+    const realise  = affaires.filter(a => a.statut === 'GAGNE');
+    const pipeline = affaires.filter(a => ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'].includes(a.statut));
+    const prospect = affaires.filter(a => a.statut === 'PROSPECT');
     const perdu    = affaires.filter(a => a.statut === 'PERDU');
 
     const sum = (arr: typeof affaires) =>

@@ -18,7 +18,7 @@ async function predictYearEndCA(organizationId: string) {
   const affaires = await prisma.affaire.findMany({
     where: { 
       organizationId,
-      statut: 'REALISE',
+      statut: 'GAGNE',
       anneePrevue: { lte: currentYear },
     },
   });
@@ -60,7 +60,7 @@ async function predictYearEndCA(organizationId: string) {
   const pipelineCA = await prisma.affaire.findMany({
     where: {
       organizationId,
-      statut: { in: ['PIPELINE', 'CONFIRME'] },
+      statut: { in: ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
       anneePrevue: String(currentYear),
       moisPrevu: { in: remainingMonths.map(m => parseInt(m.split('-')[1])) },
     } as any,
@@ -98,7 +98,7 @@ async function generateRecommendations(organizationId: string, prediction: any) 
   const highProb = await prisma.affaire.findMany({
     where: {
       organizationId,
-      statut: { in: ['PROSPECTION', 'PIPELINE'] },
+      statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
       probabilite: { gte: 60 },
     },
     orderBy: { montantHT: 'desc' },
@@ -310,7 +310,7 @@ async function executeQuery(intent: string, organizationId: string) {
       const realiseAffaires = await prisma.affaire.findMany({
         where: { 
           organizationId,
-          statut: 'REALISE',
+          statut: 'GAGNE',
         },
       });
       // Filter by actual close date or current year
@@ -402,7 +402,7 @@ async function executeQuery(intent: string, organizationId: string) {
       const highScoreAffaires = await prisma.affaire.findMany({
         where: { 
           organizationId,
-          statut: { in: ['PROSPECTION', 'PIPELINE'] },
+          statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
         },
         include: { client: true },
         orderBy: { montantHT: 'desc' },

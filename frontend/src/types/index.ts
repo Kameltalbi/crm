@@ -1,5 +1,5 @@
 export type AffaireType = string;
-export type StatutAffaire = 'PROSPECTION' | 'PIPELINE' | 'REALISE' | 'PERDU';
+export type StatutAffaire = 'PROSPECT' | 'QUALIFIE' | 'PROPOSITION' | 'NEGOCIATION' | 'GAGNE' | 'PERDU';
 export type ActiviteType = 'NOTE' | 'APPEL' | 'EMAIL_ENVOYE' | 'EMAIL_RECU' | 'RDV' | 'CHANGEMENT_STATUT' | 'DEVIS_CREE' | 'FACTURE_CREEE' | 'AUTRE';
 export type UserRole = 'OWNER' | 'PARTNER';
 export type ProductType = 'SERVICE' | 'PRODUCT';
@@ -120,8 +120,8 @@ export interface KPIs {
   commissionPartenaireDue: number;
   netRealise: number;
   parType: Record<string, number>;
-  counts: { realise: number; pipeline: number; prospect: number; perdu: number };
-  parMois: Record<number, { realise: number; pipeline: number; prospect: number }>;
+  counts: { gagne: number; enCours: number; prospect: number; perdu: number };
+  parMois: Record<number, { gagne: number; enCours: number; prospect: number }>;
   smartForecast?: SmartForecast;
 }
 

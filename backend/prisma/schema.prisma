@@ -320,7 +320,7 @@ model Affaire {
   montantHT     Decimal       @db.Decimal(12, 3) // DT, 3 décimales
   
   // Pipeline
-  statut        StatutAffaire @default(PROSPECTION)
+  statut        StatutAffaire @default(PROSPECT)
   probabilite   Int           @default(50) // 0-100 %
   score         Int           @default(0) // Lead score 0-100
   
@@ -367,9 +367,11 @@ model Affaire {
 // AffaireType is now a free-form String managed via custom categories
 
 enum StatutAffaire {
-  PROSPECTION  // 🟡 Premier contact, négociation
-  PIPELINE     // 🔵 Offre envoyée, forte probabilité
-  REALISE      // ✅ Gagné, livré/en cours
+  PROSPECT     // 🟡 Premier contact
+  QUALIFIE     // 🔵 Intérêt confirmé
+  PROPOSITION  // � Offre envoyée
+  NEGOCIATION  // 🟣 En discussion
+  GAGNE        // ✅ Signé
   PERDU        // ❌ Refusé ou abandonné
 }
 

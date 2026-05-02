@@ -108,7 +108,7 @@ notificationsRouter.post('/check-activity', async (req: AuthRequest, res, next) 
     const affairesWithoutActivity = await prisma.affaire.findMany({
       where: {
         organizationId: req.organizationId,
-        statut: { in: ['PROSPECTION', 'PIPELINE'] },
+        statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
         NOT: {
           activites: {
             some: {

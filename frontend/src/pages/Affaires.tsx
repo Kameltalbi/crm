@@ -28,7 +28,7 @@ type FormData = {
 
 const EMPTY: FormData = {
   clientId: '', productId: '', type: '', montantHT: '',
-  statut: 'PROSPECTION', probabilite: '50',
+  statut: 'PROSPECT', probabilite: '50',
   moisPrevu: String(new Date().getMonth() + 1), anneePrevue: '2026',
   viaPartenaire: false, tauxCommission: '40', notes: '',
 };
@@ -243,11 +243,11 @@ export function Affaires() {
 
   // Calculate summary KPIs from all affaires (not paginated)
   const totalCA = sortedAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const pipelineCA = sortedAffaires.filter(a => a.statut === 'PIPELINE').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const realiseCA = sortedAffaires.filter(a => a.statut === 'REALISE').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const prospectionCA = sortedAffaires.filter(a => a.statut === 'PROSPECTION').reduce((sum, a) => sum + Number(a.montantHT), 0);
-  const winRate = sortedAffaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length > 0
-    ? Math.round((sortedAffaires.filter(a => a.statut === 'REALISE').length / sortedAffaires.filter(a => a.statut === 'REALISE' || a.statut === 'PERDU').length) * 100)
+  const pipelineCA = sortedAffaires.filter(a => ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'].includes(a.statut)).reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const realiseCA = sortedAffaires.filter(a => a.statut === 'GAGNE').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const prospectionCA = sortedAffaires.filter(a => a.statut === 'PROSPECT').reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const winRate = sortedAffaires.filter(a => a.statut === 'GAGNE' || a.statut === 'PERDU').length > 0
+    ? Math.round((sortedAffaires.filter(a => a.statut === 'GAGNE').length / sortedAffaires.filter(a => a.statut === 'GAGNE' || a.statut === 'PERDU').length) * 100)
     : 0;
 
   return (
@@ -255,7 +255,7 @@ export function Affaires() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Opportunités</h1>
-          <p className="text-sm text-muted-foreground mt-1">Pipeline complet : prospection, confirmé, réalisé</p>
+          <p className="text-sm text-muted-foreground mt-1">Pipeline complet : prospect, qualifié, proposition, négociation, gagné</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <div className="flex gap-1">
@@ -290,16 +290,16 @@ export function Affaires() {
         </Card>
         <Card className="border-2 border-blue-200 bg-blue-50/30">
           <CardContent className="p-3">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pipeline</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">En cours</p>
             <p className="text-lg md:text-2xl font-bold text-blue-600 mt-1">{fmtDT(pipelineCA)}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{allAffaires.filter(a => a.statut === 'PIPELINE').length} en cours</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{allAffaires.filter(a => ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'].includes(a.statut)).length} en cours</p>
           </CardContent>
         </Card>
         <Card className="border-2 border-emerald-200 bg-emerald-50/30">
           <CardContent className="p-3">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Réalisé</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Gagné</p>
             <p className="text-lg md:text-2xl font-bold text-emerald-600 mt-1">{fmtDT(realiseCA)}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{allAffaires.filter(a => a.statut === 'REALISE').length} gagnées</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{allAffaires.filter(a => a.statut === 'GAGNE').length} gagnées</p>
           </CardContent>
         </Card>
         <Card className="border-2 border-violet-200 bg-violet-50/30">
@@ -330,9 +330,11 @@ export function Affaires() {
                 <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous statuts</SelectItem>
-                  <SelectItem value="PROSPECTION">🟡 Prospection</SelectItem>
-                  <SelectItem value="PIPELINE">🔵 Pipeline</SelectItem>
-                  <SelectItem value="REALISE">✅ Réalisé</SelectItem>
+                  <SelectItem value="PROSPECT">🟡 Prospect</SelectItem>
+                  <SelectItem value="QUALIFIE">🔵 Qualifié</SelectItem>
+                  <SelectItem value="PROPOSITION">🟠 Proposition</SelectItem>
+                  <SelectItem value="NEGOCIATION">🟣 Négociation</SelectItem>
+                  <SelectItem value="GAGNE">✅ Gagné</SelectItem>
                   <SelectItem value="PERDU">❌ Perdu</SelectItem>
                 </SelectContent>
               </Select>
@@ -534,13 +536,15 @@ export function Affaires() {
       {/* Kanban View */}
       {view === 'kanban' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(['PROSPECTION', 'PIPELINE', 'REALISE', 'PERDU'] as const).map((statut) => {
+          {(['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION', 'GAGNE', 'PERDU'] as const).map((statut) => {
             const statutAffaires = sortedAffaires.filter(a => a.statut === statut);
             const statutCA = statutAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
             const statutLabels = {
-              PROSPECTION: { label: 'Prospection', color: 'bg-yellow-50 border-yellow-200' },
-              PIPELINE: { label: 'Pipeline', color: 'bg-blue-50 border-blue-200' },
-              REALISE: { label: 'Réalisé', color: 'bg-green-50 border-green-200' },
+              PROSPECT: { label: 'Prospect', color: 'bg-yellow-50 border-yellow-200' },
+              QUALIFIE: { label: 'Qualifié', color: 'bg-blue-50 border-blue-200' },
+              PROPOSITION: { label: 'Proposition', color: 'bg-orange-50 border-orange-200' },
+              NEGOCIATION: { label: 'Négociation', color: 'bg-purple-50 border-purple-200' },
+              GAGNE: { label: 'Gagné', color: 'bg-green-50 border-green-200' },
               PERDU: { label: 'Perdu', color: 'bg-red-50 border-red-200' },
             };
             const statutInfo = statutLabels[statut];
@@ -659,9 +663,11 @@ export function Affaires() {
               <Select value={form.statut} onValueChange={(v) => setForm({ ...form, statut: v as StatutAffaire })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PROSPECTION">🟡 Prospection</SelectItem>
-                  <SelectItem value="PIPELINE">🔵 Pipeline</SelectItem>
-                  <SelectItem value="REALISE">✅ Réalisé</SelectItem>
+                  <SelectItem value="PROSPECT">🟡 Prospect</SelectItem>
+                  <SelectItem value="QUALIFIE">🔵 Qualifié</SelectItem>
+                  <SelectItem value="PROPOSITION">� Proposition</SelectItem>
+                  <SelectItem value="NEGOCIATION">🟣 Négociation</SelectItem>
+                  <SelectItem value="GAGNE">✅ Gagné</SelectItem>
                   <SelectItem value="PERDU">❌ Perdu</SelectItem>
                 </SelectContent>
               </Select>

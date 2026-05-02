@@ -175,6 +175,20 @@ export function Dashboard() {
     }
   });
   const expenseColors = expensesByCategory.map((cat: any) => generateUniqueColor(cat.name, false));
+  const revenueTotal = filteredRevenueByCategory.reduce((sum, cat) => sum + Number(cat.value), 0);
+  const expensesTotal = expensesByCategory.reduce((sum, cat) => sum + Number(cat.value), 0);
+  const revenueChartData = [...filteredRevenueByCategory]
+    .sort((a: any, b: any) => Number(b.value) - Number(a.value))
+    .map((cat: any) => ({
+      ...cat,
+      percentage: revenueTotal > 0 ? (Number(cat.value) / revenueTotal) * 100 : 0,
+    }));
+  const expensesChartData = [...expensesByCategory]
+    .sort((a: any, b: any) => Number(b.value) - Number(a.value))
+    .map((cat: any) => ({
+      ...cat,
+      percentage: expensesTotal > 0 ? (Number(cat.value) / expensesTotal) * 100 : 0,
+    }));
 
   const winRate = kpis.counts.gagne + kpis.counts.perdu > 0
     ? Math.round((kpis.counts.gagne / (kpis.counts.gagne + kpis.counts.perdu)) * 100)
@@ -350,43 +364,48 @@ export function Dashboard() {
             <CardTitle className="text-base font-semibold">Revenus par catégorie ({fmtDT(kpis.caTotal)})</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <RechartsPieChart>
                 <Pie
-                  data={filteredRevenueByCategory}
+                  data={revenueChartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
+                  innerRadius={68}
+                  outerRadius={98}
+                  paddingAngle={2}
+                  cornerRadius={6}
                   dataKey="value"
-                  label={({ percent }: any) => `${(percent * 100).toFixed(1)}%`}
+                  label={({ percent }: any) => (percent > 0.08 ? `${(percent * 100).toFixed(0)}%` : '')}
                   labelLine={false}
-                  fontSize={8}
+                  fontSize={11}
                   fill="#666"
+                  stroke="#fff"
+                  strokeWidth={2}
                 >
-                  {filteredRevenueByCategory.map((entry: any, index: number) => (
+                  {revenueChartData.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={revenueColors[index % revenueColors.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-                <Legend 
-                  wrapperStyle={{ fontSize: '8px' }}
-                  content={(props: any) => (
-                    <ul style={{ listStyle: 'none', margin: 0, padding: 0, fontSize: '8px' }}>
-                      {props.payload.map((entry: any, index: number) => (
-                        <li key={index} style={{ display: 'inline-block', marginRight: '10px', marginBottom: '5px' }}>
-                          <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: entry.color, marginRight: '4px', borderRadius: '2px' }} />
-                          <span style={{ display: 'inline-block', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', lineHeight: '1.2', maxHeight: '2.4em' }}>
-                            {entry.value}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                <Tooltip
+                  formatter={(value: number, _name: any, props: any) => [`${fmtDT(value)} TND`, `${props?.payload?.percentage?.toFixed(1) || '0'}%`]}
+                  contentStyle={{ borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 6px 16px rgba(0,0,0,0.08)' }}
                 />
               </RechartsPieChart>
             </ResponsiveContainer>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              {revenueChartData.slice(0, 6).map((entry: any, index: number) => (
+                <div key={`rev-legend-${entry.name}`} className="flex items-center justify-between gap-2 rounded-md border border-border/60 px-2 py-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="inline-block w-2.5 h-2.5 rounded-sm shrink-0"
+                      style={{ backgroundColor: revenueColors[index % revenueColors.length] }}
+                    />
+                    <span className="truncate text-muted-foreground">{entry.name}</span>
+                  </div>
+                  <span className="font-medium text-foreground">{entry.percentage.toFixed(1)}%</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -395,43 +414,48 @@ export function Dashboard() {
             <CardTitle className="text-base font-semibold">Dépenses par catégorie ({fmtDT(totalExpenses)})</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={280}>
               <RechartsPieChart>
                 <Pie
-                  data={expensesByCategory}
+                  data={expensesChartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
+                  innerRadius={68}
+                  outerRadius={98}
+                  paddingAngle={2}
+                  cornerRadius={6}
                   dataKey="value"
-                  label={({ percent }: any) => `${(percent * 100).toFixed(1)}%`}
+                  label={({ percent }: any) => (percent > 0.08 ? `${(percent * 100).toFixed(0)}%` : '')}
                   labelLine={false}
-                  fontSize={8}
+                  fontSize={11}
                   fill="#666"
+                  stroke="#fff"
+                  strokeWidth={2}
                 >
-                  {expensesByCategory.map((entry: any, index: number) => (
+                  {expensesChartData.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-                <Legend 
-                  wrapperStyle={{ fontSize: '8px' }}
-                  content={(props: any) => (
-                    <ul style={{ listStyle: 'none', margin: 0, padding: 0, fontSize: '8px' }}>
-                      {props.payload.map((entry: any, index: number) => (
-                        <li key={index} style={{ display: 'inline-block', marginRight: '10px', marginBottom: '5px' }}>
-                          <span style={{ display: 'inline-block', width: '8px', height: '8px', backgroundColor: entry.color, marginRight: '4px', borderRadius: '2px' }} />
-                          <span style={{ display: 'inline-block', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', lineHeight: '1.2', maxHeight: '2.4em' }}>
-                            {entry.value}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                <Tooltip
+                  formatter={(value: number, _name: any, props: any) => [`${fmtDT(value)} TND`, `${props?.payload?.percentage?.toFixed(1) || '0'}%`]}
+                  contentStyle={{ borderRadius: '10px', border: '1px solid #e5e7eb', boxShadow: '0 6px 16px rgba(0,0,0,0.08)' }}
                 />
               </RechartsPieChart>
             </ResponsiveContainer>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              {expensesChartData.slice(0, 6).map((entry: any, index: number) => (
+                <div key={`exp-legend-${entry.name}`} className="flex items-center justify-between gap-2 rounded-md border border-border/60 px-2 py-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="inline-block w-2.5 h-2.5 rounded-sm shrink-0"
+                      style={{ backgroundColor: expenseColors[index % expenseColors.length] }}
+                    />
+                    <span className="truncate text-muted-foreground">{entry.name}</span>
+                  </div>
+                  <span className="font-medium text-foreground">{entry.percentage.toFixed(1)}%</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>

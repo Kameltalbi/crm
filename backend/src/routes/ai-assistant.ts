@@ -11,27 +11,36 @@ const querySchema = z.object({
 });
 
 // Predictive analytics
+function sortMonthKeys(keys: string[]) {
+  return [...keys].sort((a, b) => {
+    const [ya, ma] = a.split('-').map((x) => parseInt(x!, 10));
+    const [yb, mb] = b.split('-').map((x) => parseInt(x!, 10));
+    if (ya !== yb) return ya - yb;
+    return ma - mb;
+  });
+}
+
 async function predictYearEndCA(organizationId: string) {
   const currentYear = new Date().getFullYear();
-  
-  // Get historical CA by month (including won and in-progress for prediction)
-  const affaires = await prisma.affaire.findMany({
-    where: { 
+
+  const groups = await prisma.affaire.groupBy({
+    by: ['anneePrevue', 'moisPrevu'],
+    where: {
       organizationId,
+      deletedAt: null,
       statut: { in: ['GAGNE', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
       anneePrevue: { lte: currentYear },
     },
+    _sum: { montantHT: true },
   });
-  
-  // Group by month
+
   const monthlyCA: { [key: string]: number } = {};
-  affaires.forEach(a => {
-    const key = `${a.anneePrevue}-${a.moisPrevu}`;
-    monthlyCA[key] = (monthlyCA[key] || 0) + Number(a.montantHT);
-  });
-  
-  // Calculate average monthly growth
-  const months = Object.keys(monthlyCA).sort();
+  for (const g of groups) {
+    const key = `${g.anneePrevue}-${g.moisPrevu}`;
+    monthlyCA[key] = Number(g._sum.montantHT ?? 0);
+  }
+
+  const months = sortMonthKeys(Object.keys(monthlyCA));
   let growthRates: number[] = [];
   for (let i = 1; i < months.length; i++) {
     const prev = monthlyCA[months[i - 1]] || 0;
@@ -45,10 +54,9 @@ async function predictYearEndCA(organizationId: string) {
     ? growthRates.reduce((a, b) => a + b, 0) / growthRates.length 
     : 0;
   
-  // Get current year CA so far
-  const currentYearCA = affaires
-    .filter(a => a.anneePrevue === currentYear)
-    .reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const currentYearCA = Object.entries(monthlyCA)
+    .filter(([k]) => k.startsWith(`${currentYear}-`))
+    .reduce((sum, [, v]) => sum + v, 0);
   
   // Get pipeline CA for remaining months
   const currentMonth = String(new Date().getMonth() + 1);
@@ -57,16 +65,24 @@ async function predictYearEndCA(organizationId: string) {
     return parseInt(year) === currentYear && parseInt(month) > parseInt(currentMonth);
   });
   
-  const pipelineCA = await prisma.affaire.findMany({
-    where: {
-      organizationId,
-      statut: { in: ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
-      anneePrevue: String(currentYear),
-      moisPrevu: { in: remainingMonths.map(m => parseInt(m.split('-')[1])) },
-    } as any,
-  });
-  
-  const pipelineTotal = pipelineCA.reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const pipelineMonthInts = remainingMonths
+    .map((m) => parseInt(m.split('-')[1]!, 10))
+    .filter((n) => !Number.isNaN(n));
+
+  let pipelineTotal = 0;
+  if (pipelineMonthInts.length > 0) {
+    const pipelineAgg = await prisma.affaire.aggregate({
+      where: {
+        organizationId,
+        deletedAt: null,
+        statut: { in: ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
+        anneePrevue: currentYear,
+        moisPrevu: { in: pipelineMonthInts },
+      },
+      _sum: { montantHT: true },
+    });
+    pipelineTotal = Number(pipelineAgg._sum.montantHT ?? 0);
+  }
   
   // Predict based on trend + pipeline
   const predictedCA = currentYearCA + pipelineTotal * (1 + avgGrowth);
@@ -98,11 +114,13 @@ async function generateRecommendations(organizationId: string, prediction: any) 
   const highProb = await prisma.affaire.findMany({
     where: {
       organizationId,
+      deletedAt: null,
       statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
       probabilite: { gte: 60 },
     },
     orderBy: { montantHT: 'desc' },
     take: 5,
+    select: { montantHT: true },
   });
   
   if (highProb.length > 0) {
@@ -254,11 +272,12 @@ async function executeQuery(intent: string, organizationId: string) {
 
     case 'opportunities_this_week': {
       const weekAffaires = await prisma.affaire.findMany({
-        where: { 
+        where: {
           organizationId,
-          createdAt: { gte: weekAgo }
+          deletedAt: null,
+          createdAt: { gte: weekAgo },
         },
-        include: { client: true },
+        include: { client: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
         take: 10,
       });
@@ -275,13 +294,15 @@ async function executeQuery(intent: string, organizationId: string) {
     
     case 'opportunities_this_month': {
       const monthAffaires = await prisma.affaire.findMany({
-        where: { 
+        where: {
           organizationId,
+          deletedAt: null,
           moisPrevu: currentMonth,
           anneePrevue: currentYear,
         },
-        include: { client: true },
+        include: { client: { select: { name: true } } },
         orderBy: { montantHT: 'desc' },
+        take: 150,
       });
       return {
         type: 'list',
@@ -297,7 +318,7 @@ async function executeQuery(intent: string, organizationId: string) {
     
     case 'total_opportunities': {
       const totalAffaires = await prisma.affaire.count({
-        where: { organizationId },
+        where: { organizationId, deletedAt: null },
       });
       return {
         type: 'metric',
@@ -307,33 +328,32 @@ async function executeQuery(intent: string, organizationId: string) {
     }
     
     case 'ca_realise': {
-      const realiseAffaires = await prisma.affaire.findMany({
-        where: { 
-          organizationId,
-          statut: 'GAGNE',
-        },
-      });
-      // Filter by actual close date or current year
-      const currentYearAffaires = realiseAffaires.filter(a => {
-        const closeDate = a.dateClotureReelle ? new Date(a.dateClotureReelle) : null;
-        const createDate = new Date(a.createdAt);
-        const year = closeDate ? closeDate.getFullYear() : createDate.getFullYear();
-        return year === currentYear;
-      });
-      const caRealiseCurrentYear = currentYearAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
-      
-      console.log('DEBUG CA Réalisé:', {
-        totalRealise: realiseAffaires.length,
-        currentYearAffaires: currentYearAffaires.length,
-        currentYear,
-        affaires: currentYearAffaires.map(a => ({
-          id: a.id,
-          montant: Number(a.montantHT),
-          dateClotureReelle: a.dateClotureReelle,
-          createdAt: a.createdAt,
-        })),
-      });
-      
+      const yearStart = new Date(currentYear, 0, 1);
+      const yearEnd = new Date(currentYear + 1, 0, 1);
+      const [closedInYear, wonNoCloseInYear] = await Promise.all([
+        prisma.affaire.aggregate({
+          where: {
+            organizationId,
+            deletedAt: null,
+            statut: 'GAGNE',
+            dateClotureReelle: { gte: yearStart, lt: yearEnd },
+          },
+          _sum: { montantHT: true },
+        }),
+        prisma.affaire.aggregate({
+          where: {
+            organizationId,
+            deletedAt: null,
+            statut: 'GAGNE',
+            dateClotureReelle: null,
+            createdAt: { gte: yearStart, lt: yearEnd },
+          },
+          _sum: { montantHT: true },
+        }),
+      ]);
+      const caRealiseCurrentYear =
+        Number(closedInYear._sum.montantHT ?? 0) + Number(wonNoCloseInYear._sum.montantHT ?? 0);
+
       return {
         type: 'metric',
         title: `CA réalisé ${currentYear}`,
@@ -342,15 +362,17 @@ async function executeQuery(intent: string, organizationId: string) {
     }
     
     case 'ca_pipeline': {
-      const pipelineAffaires = await prisma.affaire.findMany({
-        where: { 
+      const pipelineAgg = await prisma.affaire.aggregate({
+        where: {
           organizationId,
+          deletedAt: null,
           statut: { in: ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
           moisPrevu: currentMonth,
           anneePrevue: currentYear,
         },
+        _sum: { montantHT: true },
       });
-      const caPipeline = pipelineAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+      const caPipeline = Number(pipelineAgg._sum.montantHT ?? 0);
       return {
         type: 'metric',
         title: `CA pipeline ce mois`,
@@ -359,10 +381,11 @@ async function executeQuery(intent: string, organizationId: string) {
     }
     
     case 'ca_total': {
-      const allAffaires = await prisma.affaire.findMany({
-        where: { organizationId },
+      const agg = await prisma.affaire.aggregate({
+        where: { organizationId, deletedAt: null },
+        _sum: { montantHT: true },
       });
-      const caTotal = allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+      const caTotal = Number(agg._sum.montantHT ?? 0);
       return {
         type: 'metric',
         title: 'CA total',
@@ -372,7 +395,7 @@ async function executeQuery(intent: string, organizationId: string) {
     
     case 'total_clients': {
       const totalClients = await prisma.client.count({
-        where: { organizationId },
+        where: { organizationId, deletedAt: null },
       });
       return {
         type: 'metric',
@@ -383,9 +406,10 @@ async function executeQuery(intent: string, organizationId: string) {
     
     case 'clients_list': {
       const clients = await prisma.client.findMany({
-        where: { organizationId },
+        where: { organizationId, deletedAt: null },
         orderBy: { createdAt: 'desc' },
         take: 10,
+        select: { name: true, email: true, phone: true },
       });
       return {
         type: 'list',
@@ -400,11 +424,12 @@ async function executeQuery(intent: string, organizationId: string) {
     
     case 'priority_actions': {
       const highScoreAffaires = await prisma.affaire.findMany({
-        where: { 
+        where: {
           organizationId,
+          deletedAt: null,
           statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
         },
-        include: { client: true },
+        include: { client: { select: { name: true } } },
         orderBy: { montantHT: 'desc' },
         take: 5,
       });
@@ -420,12 +445,15 @@ async function executeQuery(intent: string, organizationId: string) {
     
     case 'risks_alerts': {
       const oldPipeline = await prisma.affaire.findMany({
-        where: { 
+        where: {
           organizationId,
+          deletedAt: null,
           statut: { in: ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
-          createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }, // 30 days
+          createdAt: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
         },
-        include: { client: true },
+        include: { client: { select: { name: true } } },
+        orderBy: { createdAt: 'asc' },
+        take: 40,
       });
       return {
         type: 'list',
@@ -439,15 +467,18 @@ async function executeQuery(intent: string, organizationId: string) {
     }
     
     case 'breakeven_analysis': {
-      const allAffairesBE = await prisma.affaire.findMany({
-        where: { organizationId, statut: 'GAGNE' },
-      });
-      const caTotalBE = allAffairesBE.reduce((sum, a) => sum + Number(a.montantHT), 0);
-      
-      const allExpenses = await prisma.expense.findMany({
-        where: { organizationId },
-      });
-      const expensesTotal = allExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
+      const [caAgg, expAgg] = await Promise.all([
+        prisma.affaire.aggregate({
+          where: { organizationId, deletedAt: null, statut: 'GAGNE' },
+          _sum: { montantHT: true },
+        }),
+        prisma.expense.aggregate({
+          where: { organizationId, deletedAt: null },
+          _sum: { amount: true },
+        }),
+      ]);
+      const caTotalBE = Number(caAgg._sum.montantHT ?? 0);
+      const expensesTotal = Number(expAgg._sum.amount ?? 0);
       
       const profit = caTotalBE - expensesTotal;
       const margin = caTotalBE > 0 ? ((profit / caTotalBE) * 100).toFixed(1) : 0;
@@ -461,18 +492,28 @@ async function executeQuery(intent: string, organizationId: string) {
     }
     
     case 'ca_vs_expenses': {
-      const affairesYear = await prisma.affaire.findMany({
-        where: { organizationId, anneePrevue: currentYear },
-      });
-      const caYear = affairesYear.reduce((sum, a) => sum + Number(a.montantHT), 0);
-      
-      const expensesYear = await prisma.expense.findMany({
-        where: { 
-          organizationId,
-          date: { gte: new Date(currentYear, 0, 1) },
-        },
-      });
-      const expensesYearTotal = expensesYear.reduce((sum, e) => sum + Number(e.amount), 0);
+      const yearStart = new Date(currentYear, 0, 1);
+      const yearEnd = new Date(currentYear + 1, 0, 1);
+      const [caYearAgg, expYearAgg] = await Promise.all([
+        prisma.affaire.aggregate({
+          where: {
+            organizationId,
+            deletedAt: null,
+            anneePrevue: currentYear,
+          },
+          _sum: { montantHT: true },
+        }),
+        prisma.expense.aggregate({
+          where: {
+            organizationId,
+            deletedAt: null,
+            date: { gte: yearStart, lt: yearEnd },
+          },
+          _sum: { amount: true },
+        }),
+      ]);
+      const caYear = Number(caYearAgg._sum.montantHT ?? 0);
+      const expensesYearTotal = Number(expYearAgg._sum.amount ?? 0);
       
       const ratio = caYear > 0 ? ((expensesYearTotal / caYear) * 100).toFixed(1) : 0;
       

@@ -6,7 +6,7 @@ export const adminRoutes = Router();
 adminRoutes.use(auth);
 
 // Middleware to check if user is admin
-const checkAdmin = (req: AuthRequest, res: any, next: any) => {
+const checkAdmin = (req: any, res: any, next: any) => {
   if (req.user?.role !== 'OWNER') {
     return res.status(403).json({ error: 'Access denied' });
   }
@@ -30,8 +30,8 @@ adminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
       prisma.organization.count(),
       prisma.affaire.count(),
       prisma.client.count(),
-      prisma.subscription.count({ where: { statut: 'ACTIF' } }),
-      prisma.subscription.count({ where: { statut: 'EN_ATTENTE' } }),
+      (prisma as any).subscription.count({ where: { statut: 'ACTIF' } }),
+      (prisma as any).subscription.count({ where: { statut: 'EN_ATTENTE' } }),
     ]);
 
     // Get database size (PostgreSQL specific query)
@@ -75,7 +75,7 @@ adminRoutes.get('/activity', async (req: AuthRequest, res, next) => {
         orderBy: { createdAt: 'desc' },
         take: 3,
       }),
-      prisma.subscription.findMany({
+      (prisma as any).subscription.findMany({
         orderBy: { createdAt: 'desc' },
         take: 3,
         include: { organization: true },

@@ -487,11 +487,13 @@ function ProfessionalKpiCard({ title, value, subtitle, icon, trend, trendUp, col
 
 export function StatutBadge({ statut }: { statut: string }) {
   const map: Record<string, { cls: string; label: string }> = {
-    REALISE: { cls: 'bg-sage text-leaf', label: '✅ Réalisé' },
-    PIPELINE: { cls: 'bg-sky-light text-sky', label: '🔵 Pipeline' },
-    PROSPECTION: { cls: 'bg-gold-light text-gold', label: '🟡 Prospection' },
-    PERDU: { cls: 'bg-coral-light text-coral', label: '❌ Perdu' },
+    GAGNE: { cls: 'bg-green-50 text-green-700', label: '✅ Gagné' },
+    QUALIFIE: { cls: 'bg-blue-50 text-blue-700', label: '🔵 Qualifié' },
+    PROPOSITION: { cls: 'bg-orange-50 text-orange-700', label: '� Proposition' },
+    NEGOCIATION: { cls: 'bg-purple-50 text-purple-700', label: '🟣 Négociation' },
+    PROSPECT: { cls: 'bg-yellow-50 text-yellow-700', label: '🟡 Prospect' },
+    PERDU: { cls: 'bg-red-50 text-red-700', label: '❌ Perdu' },
   };
-  const { cls, label } = map[statut] || map.PROSPECTION;
+  const { cls, label } = map[statut] || map.PROSPECT;
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${cls}`}>{label}</span>;
 }

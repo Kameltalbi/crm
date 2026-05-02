@@ -125,7 +125,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {label}
               </NavLink>
             ))}
-            {user?.role === 'OWNER' && user?.email === 'admin@ktoptima.com' && (
+            {user?.role === 'OWNER' && (
               <>
                 <div className="border-t border-white/20 my-4" />
                 <NavLink

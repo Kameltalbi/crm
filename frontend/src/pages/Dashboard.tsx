@@ -43,16 +43,15 @@ function KpiCard({ title, subtitle, value, icon, color, ttcValue }: {
 }
 
 export function Dashboard() {
-  const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1));
   const [selectedYear, setSelectedYear] = useState<string>('2026');
 
   const { data: kpis } = useQuery<KPIs>({
-    queryKey: ['kpis', selectedYear, selectedMonth],
-    queryFn: () => api.get('/kpis', { params: { annee: selectedYear, ...(selectedMonth !== 'all' && { mois: selectedMonth }) } }).then((r) => r.data),
+    queryKey: ['kpis', selectedYear],
+    queryFn: () => api.get('/kpis', { params: { annee: selectedYear } }).then((r) => r.data),
   });
   const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
-    queryKey: ['affaires', selectedYear, selectedMonth],
-    queryFn: () => api.get('/affaires', { params: { annee: selectedYear, ...(selectedMonth !== 'all' && { mois: selectedMonth }) } }).then((r) => r.data),
+    queryKey: ['affaires', selectedYear],
+    queryFn: () => api.get('/affaires', { params: { annee: selectedYear } }).then((r) => r.data),
   });
   const affaires = affairesData?.data || [];
   const { data: productsData } = useQuery<{ data: any[], pagination: any }>({
@@ -72,8 +71,8 @@ export function Dashboard() {
   });
 
   const { data: expensesData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['expenses', selectedYear, selectedMonth],
-    queryFn: () => api.get('/expenses', { params: { year: selectedYear, ...(selectedMonth !== 'all' && { month: selectedMonth }), limit: 9999 } }).then((r) => r.data),
+    queryKey: ['expenses', selectedYear],
+    queryFn: () => api.get('/expenses', { params: { year: selectedYear, limit: 9999 } }).then((r) => r.data),
   });
   const expenses = expensesData?.data || [];
   const totalExpenses = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
@@ -192,20 +191,10 @@ export function Dashboard() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="2025">2025</SelectItem>
               <SelectItem value="2026">2026</SelectItem>
               <SelectItem value="2027">2027</SelectItem>
               <SelectItem value="2028">2028</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les mois</SelectItem>
-              {MOIS_S.map((label, idx) => (
-                <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
-              ))}
             </SelectContent>
           </Select>
           <Link to="/affaires" className="w-full sm:w-auto">

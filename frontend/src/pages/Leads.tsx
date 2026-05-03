@@ -299,7 +299,10 @@ export function Leads() {
                       <span>Score: {lead.score}</span>
                     </div>
                     {lead.estimatedValue && (
-                      <span className="text-sm font-semibold">{Number(lead.estimatedValue).toLocaleString('fr-FR')} DT</span>
+                      <div className="text-right">
+                        <span className="text-sm font-semibold">{Math.round(Number(lead.estimatedValue) * 1.19).toLocaleString('fr-FR')} DT</span>
+                        <p className="text-[10px] text-muted-foreground">{Number(lead.estimatedValue).toLocaleString('fr-FR')} DT HT</p>
+                      </div>
                     )}
                   </div>
                   <div className="flex gap-2 pt-2">

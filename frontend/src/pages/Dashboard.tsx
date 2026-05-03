@@ -105,10 +105,10 @@ export function Dashboard() {
   // Prepare chart data
   const monthlyData = Object.entries(kpis.parMois).map(([month, data]) => ({
     month: MOIS_S[parseInt(month)],
-    gagne: Number(data.gagne),
-    enCours: Number(data.enCours),
+    gagne: Number(data.realise),
+    enCours: Number(data.pipeline),
     prospect: Number(data.prospect),
-    total: Number(data.gagne) + Number(data.enCours) + Number(data.prospect),
+    total: Number(data.realise) + Number(data.pipeline) + Number(data.prospect),
   }));
 
   // Status distribution for pie chart
@@ -121,8 +121,8 @@ export function Dashboard() {
   // Opportunities per month (count)
   const opportunitiesByMonth: { month: string; count: number }[] = [];
   for (let m = 1; m <= 12; m++) {
-    const monthData = kpis.parMois[m] || { gagne: 0, enCours: 0, prospect: 0 };
-    const totalCount = Number(monthData.gagne) + Number(monthData.enCours) + Number(monthData.prospect);
+    const monthData = kpis.parMois[m] || { realise: 0, pipeline: 0, prospect: 0 };
+    const totalCount = Number(monthData.realise) + Number(monthData.pipeline) + Number(monthData.prospect);
     opportunitiesByMonth.push({
       month: MOIS_S[m],
       count: totalCount,

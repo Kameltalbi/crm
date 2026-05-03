@@ -124,7 +124,7 @@ export interface KPIs {
   netRealise: number;
   parType: Record<string, number>;
   counts: { gagne: number; enCours: number; prospect: number; perdu: number };
-  parMois: Record<number, { gagne: number; enCours: number; prospect: number }>;
+  parMois: Record<number, { realise: number; pipeline: number; prospect: number }>;
   smartForecast?: SmartForecast;
 }
 

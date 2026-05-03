@@ -118,6 +118,17 @@ export function Dashboard() {
     { name: 'Prospection', value: kpis.caProspection, color: '#f59e0b' },
   ];
 
+  // Opportunities per month (count)
+  const opportunitiesByMonth: { month: string; count: number }[] = [];
+  for (let m = 1; m <= 12; m++) {
+    const monthData = kpis.parMois[m] || { gagne: 0, enCours: 0, prospect: 0 };
+    const totalCount = Number(monthData.gagne) + Number(monthData.enCours) + Number(monthData.prospect);
+    opportunitiesByMonth.push({
+      month: MOIS_S[m],
+      count: totalCount,
+    });
+  }
+
   // Revenue by category - use backend parType data
   const revenueByCategory: any[] = [];
   // Mapping for old hardcoded values to display names
@@ -321,41 +332,63 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Pipeline Status Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm md:text-base">État du pipeline des opportunités ({affaires.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 mb-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Réalisé</span>
-              <span className="font-semibold text-emerald-600">{fmtDT(kpis.caRealise)}</span>
+      {/* Pipeline Status Chart & Opportunities by Month */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-sm md:text-base">État du pipeline des opportunités ({affaires.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 mb-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Réalisé</span>
+                <span className="font-semibold text-emerald-600">{fmtDT(kpis.caRealise)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Pipeline</span>
+                <span className="font-semibold text-blue-600">{fmtDT(kpis.caPipeline)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Prospection</span>
+                <span className="font-semibold text-amber-600">{fmtDT(kpis.caProspection)}</span>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Pipeline</span>
-              <span className="font-semibold text-blue-600">{fmtDT(kpis.caPipeline)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Prospection</span>
-              <span className="font-semibold text-amber-600">{fmtDT(kpis.caProspection)}</span>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={statusDistributionData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
-              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                {statusDistributionData.map((entry: any, index: number) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={statusDistributionData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value: number) => [fmtDT(value), '']} />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                  {statusDistributionData.map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-sm md:text-base">Opportunités par mois ({selectedYear})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={opportunitiesByMonth}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" stroke="#6b7280" fontSize={11} />
+                <YAxis stroke="#6b7280" fontSize={11} />
+                <Tooltip
+                  formatter={(value: number) => [value, 'opportunité(s)']}
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Revenue and Expenses by Category */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

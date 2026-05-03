@@ -204,7 +204,8 @@ export function Leads() {
 
       {/* Summary */}
       {leads.length > 0 && (() => {
-        const totalLeadsValue = leads.reduce((sum: number, l: any) => sum + (Number(l.estimatedValue) || 0), 0);
+        const totalLeadsValueHT = leads.reduce((sum: number, l: any) => sum + (Number(l.estimatedValue) || 0), 0);
+        const totalLeadsValue = Math.round(totalLeadsValueHT * 1.19);
         const totalCA = kpisData ? Math.round(Number(kpisData.caTotalAll) * 1.19) : 0;
         const totalExpenses = (expensesData?.data || []).reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
         const totalPotentiel = totalCA + totalLeadsValue;
@@ -220,7 +221,7 @@ export function Leads() {
             </Card>
             <Card>
               <CardContent className="py-3 px-4">
-                <p className="text-xs text-muted-foreground">Valeur leads</p>
+                <p className="text-xs text-muted-foreground">Valeur leads TTC</p>
                 <p className="text-xl font-bold text-primary mt-1">
                   {totalLeadsValue.toLocaleString('fr-FR')} DT
                 </p>
@@ -416,7 +417,7 @@ export function Leads() {
                 <Input type="number" min="0" max="100" value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })} />
               </div>
               <div className="space-y-1.5">
-                <Label>Valeur estimée (DT)</Label>
+                <Label>Valeur estimée HT (DT)</Label>
                 <Input type="number" value={form.estimatedValue} onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })} placeholder="0" />
               </div>
               <div className="space-y-1.5 col-span-2">

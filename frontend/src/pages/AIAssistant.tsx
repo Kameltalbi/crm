@@ -72,38 +72,43 @@ export function AIAssistant() {
       const monthNames = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
       const monthLines = sortedKeys.map((k: string) => {
         const m = parseInt(k.split('-')[1]);
-        return `  • ${monthNames[m]} : ${fmtDT(months[k])}`;
+        return `  • ${monthNames[m]} : ${fmtDT(months[k])} HT`;
       }).join('\n');
 
-      const predictedTTC = fmtDT(result.predictedCA * 1.19);
-      const currentTTC = fmtDT(result.currentCA * 1.19);
-      const pipelineTTC = fmtDT(result.pipelineCA * 1.19);
-      const pondereTTC = fmtDT((result.pipelinePondere || 0) * 1.19);
+      const caTotalAll = result.caTotalAll || 0;
+      const caRealise = result.caRealise || 0;
+      const pipelineCA = result.pipelineCA || 0;
+      const pipelinePondere = result.pipelinePondere || 0;
+      const predictedCA = result.predictedCA || 0;
+      const avgMonthlyCA = result.avgMonthlyCA || 0;
 
       let analysis = '';
-      if (result.predictedCA > result.currentCA * 2) {
-        analysis = `\n\n✅ Bonne dynamique ! Votre rythme actuel laisse présager un très bon exercice. Continuez à convertir les opportunités en pipeline.`;
-      } else if (result.pipelineCA > 0) {
-        analysis = `\n\n⚡ Vous avez du potentiel en pipeline. Concentrez vos efforts sur la conversion des ${fmtDT(result.pipelineCA)} HT en cours pour maximiser le CA.`;
+      if (predictedCA > caTotalAll * 1.5) {
+        analysis = `\n\n✅ Excellente dynamique ! Votre rythme de croissance est soutenu. Continuez à convertir les opportunités en pipeline pour dépasser vos objectifs.`;
+      } else if (pipelineCA > 0) {
+        analysis = `\n\n⚡ Vous avez ${fmtDT(pipelineCA)} HT d'opportunités en pipeline. Si vous convertissez les affaires les plus probables (${fmtDT(pipelinePondere)} HT pondéré), vous pouvez significativement booster votre CA annuel.`;
       } else {
-        analysis = `\n\n⚠️ Attention : peu d'opportunités en pipeline pour les mois restants. Intensifiez la prospection pour sécuriser la fin d'année.`;
+        analysis = `\n\n⚠️ Attention : votre pipeline est vide pour les mois restants. Il est urgent d'intensifier la prospection et de relancer les contacts dormants.`;
       }
 
       let actions = '\n\n💡 Actions recommandées :';
-      if (result.pipelineCA > 0) {
-        actions += '\n  1. Relancer les opportunités en négociation pour accélérer la clôture';
+      let n = 1;
+      if (pipelineCA > 0) {
+        actions += `\n  ${n++}. Relancer les opportunités en négociation pour accélérer la clôture`;
+        actions += `\n  ${n++}. Prioriser les affaires avec probabilité > 50% pour maximiser le taux de conversion`;
       }
-      actions += '\n  ' + (result.pipelineCA > 0 ? '2' : '1') + '. Prospecter activement pour alimenter le pipeline des mois à venir';
-      actions += '\n  ' + (result.pipelineCA > 0 ? '3' : '2') + '. Fidéliser les clients existants avec des prestations complémentaires';
+      actions += `\n  ${n++}. Prospecter activement pour alimenter le pipeline des mois à venir`;
+      actions += `\n  ${n++}. Fidéliser les clients existants avec des prestations complémentaires`;
 
       return `📈 Prédiction CA fin d'année ${new Date().getFullYear()}\n\n` +
-        `CA réalisé à ce jour : ${fmtDT(result.currentCA)} HT (${currentTTC} TTC)\n` +
-        `Pipeline restant : ${fmtDT(result.pipelineCA)} HT (${pipelineTTC} TTC)\n` +
-        `Pipeline pondéré (par probabilité) : ${fmtDT(result.pipelinePondere || 0)} HT (${pondereTTC} TTC)\n` +
-        `Moyenne mensuelle : ${fmtDT(result.avgMonthlyCA || 0)} HT\n\n` +
-        `🎯 CA prévu fin d'année : ${fmtDT(result.predictedCA)} HT (${predictedTTC} TTC)\n` +
-        (result.growth ? `📊 Croissance vs année précédente : ${result.growth > 0 ? '+' : ''}${result.growth}%\n` : '') +
-        `\n📅 Détail par mois (réalisé) :\n${monthLines}` +
+        `💼 CA Total (comme dashboard) : ${fmtDT(caTotalAll)} HT (${fmtDT(caTotalAll * 1.19)} TTC)\n` +
+        `✅ CA Gagné (réalisé) : ${fmtDT(caRealise)} HT (${fmtDT(caRealise * 1.19)} TTC)\n` +
+        `📂 Pipeline en cours : ${fmtDT(pipelineCA)} HT (${fmtDT(pipelineCA * 1.19)} TTC)\n` +
+        `🎲 Pipeline pondéré (par probabilité) : ${fmtDT(pipelinePondere)} HT (${fmtDT(pipelinePondere * 1.19)} TTC)\n` +
+        `📊 Moyenne mensuelle réalisée : ${fmtDT(avgMonthlyCA)} HT\n\n` +
+        `🎯 CA prévu fin d'année : ${fmtDT(predictedCA)} HT (${fmtDT(predictedCA * 1.19)} TTC)\n` +
+        (result.growth ? `� Croissance vs année précédente : ${result.growth > 0 ? '+' : ''}${result.growth}%\n` : '') +
+        `\n📅 Détail par mois (CA gagné) :\n${monthLines}` +
         analysis + actions;
     }
 

@@ -24,75 +24,55 @@ async function predictYearEndCA(organizationId: string) {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
 
-  // 1. CA réalisé (GAGNE) pour l'année en cours
-  const realiseGroups = await prisma.affaire.groupBy({
-    by: ['moisPrevu'],
+  // 1. Toutes les affaires de l'année (sauf PERDU) — cohérent avec le dashboard
+  const allAffaires = await prisma.affaire.findMany({
     where: {
       organizationId,
       deletedAt: null,
-      statut: 'GAGNE',
       anneePrevue: currentYear,
+      statut: { not: 'PERDU' },
     },
-    _sum: { montantHT: true },
+    select: { montantHT: true, probabilite: true, moisPrevu: true, statut: true },
   });
 
+  // 2. CA Total (comme dashboard) = toutes affaires sauf PERDU
+  const caTotalAll = allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
+
+  // 3. CA Réalisé (GAGNE uniquement)
+  const realise = allAffaires.filter(a => a.statut === 'GAGNE');
+  const caRealise = realise.reduce((sum, a) => sum + Number(a.montantHT), 0);
+
+  // 4. Détail par mois (réalisé GAGNE)
   const monthlyCA: { [key: string]: number } = {};
-  for (const g of realiseGroups) {
-    const key = `${currentYear}-${g.moisPrevu}`;
-    monthlyCA[key] = Number(g._sum.montantHT ?? 0);
+  for (const a of realise) {
+    const key = `${currentYear}-${a.moisPrevu}`;
+    monthlyCA[key] = (monthlyCA[key] || 0) + Number(a.montantHT);
   }
 
-  const currentYearCA = realiseGroups.reduce((sum, g) => sum + Number(g._sum.montantHT ?? 0), 0);
+  // 5. Pipeline = affaires non gagnées
+  const pipeline = allAffaires.filter(a => a.statut !== 'GAGNE');
+  const pipelineTotal = pipeline.reduce((sum, a) => sum + Number(a.montantHT), 0);
 
-  // 2. Pipeline (non gagné) pour les mois restants de l'année
-  const remainingMonthInts = [];
-  for (let m = currentMonth; m <= 12; m++) {
-    remainingMonthInts.push(m);
-  }
-
-  const pipelineAgg = await prisma.affaire.aggregate({
-    where: {
-      organizationId,
-      deletedAt: null,
-      statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
-      anneePrevue: currentYear,
-      moisPrevu: { in: remainingMonthInts },
-    },
-    _sum: { montantHT: true },
-  });
-  const pipelineTotal = Number(pipelineAgg._sum.montantHT ?? 0);
-
-  // 3. Pipeline pondéré par probabilité
-  const pipelineDetails = await prisma.affaire.findMany({
-    where: {
-      organizationId,
-      deletedAt: null,
-      statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
-      anneePrevue: currentYear,
-      moisPrevu: { in: remainingMonthInts },
-    },
-    select: { montantHT: true, probabilite: true, moisPrevu: true },
-  });
-
-  const pipelinePondere = pipelineDetails.reduce((sum, a) => {
+  // 6. Pipeline pondéré par probabilité
+  const pipelinePondere = pipeline.reduce((sum, a) => {
     return sum + Number(a.montantHT) * (a.probabilite / 100);
   }, 0);
 
-  // 4. Moyenne mensuelle réalisée pour extrapoler
+  // 7. Moyenne mensuelle réalisée pour extrapoler
   const monthsWithCA = currentMonth - 1 || 1;
-  const avgMonthlyCA = currentYearCA / monthsWithCA;
+  const avgMonthlyCA = caRealise / monthsWithCA;
   const monthsRemaining = 12 - currentMonth + 1;
 
-  // 5. Prédiction = CA réalisé + pipeline pondéré + extrapolation mois sans pipeline
+  // 8. Prédiction = CA réalisé + pipeline pondéré + extrapolation conservatrice
   const extrapolation = Math.max(0, avgMonthlyCA * monthsRemaining - pipelineTotal);
-  const predictedCA = Math.round(currentYearCA + pipelinePondere + extrapolation * 0.5);
+  const predictedCA = Math.round(caRealise + pipelinePondere + extrapolation * 0.5);
 
-  // 6. Taux de croissance vs année précédente
+  // 9. Taux de croissance vs année précédente
   const prevYearAgg = await prisma.affaire.aggregate({
     where: {
       organizationId,
       deletedAt: null,
-      statut: 'GAGNE',
+      statut: { not: 'PERDU' },
       anneePrevue: currentYear - 1,
     },
     _sum: { montantHT: true },
@@ -101,7 +81,8 @@ async function predictYearEndCA(organizationId: string) {
   const growthVsPrev = prevYearCA > 0 ? Math.round(((predictedCA - prevYearCA) / prevYearCA) * 100) : 0;
 
   return {
-    currentYearCA: Math.round(currentYearCA),
+    caTotalAll: Math.round(caTotalAll),
+    caRealise: Math.round(caRealise),
     predictedCA,
     pipelineCA: Math.round(pipelineTotal),
     pipelinePondere: Math.round(pipelinePondere),
@@ -250,7 +231,8 @@ async function executeQuery(intent: string, organizationId: string) {
       return {
         type: 'prediction',
         title: 'Prédiction CA fin d\'année',
-        currentCA: prediction.currentYearCA,
+        caTotalAll: prediction.caTotalAll,
+        caRealise: prediction.caRealise,
         predictedCA: prediction.predictedCA,
         pipelineCA: prediction.pipelineCA,
         pipelinePondere: prediction.pipelinePondere,

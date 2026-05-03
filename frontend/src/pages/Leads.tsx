@@ -205,7 +205,7 @@ export function Leads() {
       {/* Summary */}
       {leads.length > 0 && (() => {
         const totalLeadsValue = leads.reduce((sum: number, l: any) => sum + (Number(l.estimatedValue) || 0), 0);
-        const totalCA = (affairesData?.data || []).reduce((sum: number, a: any) => sum + (Number(a.montant) || 0), 0);
+        const totalCA = (affairesData?.data || []).reduce((sum: number, a: any) => sum + (Number(a.montantHT) || 0), 0) * 1.19;
         const totalExpenses = (expensesData?.data || []).reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
         const totalPotentiel = totalCA + totalLeadsValue;
         const tauxCouverture = totalExpenses > 0 ? Math.round((totalPotentiel / totalExpenses) * 100) : 0;
@@ -241,7 +241,7 @@ export function Leads() {
                   {tauxCouverture}%
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
-                  (CA {totalCA.toLocaleString('fr-FR')} + Leads {totalLeadsValue.toLocaleString('fr-FR')}) / Dépenses {totalExpenses.toLocaleString('fr-FR')}
+                  (CA {Math.round(totalCA).toLocaleString('fr-FR')} + Leads {totalLeadsValue.toLocaleString('fr-FR')}) / Dépenses {Math.round(totalExpenses).toLocaleString('fr-FR')}
                 </p>
               </CardContent>
             </Card>

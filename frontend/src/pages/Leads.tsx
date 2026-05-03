@@ -78,9 +78,9 @@ export function Leads() {
   });
   const clients = clientsData?.data || [];
 
-  const { data: affairesData } = useQuery<{ data: any[] }>({
-    queryKey: ['affaires', filterYear],
-    queryFn: () => api.get('/affaires', { params: { annee: filterYear } }).then((r) => r.data),
+  const { data: kpisData } = useQuery<any>({
+    queryKey: ['kpis', filterYear],
+    queryFn: () => api.get('/kpis', { params: { annee: filterYear } }).then((r) => r.data),
   });
 
   const { data: expensesData } = useQuery<{ data: any[] }>({
@@ -205,7 +205,7 @@ export function Leads() {
       {/* Summary */}
       {leads.length > 0 && (() => {
         const totalLeadsValue = leads.reduce((sum: number, l: any) => sum + (Number(l.estimatedValue) || 0), 0);
-        const totalCA = (affairesData?.data || []).reduce((sum: number, a: any) => sum + (Number(a.montantHT) || 0), 0) * 1.19;
+        const totalCA = kpisData ? Math.round(Number(kpisData.caTotalAll) * 1.19) : 0;
         const totalExpenses = (expensesData?.data || []).reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
         const totalPotentiel = totalCA + totalLeadsValue;
         const tauxCouverture = totalExpenses > 0 ? Math.round((totalPotentiel / totalExpenses) * 100) : 0;

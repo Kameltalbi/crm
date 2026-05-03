@@ -41,24 +41,85 @@ export function AIAssistant() {
     },
   });
 
+  const fmtDT = (v: number) => Math.round(v).toLocaleString('fr-FR') + ' DT';
+
   const formatResponse = (data: any): string => {
     const { result } = data;
     
     if (result.type === 'metric') {
-      return `${result.title}: ${result.value}`;
+      return `📊 ${result.title} : ${result.value}`;
     }
     
     if (result.type === 'list') {
-      const items = result.data.map((item: any) => {
-        if (typeof item === 'string') return `• ${item}`;
-        const parts = Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(', ');
-        return `• ${parts}`;
+      if (!result.data || result.data.length === 0) {
+        return `📋 ${result.title}\n\nAucun élément trouvé.`;
+      }
+      const items = result.data.map((item: any, i: number) => {
+        if (typeof item === 'string') return `${i + 1}. ${item}`;
+        const parts = Object.entries(item).map(([k, v]) => `${v}`).join(' — ');
+        return `${i + 1}. ${parts}`;
       }).join('\n');
-      return `${result.title}\n${items}`;
+      return `📋 ${result.title}\n\n${items}`;
     }
     
     if (result.type === 'text') {
       return result.value;
+    }
+
+    if (result.type === 'prediction') {
+      const months = result.monthsData || {};
+      const sortedKeys = Object.keys(months).sort();
+      const monthNames = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+      const monthLines = sortedKeys.map((k: string) => {
+        const m = parseInt(k.split('-')[1]);
+        return `  • ${monthNames[m]} : ${fmtDT(months[k])}`;
+      }).join('\n');
+
+      const predictedTTC = fmtDT(result.predictedCA * 1.19);
+      const currentTTC = fmtDT(result.currentCA * 1.19);
+      const pipelineTTC = fmtDT(result.pipelineCA * 1.19);
+      const pondereTTC = fmtDT((result.pipelinePondere || 0) * 1.19);
+
+      let analysis = '';
+      if (result.predictedCA > result.currentCA * 2) {
+        analysis = `\n\n✅ Bonne dynamique ! Votre rythme actuel laisse présager un très bon exercice. Continuez à convertir les opportunités en pipeline.`;
+      } else if (result.pipelineCA > 0) {
+        analysis = `\n\n⚡ Vous avez du potentiel en pipeline. Concentrez vos efforts sur la conversion des ${fmtDT(result.pipelineCA)} HT en cours pour maximiser le CA.`;
+      } else {
+        analysis = `\n\n⚠️ Attention : peu d'opportunités en pipeline pour les mois restants. Intensifiez la prospection pour sécuriser la fin d'année.`;
+      }
+
+      let actions = '\n\n💡 Actions recommandées :';
+      if (result.pipelineCA > 0) {
+        actions += '\n  1. Relancer les opportunités en négociation pour accélérer la clôture';
+      }
+      actions += '\n  ' + (result.pipelineCA > 0 ? '2' : '1') + '. Prospecter activement pour alimenter le pipeline des mois à venir';
+      actions += '\n  ' + (result.pipelineCA > 0 ? '3' : '2') + '. Fidéliser les clients existants avec des prestations complémentaires';
+
+      return `📈 Prédiction CA fin d'année ${new Date().getFullYear()}\n\n` +
+        `CA réalisé à ce jour : ${fmtDT(result.currentCA)} HT (${currentTTC} TTC)\n` +
+        `Pipeline restant : ${fmtDT(result.pipelineCA)} HT (${pipelineTTC} TTC)\n` +
+        `Pipeline pondéré (par probabilité) : ${fmtDT(result.pipelinePondere || 0)} HT (${pondereTTC} TTC)\n` +
+        `Moyenne mensuelle : ${fmtDT(result.avgMonthlyCA || 0)} HT\n\n` +
+        `🎯 CA prévu fin d'année : ${fmtDT(result.predictedCA)} HT (${predictedTTC} TTC)\n` +
+        (result.growth ? `📊 Croissance vs année précédente : ${result.growth > 0 ? '+' : ''}${result.growth}%\n` : '') +
+        `\n📅 Détail par mois (réalisé) :\n${monthLines}` +
+        analysis + actions;
+    }
+
+    if (result.type === 'recommendations') {
+      const recs = (result.recommendations || []).map((r: string, i: number) => `${i + 1}. ${r}`).join('\n');
+      return `💡 Recommandations personnalisées\n\n${recs}`;
+    }
+
+    if (result.type === 'target_analysis') {
+      const monthlyTarget = fmtDT(result.monthlyTarget || 0);
+      return `🎯 Analyse des objectifs\n\n` +
+        `CA réalisé : ${fmtDT(result.currentCA)} HT\n` +
+        `CA prévu fin d'année : ${fmtDT(result.predictedCA)} HT\n` +
+        `Objectif mensuel moyen : ${monthlyTarget} HT\n` +
+        `Mois restants : ${result.monthsRemaining}\n\n` +
+        (result.recommendations ? `💡 Recommandations :\n${(result.recommendations || []).map((r: string, i: number) => `${i + 1}. ${r}`).join('\n')}` : '');
     }
     
     return JSON.stringify(result, null, 2);

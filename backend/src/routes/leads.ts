@@ -9,18 +9,26 @@ const prisma = new PrismaClient();
 // Apply auth middleware to all routes
 leadsRoutes.use(auth);
 
+const toOptionalNumber = z.preprocess(
+  (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
+  z.number().optional()
+);
+
 const leadSchema = z.object({
   name: z.string().min(1),
   contactName: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
+  email: z.preprocess((v) => (v === '' ? undefined : v), z.string().email().optional()),
   phone: z.string().optional(),
   company: z.string().optional(),
   source: z.string().optional(),
   status: z.string().optional(),
-  score: z.coerce.number().min(0).max(100).optional(),
-  estimatedValue: z.coerce.number().optional(),
+  score: z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
+    z.number().min(0).max(100).optional()
+  ),
+  estimatedValue: toOptionalNumber,
   notes: z.string().optional(),
-  clientId: z.string().optional(),
+  clientId: z.preprocess((v) => (v === '' ? undefined : v), z.string().optional()),
 });
 
 const leadUpdateSchema = leadSchema.partial();

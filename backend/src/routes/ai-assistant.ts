@@ -22,77 +22,92 @@ function sortMonthKeys(keys: string[]) {
 
 async function predictYearEndCA(organizationId: string) {
   const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
 
-  const groups = await prisma.affaire.groupBy({
-    by: ['anneePrevue', 'moisPrevu'],
+  // 1. CA réalisé (GAGNE) pour l'année en cours
+  const realiseGroups = await prisma.affaire.groupBy({
+    by: ['moisPrevu'],
     where: {
       organizationId,
       deletedAt: null,
-      statut: { in: ['GAGNE', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
-      anneePrevue: { lte: currentYear },
+      statut: 'GAGNE',
+      anneePrevue: currentYear,
     },
     _sum: { montantHT: true },
   });
 
   const monthlyCA: { [key: string]: number } = {};
-  for (const g of groups) {
-    const key = `${g.anneePrevue}-${g.moisPrevu}`;
+  for (const g of realiseGroups) {
+    const key = `${currentYear}-${g.moisPrevu}`;
     monthlyCA[key] = Number(g._sum.montantHT ?? 0);
   }
 
-  const months = sortMonthKeys(Object.keys(monthlyCA));
-  let growthRates: number[] = [];
-  for (let i = 1; i < months.length; i++) {
-    const prev = monthlyCA[months[i - 1]] || 0;
-    const curr = monthlyCA[months[i]] || 0;
-    if (prev > 0) {
-      growthRates.push((curr - prev) / prev);
-    }
-  }
-  
-  const avgGrowth = growthRates.length > 0 
-    ? growthRates.reduce((a, b) => a + b, 0) / growthRates.length 
-    : 0;
-  
-  const currentYearCA = Object.entries(monthlyCA)
-    .filter(([k]) => k.startsWith(`${currentYear}-`))
-    .reduce((sum, [, v]) => sum + v, 0);
-  
-  // Get pipeline CA for remaining months
-  const currentMonth = String(new Date().getMonth() + 1);
-  const remainingMonths = months.filter(m => {
-    const [year, month] = m.split('-');
-    return parseInt(year) === currentYear && parseInt(month) > parseInt(currentMonth);
-  });
-  
-  const pipelineMonthInts = remainingMonths
-    .map((m) => parseInt(m.split('-')[1]!, 10))
-    .filter((n) => !Number.isNaN(n));
+  const currentYearCA = realiseGroups.reduce((sum, g) => sum + Number(g._sum.montantHT ?? 0), 0);
 
-  let pipelineTotal = 0;
-  if (pipelineMonthInts.length > 0) {
-    const pipelineAgg = await prisma.affaire.aggregate({
-      where: {
-        organizationId,
-        deletedAt: null,
-        statut: { in: ['QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
-        anneePrevue: currentYear,
-        moisPrevu: { in: pipelineMonthInts },
-      },
-      _sum: { montantHT: true },
-    });
-    pipelineTotal = Number(pipelineAgg._sum.montantHT ?? 0);
+  // 2. Pipeline (non gagné) pour les mois restants de l'année
+  const remainingMonthInts = [];
+  for (let m = currentMonth; m <= 12; m++) {
+    remainingMonthInts.push(m);
   }
-  
-  // Predict based on trend + pipeline
-  const predictedCA = currentYearCA + pipelineTotal * (1 + avgGrowth);
-  
+
+  const pipelineAgg = await prisma.affaire.aggregate({
+    where: {
+      organizationId,
+      deletedAt: null,
+      statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
+      anneePrevue: currentYear,
+      moisPrevu: { in: remainingMonthInts },
+    },
+    _sum: { montantHT: true },
+  });
+  const pipelineTotal = Number(pipelineAgg._sum.montantHT ?? 0);
+
+  // 3. Pipeline pondéré par probabilité
+  const pipelineDetails = await prisma.affaire.findMany({
+    where: {
+      organizationId,
+      deletedAt: null,
+      statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
+      anneePrevue: currentYear,
+      moisPrevu: { in: remainingMonthInts },
+    },
+    select: { montantHT: true, probabilite: true, moisPrevu: true },
+  });
+
+  const pipelinePondere = pipelineDetails.reduce((sum, a) => {
+    return sum + Number(a.montantHT) * (a.probabilite / 100);
+  }, 0);
+
+  // 4. Moyenne mensuelle réalisée pour extrapoler
+  const monthsWithCA = currentMonth - 1 || 1;
+  const avgMonthlyCA = currentYearCA / monthsWithCA;
+  const monthsRemaining = 12 - currentMonth + 1;
+
+  // 5. Prédiction = CA réalisé + pipeline pondéré + extrapolation mois sans pipeline
+  const extrapolation = Math.max(0, avgMonthlyCA * monthsRemaining - pipelineTotal);
+  const predictedCA = Math.round(currentYearCA + pipelinePondere + extrapolation * 0.5);
+
+  // 6. Taux de croissance vs année précédente
+  const prevYearAgg = await prisma.affaire.aggregate({
+    where: {
+      organizationId,
+      deletedAt: null,
+      statut: 'GAGNE',
+      anneePrevue: currentYear - 1,
+    },
+    _sum: { montantHT: true },
+  });
+  const prevYearCA = Number(prevYearAgg._sum.montantHT ?? 0);
+  const growthVsPrev = prevYearCA > 0 ? Math.round(((predictedCA - prevYearCA) / prevYearCA) * 100) : 0;
+
   return {
-    currentYearCA,
+    currentYearCA: Math.round(currentYearCA),
     predictedCA,
-    pipelineCA: pipelineTotal,
-    avgGrowth: Math.round(avgGrowth * 100),
+    pipelineCA: Math.round(pipelineTotal),
+    pipelinePondere: Math.round(pipelinePondere),
+    avgGrowth: growthVsPrev,
     monthsData: monthlyCA,
+    avgMonthlyCA: Math.round(avgMonthlyCA),
   };
 }
 
@@ -238,6 +253,8 @@ async function executeQuery(intent: string, organizationId: string) {
         currentCA: prediction.currentYearCA,
         predictedCA: prediction.predictedCA,
         pipelineCA: prediction.pipelineCA,
+        pipelinePondere: prediction.pipelinePondere,
+        avgMonthlyCA: prediction.avgMonthlyCA,
         growth: prediction.avgGrowth,
         monthsData: prediction.monthsData,
       };

@@ -14,13 +14,8 @@ type FormData = {
   description: string;
   startDate: string;
   endDate: string;
-  allDay: boolean;
   eventType: string;
   location: string;
-  relatedAffaireId: string;
-  relatedLeadId: string;
-  status: string;
-  reminderMinutes: string;
 };
 
 const EMPTY: FormData = {
@@ -28,13 +23,8 @@ const EMPTY: FormData = {
   description: '',
   startDate: '',
   endDate: '',
-  allDay: false,
   eventType: 'MEETING',
   location: '',
-  relatedAffaireId: '',
-  relatedLeadId: '',
-  status: 'SCHEDULED',
-  reminderMinutes: '',
 };
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -66,22 +56,16 @@ export function Calendar() {
   });
   const events = eventsData?.data || [];
 
-  const { data: affairesData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['affaires'],
-    queryFn: () => api.get('/affaires').then((r) => r.data),
-  });
-  const affaires = affairesData?.data || [];
-
-  const { data: leadsData } = useQuery<{ data: any[], pagination: any }>({
-    queryKey: ['leads'],
-    queryFn: () => api.get('/leads').then((r) => r.data),
-  });
-  const leads = leadsData?.data || [];
-
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
-      const payload = { ...data };
-      delete (payload as any).id;
+      const payload: any = {
+        title: data.title,
+        description: data.description || null,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        eventType: data.eventType,
+        location: data.location || null,
+      };
       return data.id ? api.put(`/calendar/${data.id}`, payload) : api.post('/calendar', payload);
     },
     onSuccess: () => {
@@ -103,13 +87,8 @@ export function Calendar() {
       description: event.description || '',
       startDate: new Date(event.startDate).toISOString().slice(0, 16),
       endDate: new Date(event.endDate).toISOString().slice(0, 16),
-      allDay: event.allDay,
       eventType: event.eventType,
       location: event.location || '',
-      relatedAffaireId: event.relatedAffaireId || '',
-      relatedLeadId: event.relatedLeadId || '',
-      status: event.status,
-      reminderMinutes: event.reminderMinutes ? String(event.reminderMinutes) : '',
     });
     setOpen(true);
   };

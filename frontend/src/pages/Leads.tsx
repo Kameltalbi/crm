@@ -78,6 +78,16 @@ export function Leads() {
   });
   const clients = clientsData?.data || [];
 
+  const { data: affairesData } = useQuery<{ data: any[] }>({
+    queryKey: ['affaires', filterYear],
+    queryFn: () => api.get('/affaires', { params: { annee: filterYear } }).then((r) => r.data),
+  });
+
+  const { data: expensesData } = useQuery<{ data: any[] }>({
+    queryKey: ['expenses', filterYear],
+    queryFn: () => api.get('/expenses', { params: { year: filterYear, limit: 9999 } }).then((r) => r.data),
+  });
+
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
       const payload = { ...data };
@@ -193,32 +203,51 @@ export function Leads() {
       </div>
 
       {/* Summary */}
-      {leads.length > 0 && (
-        <div className="flex flex-wrap gap-4">
-          <Card className="flex-1 min-w-[160px]">
-            <CardContent className="py-3 px-4 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total leads</span>
-              <span className="text-lg font-bold">{leads.length}</span>
-            </CardContent>
-          </Card>
-          <Card className="flex-1 min-w-[160px]">
-            <CardContent className="py-3 px-4 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Valeur totale</span>
-              <span className="text-lg font-bold text-primary">
-                {leads.reduce((sum: number, l: any) => sum + (Number(l.estimatedValue) || 0), 0).toLocaleString('fr-FR')} DT
-              </span>
-            </CardContent>
-          </Card>
-          <Card className="flex-1 min-w-[160px]">
-            <CardContent className="py-3 px-4 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Score moyen</span>
-              <span className="text-lg font-bold">
-                {Math.round(leads.reduce((sum: number, l: any) => sum + (Number(l.score) || 0), 0) / leads.length)}
-              </span>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {leads.length > 0 && (() => {
+        const totalLeadsValue = leads.reduce((sum: number, l: any) => sum + (Number(l.estimatedValue) || 0), 0);
+        const totalCA = (affairesData?.data || []).reduce((sum: number, a: any) => sum + (Number(a.montant) || 0), 0);
+        const totalExpenses = (expensesData?.data || []).reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0);
+        const totalPotentiel = totalCA + totalLeadsValue;
+        const tauxCouverture = totalExpenses > 0 ? Math.round((totalPotentiel / totalExpenses) * 100) : 0;
+
+        return (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="py-3 px-4">
+                <p className="text-xs text-muted-foreground">Total leads</p>
+                <p className="text-xl font-bold mt-1">{leads.length}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-3 px-4">
+                <p className="text-xs text-muted-foreground">Valeur leads</p>
+                <p className="text-xl font-bold text-primary mt-1">
+                  {totalLeadsValue.toLocaleString('fr-FR')} DT
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-3 px-4">
+                <p className="text-xs text-muted-foreground">Score moyen</p>
+                <p className="text-xl font-bold mt-1">
+                  {Math.round(leads.reduce((sum: number, l: any) => sum + (Number(l.score) || 0), 0) / leads.length)}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-3 px-4">
+                <p className="text-xs text-muted-foreground">Taux de couverture potentiel</p>
+                <p className={`text-xl font-bold mt-1 ${tauxCouverture >= 100 ? 'text-primary' : 'text-orange-500'}`}>
+                  {tauxCouverture}%
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  (CA {totalCA.toLocaleString('fr-FR')} + Leads {totalLeadsValue.toLocaleString('fr-FR')}) / Dépenses {totalExpenses.toLocaleString('fr-FR')}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Leads Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -9,20 +9,25 @@ const prisma = new PrismaClient();
 // Apply auth middleware to all routes
 expensesRoutes.use(auth);
 
+const toOptionalString = z.preprocess((v) => (v === '' ? undefined : v), z.string().optional());
+
 const expenseSchema = z.object({
   title: z.string().min(1),
-  description: z.string().optional(),
-  amount: z.number().nonnegative(),
+  description: toOptionalString,
+  amount: z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
+    z.number().nonnegative()
+  ),
   currency: z.string().default('TND'),
   category: z.string().default('Autre'),
-  date: z.string().optional(),
-  relatedAffaireId: z.string().optional(),
-  relatedLeadId: z.string().optional(),
+  date: toOptionalString,
+  relatedAffaireId: toOptionalString,
+  relatedLeadId: toOptionalString,
   status: z.string().default('PENDING'),
-  receiptUrl: z.string().optional(),
-  isRecurrent: z.boolean().optional(),
-  recurrenceMonths: z.string().optional(),
-  notes: z.string().optional(),
+  receiptUrl: toOptionalString,
+  isRecurrent: z.preprocess((v) => (v === '' || v === undefined ? undefined : v), z.boolean().optional()),
+  recurrenceMonths: toOptionalString,
+  notes: toOptionalString,
 });
 
 const expenseUpdateSchema = expenseSchema.partial();

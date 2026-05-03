@@ -126,27 +126,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             sidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full lg:w-0 lg:translate-x-0'
           )}
         >
-          {/* Brand / org */}
-          <div className="border-b border-white/10 bg-black/10 px-4 py-4">
-            {organization && orgLogoSrc ? (
-              <div className="flex min-h-[3rem] items-center justify-center rounded-xl bg-white/5 p-2 ring-1 ring-white/10">
-                <img src={orgLogoSrc} alt={organization.name} className="max-h-11 w-auto max-w-full object-contain" />
-              </div>
-            ) : organization ? (
-              <div className="flex items-center gap-3 rounded-xl bg-white/5 p-2 ring-1 ring-white/10">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/15">
-                  <Building2 size={22} className="text-white" strokeWidth={2} />
-                </div>
-                <span className="min-w-0 truncate text-sm font-semibold leading-snug text-white/95">{organization.name}</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 px-1">
-                <img src="/logo.png" alt="ktOptima" className="h-9 w-auto brightness-0 invert opacity-95" />
-                <span className="text-base font-bold tracking-tight">CRM</span>
-              </div>
-            )}
-          </div>
-
           <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
             {nav.map(({ to, label, icon: Icon }) => (
               <NavLink

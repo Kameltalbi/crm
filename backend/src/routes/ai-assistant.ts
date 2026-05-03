@@ -101,8 +101,8 @@ async function generateRecommendations(organizationId: string, prediction: any) 
   const monthsPassed = currentMonth;
   const expectedAtThisPoint = (prediction.predictedCA / 12) * monthsPassed;
   
-  if (prediction.currentYearCA < expectedAtThisPoint * 0.8) {
-    recommendations.push(`⚠️ Vous êtes en retard de ${Math.round((expectedAtThisPoint - prediction.currentYearCA) / 1000) * 1000} DT par rapport à votre tendance.`);
+  if (prediction.caRealise < expectedAtThisPoint * 0.8) {
+    recommendations.push(`⚠️ Vous êtes en retard de ${Math.round((expectedAtThisPoint - prediction.caRealise) / 1000) * 1000} DT par rapport à votre tendance.`);
     recommendations.push('💡 Action prioritaire : Contactez vos opportunités en Pipeline avec probabilité > 50%');
   }
   
@@ -261,7 +261,7 @@ async function executeQuery(intent: string, organizationId: string) {
       return {
         type: 'target_analysis',
         title: 'Analyse des objectifs',
-        currentCA: prediction.currentYearCA,
+        currentCA: prediction.caRealise,
         predictedCA: prediction.predictedCA,
         monthlyTarget,
         monthsRemaining,

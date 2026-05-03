@@ -12,13 +12,13 @@ leadsRoutes.use(auth);
 const leadSchema = z.object({
   name: z.string().min(1),
   contactName: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   company: z.string().optional(),
   source: z.string().optional(),
   status: z.string().optional(),
-  score: z.number().min(0).max(100).optional(),
-  estimatedValue: z.number().optional(),
+  score: z.coerce.number().min(0).max(100).optional(),
+  estimatedValue: z.coerce.number().optional(),
   notes: z.string().optional(),
   clientId: z.string().optional(),
 });

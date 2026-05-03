@@ -12,8 +12,10 @@ type FormData = {
   id?: string;
   title: string;
   description: string;
-  startDate: string;
-  endDate: string;
+  startDateDate: string;
+  startDateTime: string;
+  endDateDate: string;
+  endDateTime: string;
   eventType: string;
   location: string;
 };
@@ -21,8 +23,10 @@ type FormData = {
 const EMPTY: FormData = {
   title: '',
   description: '',
-  startDate: '',
-  endDate: '',
+  startDateDate: '',
+  startDateTime: '09:00',
+  endDateDate: '',
+  endDateTime: '10:00',
   eventType: 'MEETING',
   location: '',
 };
@@ -61,8 +65,8 @@ export function Calendar() {
       const payload: any = {
         title: data.title,
         description: data.description || null,
-        startDate: data.startDate,
-        endDate: data.endDate,
+        startDate: `${data.startDateDate}T${data.startDateTime}`,
+        endDate: `${data.endDateDate}T${data.endDateTime}`,
         eventType: data.eventType,
         location: data.location || null,
       };
@@ -81,12 +85,16 @@ export function Calendar() {
   });
 
   const openEdit = (event: any) => {
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
     setForm({
       id: event.id,
       title: event.title,
       description: event.description || '',
-      startDate: new Date(event.startDate).toISOString().slice(0, 16),
-      endDate: new Date(event.endDate).toISOString().slice(0, 16),
+      startDateDate: start.toISOString().slice(0, 10),
+      startDateTime: start.toTimeString().slice(0, 5),
+      endDateDate: end.toISOString().slice(0, 10),
+      endDateTime: end.toTimeString().slice(0, 5),
       eventType: event.eventType,
       location: event.location || '',
     });
@@ -293,12 +301,22 @@ export function Calendar() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Début *</Label>
-                  <Input type="datetime-local" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+                  <Label>Date début *</Label>
+                  <Input type="date" value={form.startDateDate} onChange={(e) => setForm({ ...form, startDateDate: e.target.value, endDateDate: form.endDateDate || e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Fin *</Label>
-                  <Input type="datetime-local" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
+                  <Label>Heure début *</Label>
+                  <Input type="time" value={form.startDateTime} onChange={(e) => setForm({ ...form, startDateTime: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Date fin *</Label>
+                  <Input type="date" value={form.endDateDate} onChange={(e) => setForm({ ...form, endDateDate: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Heure fin *</Label>
+                  <Input type="time" value={form.endDateTime} onChange={(e) => setForm({ ...form, endDateTime: e.target.value })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

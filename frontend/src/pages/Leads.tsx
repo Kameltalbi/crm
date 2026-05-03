@@ -192,6 +192,34 @@ export function Leads() {
         </Select>
       </div>
 
+      {/* Summary */}
+      {leads.length > 0 && (
+        <div className="flex flex-wrap gap-4">
+          <Card className="flex-1 min-w-[160px]">
+            <CardContent className="py-3 px-4 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Total leads</span>
+              <span className="text-lg font-bold">{leads.length}</span>
+            </CardContent>
+          </Card>
+          <Card className="flex-1 min-w-[160px]">
+            <CardContent className="py-3 px-4 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Valeur totale</span>
+              <span className="text-lg font-bold text-primary">
+                {leads.reduce((sum: number, l: any) => sum + (Number(l.estimatedValue) || 0), 0).toLocaleString('fr-FR')} DT
+              </span>
+            </CardContent>
+          </Card>
+          <Card className="flex-1 min-w-[160px]">
+            <CardContent className="py-3 px-4 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Score moyen</span>
+              <span className="text-lg font-bold">
+                {Math.round(leads.reduce((sum: number, l: any) => sum + (Number(l.score) || 0), 0) / leads.length)}
+              </span>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Leads Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {leads.length === 0 ? (

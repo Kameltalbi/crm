@@ -10,6 +10,44 @@ const prisma = new PrismaClient();
 // Apply auth middleware to all routes
 aiAssistantRoutes.use(auth);
 
+// OpenAI API integration
+async function callOpenAI(prompt: string, systemPrompt?: string): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`OpenAI API error: ${error}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    throw error;
+  }
+}
+
 const querySchema = z.object({
   message: z.string().min(1),
 });
@@ -540,13 +578,147 @@ async function executeQuery(intent: string, organizationId: string) {
 aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest, res, next) => {
   try {
     const { message } = querySchema.parse(req.body);
-    
-    const intent = processQuery(message, req.organizationId!);
-    const result = await executeQuery(intent, req.organizationId!);
-    
+    const organizationId = req.organizationId!;
+
+    // Fetch CRM context for the AI
+    const [affaires, clients, objectifs] = await Promise.all([
+      prisma.affaire.findMany({
+        where: { organizationId, deletedAt: null, statut: { not: 'PERDU' } },
+        select: { title: true, montantHT: true, statut: true, probabilite: true, createdAt: true },
+        take: 20,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.client.findMany({
+        where: { organizationId },
+        select: { name: true, email: true, createdAt: true },
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.salesObjective.findMany({
+        where: { organizationId, year: new Date().getFullYear() },
+        select: { targetAmount: true, month: true },
+        take: 12,
+      }),
+    ]);
+
+    const context = {
+      affairesCount: affaires.length,
+      clientsCount: clients.length,
+      totalCA: affaires.reduce((sum, a) => sum + Number(a.montantHT), 0),
+      recentAffaires: affaires.slice(0, 5).map(a => ({
+        titre: a.title,
+        statut: a.statut,
+        montant: Number(a.montantHT),
+        probabilite: a.probabilite,
+      })),
+      objectifs: objectifs.map(o => ({
+        mois: o.month,
+        cible: Number(o.targetAmount),
+      })),
+    };
+
+    const systemPrompt = `Tu es un assistant CRM professionnel et expert en vente. 
+Tu aides les équipes commerciales avec:
+- Analyse de pipeline et prédictions de vente
+- Conseils stratégiques pour améliorer les conversions
+- Rédaction d'emails personnalisés
+- Scoring de leads et recommandations
+- Analyse de performance
+
+Contexte CRM actuel:
+- ${context.affairesCount} affaires en cours
+- ${context.clientsCount} clients
+- CA total du pipeline: ${context.totalCA} DT
+- Affaires récentes: ${JSON.stringify(context.recentAffaires)}
+- Objectifs mensuels: ${JSON.stringify(context.objectifs)}
+
+Réponds de manière professionnelle, concise et actionnable. En français.`;
+
+    const aiResponse = await callOpenAI(message, systemPrompt);
+
     res.json({
-      intent,
-      result,
+      intent: 'ai_response',
+      result: aiResponse,
+      context: {
+        affairesCount: context.affairesCount,
+        clientsCount: context.clientsCount,
+        totalCA: context.totalCA,
+      },
+    });
+  } catch (e) { next(e); }
+});
+
+// POST /api/ai-assistant/draft-email - Draft personalized email with AI
+aiAssistantRoutes.post('/draft-email', checkPlanFeature('ai'), async (req: AuthRequest, res, next) => {
+  try {
+    const { clientId, affaireId, type } = req.body;
+
+    let client, affaire;
+    if (clientId) {
+      client = await prisma.client.findUnique({
+        where: { id: clientId },
+        select: { name: true, email: true, phone: true },
+      });
+    }
+    if (affaireId) {
+      affaire = await prisma.affaire.findUnique({
+        where: { id: affaireId },
+        select: { title: true, montantHT: true, statut: true, probabilite: true },
+      });
+    }
+
+    const emailPrompt = type === 'followup' 
+      ? `Rédige un email de suivi professionnel pour ${client?.name || 'le client'}. 
+         Contexte affaire: ${affaire?.title || 'Non spécifié'}, montant: ${affaire?.montantHT || 0} DT, statut: ${affaire?.statut}.
+         Objectif: Relancer le client pour avancer l'affaire. Ton professionnel mais convaincant.`
+      : type === 'proposal'
+      ? `Rédige un email d'envoi de proposition pour ${client?.name || 'le client'}.
+         Contexte affaire: ${affaire?.title || 'Non spécifié'}, montant: ${affaire?.montantHT || 0} DT.
+         Objectif: Présenter la proposition et demander un rendez-vous. Ton professionnel et orienté action.`
+      : `Rédige un email professionnel pour ${client?.name || 'le client'}.`;
+
+    const systemPrompt = `Tu es un expert en rédaction d'emails commerciaux. 
+Rédige des emails professionnels, concis et orientés action.
+En français. Inclus un objet d'email clair.`;
+
+    const aiResponse = await callOpenAI(emailPrompt, systemPrompt);
+
+    res.json({
+      emailDraft: aiResponse,
+      clientName: client?.name,
+      clientEmail: client?.email,
+    });
+  } catch (e) { next(e); }
+});
+
+// POST /api/ai-assistant/score-lead - Score lead with AI
+aiAssistantRoutes.post('/score-lead', checkPlanFeature('ai'), async (req: AuthRequest, res, next) => {
+  try {
+    const { affaireId } = req.body;
+
+    const affaire = await prisma.affaire.findUnique({
+      where: { id: affaireId },
+      include: { client: true },
+    });
+
+    if (!affaire) {
+      return res.status(404).json({ error: 'Affaire not found' });
+    }
+
+    const scoringPrompt = `Analyse cette opportunité et donne un score de 0 à 100 basé sur:
+- Probabilité actuelle: ${affaire.probabilite}%
+- Montant: ${affaire.montantHT} DT
+- Statut: ${affaire.statut}
+- Client: ${affaire.client?.name}
+- Date création: ${affaire.createdAt}
+
+Donne aussi 3 recommandations concrètes pour améliorer ce score.`;
+
+    const aiResponse = await callOpenAI(scoringPrompt, 'Tu es un expert en scoring de leads commerciaux. Sois analytique et actionnable.');
+
+    res.json({
+      score: aiResponse,
+      affaireId,
     });
   } catch (e) { next(e); }
 });

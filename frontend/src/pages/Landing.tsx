@@ -52,14 +52,7 @@ export function Landing() {
               <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
               <span className="text-xl font-bold text-foreground">CRM</span>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-              >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-              <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
               <a href="#features" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
                 Fonctionnalités
               </a>
@@ -73,6 +66,13 @@ export function Landing() {
                 Contact
               </a>
             </nav>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              >
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
               <div className="hidden md:flex items-center gap-3">
                 <Link to="/login">
                   <Button variant="ghost" size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">

@@ -106,6 +106,23 @@ Cordialement`,
       ],
     });
 
+    // Create default subscription (1 month trial from registration date)
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 1);
+    
+    await prisma.subscription.create({
+      data: {
+        organizationId: organization.id,
+        plan: organization.plan || 'FREE',
+        price: organization.plan === 'ENTERPRISE' ? 980 : organization.plan === 'BUSINESS' ? 290 : 0,
+        paymentMethod: 'VIREMENT',
+        paymentStatus: organization.plan === 'FREE' ? 'PAID' : 'PENDING',
+        startDate,
+        endDate,
+      },
+    });
+
     // Create user with organization
     const user = await prisma.user.create({
       data: {

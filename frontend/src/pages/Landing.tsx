@@ -107,7 +107,7 @@ export function Landing() {
               </a>
               <div className="pt-4 space-y-2">
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="ghost" size="lg" className="w-full">
+                  <Button variant="ghost" size="lg" className="w-full bg-[#d1fae4] hover:bg-[#c1ebe0]">
                     Connexion
                   </Button>
                 </Link>

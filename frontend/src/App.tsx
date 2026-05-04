@@ -50,6 +50,14 @@ export default function App() {
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route
+        path="/payment-pending"
+        element={
+          <ProtectedRoute>
+            <PaymentPending />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/*"
         element={
           <ProtectedRoute>
@@ -72,7 +80,6 @@ export default function App() {
                 <Route path="/email-templates" element={<EmailTemplates />} />
                 <Route path="/ai-assistant" element={<AIAssistant />} />
                 <Route path="/objectifs" element={<Objectifs />} />
-                <Route path="/payment-pending" element={<PaymentPending />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>

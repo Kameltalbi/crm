@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Mail, Users, Package, FileText, Building2, Tag } from 'lucide-react';
+import { Mail, Users, Package, FileText, Building2, Tag, DollarSign } from 'lucide-react';
 import { GmailSettings } from '@/components/settings/GmailSettings';
 import { SoftfactureSettings } from '@/components/settings/SoftfactureSettings';
 import { UsersSettings } from '@/components/settings/UsersSettings';
 import { ProductsSettings } from '@/components/settings/ProductsSettings';
 import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 import { CategoriesSettings } from '@/components/settings/CategoriesSettings';
+import { CommissionSettings } from '@/components/settings/CommissionSettings';
 
-type Tab = 'organization' | 'gmail' | 'softfacture' | 'users' | 'products' | 'categories';
+type Tab = 'organization' | 'gmail' | 'softfacture' | 'users' | 'products' | 'categories' | 'commissions';
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'organization', label: 'Organisation', icon: Building2 },
@@ -16,6 +17,7 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'users', label: 'Utilisateurs', icon: Users },
   { id: 'products', label: 'Produits', icon: Package },
   { id: 'categories', label: 'Catégories', icon: Tag },
+  { id: 'commissions', label: 'Primes', icon: DollarSign },
 ];
 
 export function Settings() {
@@ -57,6 +59,7 @@ export function Settings() {
         {activeTab === 'users' && <UsersSettings />}
         {activeTab === 'products' && <ProductsSettings />}
         {activeTab === 'categories' && <CategoriesSettings />}
+        {activeTab === 'commissions' && <CommissionSettings />}
       </div>
     </div>
   );

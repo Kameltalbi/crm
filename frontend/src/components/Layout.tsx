@@ -101,7 +101,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <img
                 src={orgLogoSrc}
                 alt={organization.name}
-                className="h-9 max-h-9 w-auto max-w-[min(200px,42vw)] object-contain sm:h-10 sm:max-h-10"
+                className="h-12 max-h-12 w-auto max-w-[min(300px,50vw)] object-contain"
               />
             ) : organization ? (
               <div className="flex min-w-0 items-center gap-2.5">

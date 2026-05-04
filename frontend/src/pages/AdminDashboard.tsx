@@ -373,6 +373,13 @@ function SubscriptionsTab() {
     },
   });
 
+  const deleteSubscriptionMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/superadmin/subscriptions/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
+    },
+  });
+
   const statusBadge = (status: string) => {
     const colors: any = { actif: 'bg-green-100 text-green-700', en_attente: 'bg-yellow-100 text-yellow-700', expiré: 'bg-red-100 text-red-700', refusé: 'bg-red-100 text-red-700' };
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{status}</span>;
@@ -446,6 +453,13 @@ function SubscriptionsTab() {
                     <td className="p-4 flex gap-2 justify-end">
                       <Button size="sm" variant="outline" onClick={() => openDialog(s)}>
                         <Edit size={14} />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => {
+                        if (confirm('Supprimer cet abonnement ?')) {
+                          deleteSubscriptionMutation.mutate(s.id);
+                        }
+                      }} disabled={deleteSubscriptionMutation.isPending}>
+                        <Trash2 size={14} />
                       </Button>
                     </td>
                   </tr>

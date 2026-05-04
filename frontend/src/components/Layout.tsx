@@ -38,6 +38,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     queryFn: () => api.get('/organizations').then((r) => r.data),
   });
 
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['current-subscription'],
+    queryFn: () => api.get('/subscriptions/current').then(r => r.data),
+  });
+
   const { data: permissionsData } = useQuery<any[]>({
     queryKey: ['user-permissions'],
     queryFn: () => api.get('/user-permissions/me').then((r) => r.data),
@@ -45,6 +50,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const organization = Array.isArray(organizationsData) ? organizationsData[0] : organizationsData;
   const orgLogoSrc = useOrganizationLogoSrc(organization?.logoUrl);
+  const currentPlan = subscriptionData?.plan || 'FREE';
 
   const handleLogout = async () => {
     await logout();
@@ -73,6 +79,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
     
     return true;
   });
+
+  // Check if expenses is accessible
+  const expensesAccessible = currentPlan === 'ENTERPRISE';
 
   return (
     <div className="flex h-screen flex-col bg-gradient-to-br from-background via-background to-muted/50">
@@ -150,36 +159,48 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
         >
           <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
-            {filteredNav.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/'}
-                onClick={closeSidebarOnMobile}
-                className={({ isActive }) =>
-                  cn(
-                    'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                    isActive
-                      ? 'bg-white/18 text-white shadow-sm ring-1 ring-white/25'
-                      : 'text-white/75 hover:bg-white/10 hover:text-white'
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={cn(
-                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-                        isActive ? 'bg-white/20 text-white' : 'bg-white/0 text-white/80 group-hover:bg-white/10 group-hover:text-white'
+            {filteredNav.map(({ to, label, icon: Icon, page }) => {
+              const isExpenses = page === 'expenses';
+              const isDisabled = isExpenses && !expensesAccessible;
+              
+              return (
+                <NavLink
+                  key={to}
+                  to={isDisabled ? '#' : to}
+                  end={to === '/'}
+                  onClick={(e) => {
+                    if (isDisabled) {
+                      e.preventDefault();
+                      // Optionally show upgrade dialog or redirect to pricing
+                      return;
+                    }
+                    closeSidebarOnMobile();
+                  }}
+                  className={({ isActive }) =>
+                    cn(
+                      'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                      isDisabled
+                        ? 'text-white/40 cursor-not-allowed'
+                        : isActive
+                        ? 'bg-white/18 text-white shadow-sm ring-1 ring-white/25'
+                        : 'text-white/75 hover:bg-white/10 hover:text-white'
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon size={18} className={cn('shrink-0', isDisabled && 'opacity-50')} />
+                      <span className="flex-1">{label}</span>
+                      {isDisabled && (
+                        <span className="ml-2 rounded-full bg-amber-400/90 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                          Upgrade
+                        </span>
                       )}
-                    >
-                      <Icon size={18} strokeWidth={2} />
-                    </span>
-                    <span className="truncate">{label}</span>
-                  </>
-                )}
-              </NavLink>
-            ))}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
             {user?.role === 'OWNER' && (
               <>
                 <div className="my-3 border-t border-white/15" />

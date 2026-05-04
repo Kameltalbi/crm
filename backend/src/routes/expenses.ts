@@ -7,8 +7,9 @@ import { checkPlanFeature } from '../middleware/planRestrictions.js';
 export const expensesRoutes = Router();
 const prisma = new PrismaClient();
 
-// Apply auth middleware to all routes
+// Apply auth and plan feature middleware to all routes
 expensesRoutes.use(auth);
+expensesRoutes.use(checkPlanFeature('expenses'));
 
 const toOptionalString = z.preprocess((v) => (v === '' ? undefined : v), z.string().optional());
 

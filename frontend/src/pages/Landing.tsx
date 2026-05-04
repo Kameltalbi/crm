@@ -80,7 +80,7 @@ export function Landing() {
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">
+                  <Button size="lg" className="bg-leaf hover:bg-leaf/90">
                     S'inscrire
                   </Button>
                 </Link>

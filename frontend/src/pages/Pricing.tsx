@@ -93,10 +93,24 @@ export function Pricing() {
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
               <span className="text-xl font-bold text-foreground">CRM</span>
-            </Link>
+            </div>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link to="/#features" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
+                Fonctionnalités
+              </Link>
+              <Link to="/#why" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
+                Pourquoi nous ?
+              </Link>
+              <Link to="/pricing" className="text-lg text-foreground font-semibold">
+                Tarifs
+              </Link>
+              <Link to="/#contact" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
+                Contact
+              </Link>
+            </nav>
             <div className="flex items-center gap-3">
               <Link to="/login">
                 <Button variant="ghost" size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">

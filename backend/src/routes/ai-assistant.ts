@@ -626,11 +626,17 @@ Tu aides les équipes commerciales avec:
 - Analyse de performance
 
 Contexte CRM actuel:
-- ${context.affairesCount} affaires en cours
-- ${context.clientsCount} clients
-- CA total du pipeline: ${context.totalCA} DT
-- Affaires récentes: ${JSON.stringify(context.recentAffaires)}
-- Objectifs mensuels: ${JSON.stringify(context.objectifs)}
+- Nombre d'affaires en cours: ${context.affairesCount}
+- Nombre de clients: ${context.clientsCount}
+- CA total du pipeline (toutes affaires): ${context.totalCA} DT
+
+Affaires récentes (affichage des 5 dernières):
+${context.recentAffaires.map(a => `- ${a.titre}: ${a.montant} DT, statut: ${a.statut}, probabilité: ${a.probabilite}%`).join('\n')}
+
+Objectifs mensuels:
+${context.objectifs.map(o => `- ${o.mois}: ${o.cible} DT`).join('\n') || 'Aucun objectif défini'}
+
+IMPORTANT: Quand tu fais des calculs, utilise uniquement les montants en DT. Ne divise pas par 100 ou ne multiplie pas par des facteurs incorrects. Les montants sont déjà en DT.
 
 Réponds de manière professionnelle, concise et actionnable. En français.`;
 

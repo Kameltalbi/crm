@@ -57,6 +57,7 @@ model User {
   email        String   @unique
   passwordHash String
   name         String
+  phone        String?
   role         UserRole @default(OWNER)
   failedLoginAttempts Int @default(0)
   lockedUntil  DateTime?

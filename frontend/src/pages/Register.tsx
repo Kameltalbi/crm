@@ -11,6 +11,7 @@ export function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [organizationName, setOrganizationName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -21,7 +22,7 @@ export function Register() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', { email, password, name, organizationName });
+      const { data } = await api.post('/auth/register', { email, password, name, organizationName, phone });
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -54,6 +55,10 @@ export function Register() {
             <div className="space-y-1.5">
               <Label htmlFor="name">Votre nom *</Label>
               <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="email">Email *</Label>

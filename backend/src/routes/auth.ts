@@ -20,11 +20,12 @@ const registerSchema = z.object({
   password: z.string().min(8).regex(passwordRegex, 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'),
   name: z.string().min(1),
   organizationName: z.string().min(1),
+  phone: z.string().optional(),
 });
 
 authRoutes.post('/register', async (req, res, next) => {
   try {
-    const { email, password, name, organizationName } = registerSchema.parse(req.body);
+    const { email, password, name, organizationName, phone } = registerSchema.parse(req.body);
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -47,6 +48,7 @@ authRoutes.post('/register', async (req, res, next) => {
         email,
         passwordHash,
         name,
+        phone,
         role: UserRole.OWNER,
         organizationId: organization.id,
       },

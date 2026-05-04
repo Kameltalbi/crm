@@ -395,6 +395,7 @@ export function Affaires() {
                   <tr className="border-b bg-sage">
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Client / Titre</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Score</th>
+                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Probabilité</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Statut</th>
@@ -432,6 +433,7 @@ export function Affaires() {
                             {a.score || 0}
                           </span>
                         </td>
+                        <td className="p-2.5 text-right font-semibold">{a.probabilite}%</td>
                         <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>
                         <td className="p-2.5 text-right font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</td>
                         <td className="p-2.5"><StatutBadge statut={a.statut} /></td>

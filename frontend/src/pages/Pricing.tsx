@@ -23,8 +23,8 @@ const plans = [
   },
   {
     name: 'Business',
-    monthlyPrice: 48,
-    annualPrice: 480,
+    monthlyPrice: 58,
+    annualPrice: 580,
     features: [
       'Prospects illimités',
       '5 utilisateurs',

@@ -10,16 +10,16 @@ import type { Organization } from '@/types';
 import { Notifications } from './Notifications';
 
 const nav = [
-  { to: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
-  { to: '/affaires',     label: 'Opportunités',  icon: Briefcase       },
-  { to: '/clients',      label: 'Clients',       icon: Users           },
-  { to: '/leads',        label: 'Leads',         icon: UserCheck       },
-  { to: '/calendar',     label: 'Calendrier',    icon: CalendarIcon    },
-  { to: '/expenses',     label: 'Dépenses',      icon: Receipt         },
-  { to: '/activites',    label: 'Activités',     icon: FileText        },
-  { to: '/email-templates', label: 'Templates Emails', icon: Mail },
-  { to: '/ai-assistant', label: 'Assistant IA', icon: Sparkles },
-  { to: '/objectifs',    label: 'Objectifs',     icon: Target          },
+  { to: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, page: 'dashboard' },
+  { to: '/affaires',     label: 'Opportunités',  icon: Briefcase,       page: 'affaires' },
+  { to: '/clients',      label: 'Clients',       icon: Users,           page: 'clients' },
+  { to: '/leads',        label: 'Leads',         icon: UserCheck,       page: 'leads' },
+  { to: '/calendar',     label: 'Calendrier',    icon: CalendarIcon,    page: 'calendar' },
+  { to: '/expenses',     label: 'Dépenses',      icon: Receipt,         page: 'expenses' },
+  { to: '/activites',    label: 'Activités',     icon: FileText,        page: 'activites' },
+  { to: '/email-templates', label: 'Templates Emails', icon: Mail, page: 'email-templates' },
+  { to: '/ai-assistant', label: 'Assistant IA', icon: Sparkles, page: 'ai-assistant' },
+  { to: '/objectifs',    label: 'Objectifs',     icon: Target,          page: 'objectifs' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -38,6 +38,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     queryFn: () => api.get('/organizations').then((r) => r.data),
   });
 
+  const { data: permissionsData } = useQuery<any[]>({
+    queryKey: ['user-permissions'],
+    queryFn: () => api.get('/user-permissions/me').then((r) => r.data),
+  });
+
   const organization = Array.isArray(organizationsData) ? organizationsData[0] : organizationsData;
   const orgLogoSrc = useOrganizationLogoSrc(organization?.logoUrl);
 
@@ -51,6 +56,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
       setSidebarOpen(false);
     }
   };
+
+  // Filter nav items based on user permissions
+  const filteredNav = nav.filter(item => {
+    // OWNER has access to everything
+    if (user?.role === 'OWNER') return true;
+    
+    // PARTNER has access to everything (read-only)
+    if (user?.role === 'PARTNER') return true;
+    
+    // COMMERCIAL: check specific permissions
+    if (user?.role === 'COMMERCIAL') {
+      const permission = permissionsData?.find(p => p.page === item.page);
+      return permission?.canView ?? false;
+    }
+    
+    return true;
+  });
 
   return (
     <div className="flex h-screen flex-col bg-gradient-to-br from-background via-background to-muted/50">
@@ -128,7 +150,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
         >
           <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
-            {nav.map(({ to, label, icon: Icon }) => (
+            {filteredNav.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}

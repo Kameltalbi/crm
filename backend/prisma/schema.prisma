@@ -43,6 +43,7 @@ model Organization {
   emailTemplates EmailTemplate[]
   subscriptions Subscription[]
   salesObjectives SalesObjective[]
+  userPermissions UserPermission[]
 
   @@map("organizations")
 }
@@ -75,14 +76,16 @@ model User {
   refreshTokens    RefreshToken[]
   auditLogs        AuditLog[]
   salesObjectives  SalesObjective[]
+  permissions      UserPermission[]
 
   @@index([organizationId])
   @@map("users")
 }
 
 enum UserRole {
-  OWNER   // Accès complet, gestion des utilisateurs
-  PARTNER // Accès limité, lecture seule sur les données
+  OWNER     // Accès complet, gestion des utilisateurs
+  PARTNER   // Accès limité, lecture seule sur les données
+  COMMERCIAL // Accès limité aux opportunités assignées, objectifs
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -701,4 +704,28 @@ model SalesObjective {
   @@index([organizationId])
   @@index([userId])
   @@map("sales_objectives")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  USER PERMISSION — Permissions d'accès aux pages par utilisateur
+// ═══════════════════════════════════════════════════════════════
+model UserPermission {
+  id            String   @id @default(cuid())
+  organizationId String
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page          String   // dashboard, affaires, clients, leads, calendar, expenses, activites, email-templates, ai-assistant, objectifs, settings
+  canView       Boolean  @default(true)
+  canCreate     Boolean  @default(false)
+  canEdit       Boolean  @default(false)
+  canDelete     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId, page])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("user_permissions")
 }

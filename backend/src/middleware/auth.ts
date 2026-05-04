@@ -42,4 +42,33 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   }
 };
 
+// Middleware to check if user has permission to access a page
+export const requirePage = (page: string) => {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Non authentifié' });
+    }
+
+    // OWNER has access to everything
+    if (req.user.role === 'OWNER') {
+      return next();
+    }
+
+    // Check user permissions
+    const permission = await prisma.userPermission.findFirst({
+      where: {
+        userId: req.user.id,
+        organizationId: req.organizationId,
+        page,
+      },
+    });
+
+    if (!permission || !permission.canView) {
+      return res.status(403).json({ error: 'Accès non autorisé à cette page' });
+    }
+
+    next();
+  };
+};
+
 export default auth;

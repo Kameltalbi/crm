@@ -32,6 +32,7 @@ import { aiAssistantRoutes } from './routes/ai-assistant.js';
 import { subscriptionsRoutes } from './routes/subscriptions.js';
 import { adminRoutes } from './routes/admin.js';
 import { salesObjectivesRoutes } from './routes/sales-objectives.js';
+import { userPermissionsRoutes } from './routes/user-permissions.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { getUploadsDir } from './lib/uploadsDir.js';
 
@@ -125,6 +126,7 @@ app.use('/api/ai-assistant', aiAssistantRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/sales-objectives', salesObjectivesRoutes);
+app.use('/api/user-permissions', userPermissionsRoutes);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

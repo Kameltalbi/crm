@@ -35,7 +35,7 @@ userPermissionsRoutes.get('/user/:userId', async (req: AuthRequest, res, next) =
     const { userId } = req.params;
     const permissions = await prisma.userPermission.findMany({
       where: {
-        userId,
+        userId: userId as string,
         organizationId: req.organizationId,
       },
     });

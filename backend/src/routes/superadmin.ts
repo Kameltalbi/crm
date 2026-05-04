@@ -27,6 +27,7 @@ superadminRoutes.get('/organizations', async (req: AuthRequest, res, next) => {
         email: true,
         phone: true,
         paymentStatus: true,
+        plan: true,
         createdAt: true,
         _count: {
           select: {

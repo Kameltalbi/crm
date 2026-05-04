@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, CreditCard, Wallet, ArrowRight, X, Phone, Mail, MapPin } from 'lucide-react';
+import { Check, CreditCard, Wallet, ArrowRight, X, Phone, Mail, MapPin, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
@@ -67,6 +67,7 @@ export function Pricing() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'VIREMENT' | 'ESPECES'>('VIREMENT');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isAnnual, setIsAnnual] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const subscribeMutation = useMutation({
     mutationFn: () =>
@@ -112,19 +113,59 @@ export function Pricing() {
               </Link>
             </nav>
             <div className="flex items-center gap-3">
-              <Link to="/login">
-                <Button variant="ghost" size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">
-                  Connexion
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button size="lg" className="bg-leaf hover:bg-leaf/90">
-                  S'inscrire
-                </Button>
-              </Link>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+              >
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+              <div className="hidden md:flex items-center gap-3">
+                <Link to="/login">
+                  <Button variant="ghost" size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">
+                    Connexion
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="lg" className="bg-leaf hover:bg-leaf/90">
+                    S'inscrire
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t bg-white">
+            <div className="px-4 py-4 space-y-3">
+              <Link to="/#features" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                Fonctionnalités
+              </Link>
+              <Link to="/#why" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                Pourquoi nous ?
+              </Link>
+              <Link to="/pricing" className="block text-lg text-foreground font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                Tarifs
+              </Link>
+              <Link to="/#contact" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                Contact
+              </Link>
+              <div className="pt-4 space-y-2">
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" size="lg" className="w-full bg-[#d1fae4] hover:bg-[#c1ebe0]">
+                    Connexion
+                  </Button>
+                </Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                  <Button size="lg" className="w-full bg-leaf hover:bg-leaf/90">
+                    S'inscrire
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="py-12 px-4">

@@ -188,6 +188,11 @@ affairesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
     });
     if (!existing) return res.status(404).json({ error: 'Affaire introuvable' });
 
+    // Auto-set probability to 100% when status is GAGNE
+    if (data.statut === 'GAGNE') {
+      data.probabilite = 100;
+    }
+
     // Recalculate lead score if relevant fields changed
     const shouldRecalculate = data.montantHT !== undefined || data.probabilite !== undefined || data.statut !== undefined;
     let score = (existing as any).score || 0;

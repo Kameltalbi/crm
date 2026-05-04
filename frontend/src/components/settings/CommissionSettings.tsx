@@ -17,8 +17,6 @@ export function CommissionSettings() {
     includeRecurring: true,
     paymentDelay: 30,
   });
-  const [previewData, setPreviewData] = useState({ salesAmount: 0, userId: '', year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
-  const [previewResult, setPreviewResult] = useState<any>(null);
 
   const { data: currentConfig } = useQuery({
     queryKey: ['commission-config'],
@@ -44,23 +42,12 @@ export function CommissionSettings() {
   const saveMutation = useMutation({
     mutationFn: (data: any) => api.post('/commissions/config', data),
     onSuccess: () => {
-      alert('Configuration sauvegardée avec succès');
-    },
-  });
-
-  const previewMutation = useMutation({
-    mutationFn: (data: any) => api.post('/commissions/preview', data).then(r => r.data),
-    onSuccess: (data) => {
-      setPreviewResult(data);
+      alert('Configuration sauvegardée avec succès. Les primes seront calculées automatiquement.');
     },
   });
 
   const handleSave = () => {
     saveMutation.mutate(config);
-  };
-
-  const handlePreview = () => {
-    previewMutation.mutate(previewData);
   };
 
   return (
@@ -153,43 +140,6 @@ export function CommissionSettings() {
           <Button onClick={handleSave} disabled={saveMutation.isPending}>
             {saveMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder la configuration'}
           </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Prévisualisation de prime</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label>Montant des ventes (DT)</Label>
-              <Input type="number" value={previewData.salesAmount} onChange={(e) => setPreviewData({ ...previewData, salesAmount: Number(e.target.value) })} placeholder="Ex: 50000" />
-            </div>
-            <div className="flex items-end">
-              <Button onClick={handlePreview} disabled={previewMutation.isPending} className="w-full">
-                {previewMutation.isPending ? 'Calcul...' : 'Calculer la prime'}
-              </Button>
-            </div>
-          </div>
-
-          {previewResult && (
-            <Card className="bg-emerald-50">
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Taux d'atteinte</p>
-                    <p className="text-2xl font-bold">{previewResult.achievementRate}%</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Prime estimée</p>
-                    <p className="text-2xl font-bold text-emerald-600">{previewResult.commission} DT</p>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">{previewResult.calculationDetails}</p>
-              </CardContent>
-            </Card>
-          )}
         </CardContent>
       </Card>
     </div>

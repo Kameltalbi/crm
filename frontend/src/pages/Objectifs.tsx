@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, Target, User, Calendar } from 'lucide-react';
+import { Plus, Pencil, Trash2, Target, User, Calendar, DollarSign } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import type { User as UserType } from '@/types';
+import { useAuth } from '@/lib/auth';
 
 type FormData = {
   id?: string;
@@ -34,6 +35,8 @@ export function Objectifs() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
   const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
+  const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1));
+  const user = useAuth((s) => s.user);
 
   const { data: objectivesData } = useQuery<any[]>({
     queryKey: ['sales-objectives', selectedYear],
@@ -46,6 +49,18 @@ export function Objectifs() {
     queryFn: () => api.get('/users').then((r) => r.data),
   });
   const users = usersData?.data || [];
+
+  const { data: commissionsData } = useQuery<any>({
+    queryKey: ['commissions-calculate', selectedYear, selectedMonth],
+    queryFn: () => api.post('/commissions/calculate', { year: Number(selectedYear), month: Number(selectedMonth) }).then(r => r.data),
+    enabled: !!user && (user.role === 'OWNER' || user.role === 'PARTNER' || user.role === 'COMMERCIAL'),
+  });
+  const commissions = commissionsData?.commissions || [];
+
+  // Filter commissions based on role
+  const filteredCommissions = user?.role === 'COMMERCIAL' 
+    ? commissions.filter((c: any) => c.userId === user?.id)
+    : commissions;
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
@@ -123,6 +138,16 @@ export function Objectifs() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((month, idx) => (
+                <SelectItem key={idx} value={String(idx + 1)}>{month}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={openNew}><Plus size={16} className="mr-2" />Nouvel objectif</Button>
         </div>
       </div>
@@ -177,6 +202,52 @@ export function Objectifs() {
           </table>
         </CardContent>
       </Card>
+
+      {filteredCommissions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign size={20} className="text-leaf" />
+              Primes - {MONTHS[Number(selectedMonth) - 1]} {selectedYear}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left p-4 font-semibold">Commercial</th>
+                  <th className="text-right p-4 font-semibold">Objectif</th>
+                  <th className="text-right p-4 font-semibold">Ventes</th>
+                  <th className="text-right p-4 font-semibold">Atteinte</th>
+                  <th className="text-right p-4 font-semibold">Prime</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCommissions.map((comm: any) => (
+                  <tr key={comm.userId} className="border-b hover:bg-muted/30">
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <User size={16} className="text-muted-foreground" />
+                        <span className="font-medium">{comm.userName}</span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">{fmtDT(comm.targetAmount)}</td>
+                    <td className="p-4 text-right">{fmtDT(comm.salesAmount)}</td>
+                    <td className="p-4 text-right">
+                      <span className={`font-semibold ${parseFloat(comm.achievementRate) >= 100 ? 'text-green-600' : 'text-orange-600'}`}>
+                        {comm.achievementRate}%
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <span className="font-bold text-leaf">{fmtDT(parseFloat(comm.commission))}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">

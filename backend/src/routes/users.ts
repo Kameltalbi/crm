@@ -5,6 +5,7 @@ import { prisma } from '../db/prisma.js';
 import auth, { AuthRequest } from '../middleware/auth.js';
 import { UserRole } from '@prisma/client';
 import { parsePagination } from '../lib/pagination.js';
+import { checkUserLimit } from '../middleware/planRestrictions.js';
 
 export const usersRoutes = Router();
 usersRoutes.use(auth);
@@ -61,7 +62,7 @@ usersRoutes.get('/', async (req: AuthRequest, res, next) => {
 });
 
 // POST /api/users - Create new user (owner only)
-usersRoutes.post('/', async (req: AuthRequest, res, next) => {
+usersRoutes.post('/', checkUserLimit, async (req: AuthRequest, res, next) => {
   try {
     const currentUser = await prisma.user.findUnique({
       where: { id: req.userId },

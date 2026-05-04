@@ -134,6 +134,9 @@ superadminRoutes.post('/subscriptions', async (req: AuthRequest, res, next) => {
   try {
     const { organizationId, plan, price, paymentMethod, startDate, endDate } = req.body;
     
+    // Map subscription plan to organization plan
+    const orgPlan = plan === 'STARTER' ? 'FREE' : plan === 'PRO' ? 'BUSINESS' : 'ENTERPRISE';
+    
     const subscription = await prisma.subscription.create({
       data: {
         organizationId,
@@ -144,6 +147,12 @@ superadminRoutes.post('/subscriptions', async (req: AuthRequest, res, next) => {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
       },
+    });
+    
+    // Update organization plan
+    await prisma.organization.update({
+      where: { id: organizationId },
+      data: { plan: orgPlan },
     });
     
     res.status(201).json(subscription);

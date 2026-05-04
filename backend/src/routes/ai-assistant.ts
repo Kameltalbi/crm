@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { prisma } from '../db/prisma.js';
+import { PrismaClient } from '@prisma/client';
 import auth, { AuthRequest } from '../middleware/auth.js';
+import { checkPlanFeature } from '../middleware/planRestrictions.js';
 
 export const aiAssistantRoutes = Router();
+const prisma = new PrismaClient();
+
+// Apply auth middleware to all routes
 aiAssistantRoutes.use(auth);
 
 const querySchema = z.object({
@@ -533,7 +537,7 @@ async function executeQuery(intent: string, organizationId: string) {
 }
 
 // POST /api/ai-assistant/query
-aiAssistantRoutes.post('/query', async (req: AuthRequest, res, next) => {
+aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest, res, next) => {
   try {
     const { message } = querySchema.parse(req.body);
     

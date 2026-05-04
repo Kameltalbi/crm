@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
-import auth from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
+import { checkProspectLimit } from '../middleware/planRestrictions.js';
 
 export const leadsRoutes = Router();
 const prisma = new PrismaClient();
@@ -100,7 +101,7 @@ leadsRoutes.get('/:id', async (req: any, res) => {
 });
 
 // POST /leads - Create a new lead
-leadsRoutes.post('/', async (req: any, res) => {
+leadsRoutes.post('/', checkProspectLimit, async (req: AuthRequest, res, next) => {
   try {
     const organizationId = req.organizationId;
     const userId = req.userId;

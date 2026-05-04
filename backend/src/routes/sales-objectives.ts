@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import auth, { AuthRequest } from '../middleware/auth.js';
+import { checkPlanFeature } from '../middleware/planRestrictions.js';
 
 export const salesObjectivesRoutes = Router();
 salesObjectivesRoutes.use(auth);
@@ -14,7 +15,7 @@ const objectiveSchema = z.object({
 });
 
 // GET all objectives for organization
-salesObjectivesRoutes.get('/', async (req: AuthRequest, res, next) => {
+salesObjectivesRoutes.get('/', checkPlanFeature('objectives'), async (req: AuthRequest, res, next) => {
   try {
     const { year, month, userId } = req.query;
     const where: any = { organizationId: req.organizationId };
@@ -40,7 +41,7 @@ salesObjectivesRoutes.get('/', async (req: AuthRequest, res, next) => {
 });
 
 // GET single objective
-salesObjectivesRoutes.get('/:id', async (req: AuthRequest, res, next) => {
+salesObjectivesRoutes.get('/:id', checkPlanFeature('objectives'), async (req: AuthRequest, res, next) => {
   try {
     const objective = await prisma.salesObjective.findFirst({
       where: {
@@ -59,7 +60,7 @@ salesObjectivesRoutes.get('/:id', async (req: AuthRequest, res, next) => {
 });
 
 // POST create objective
-salesObjectivesRoutes.post('/', async (req: AuthRequest, res, next) => {
+salesObjectivesRoutes.post('/', checkPlanFeature('objectives'), async (req: AuthRequest, res, next) => {
   try {
     const data = objectiveSchema.parse(req.body);
 
@@ -97,7 +98,7 @@ salesObjectivesRoutes.post('/', async (req: AuthRequest, res, next) => {
 });
 
 // PUT update objective
-salesObjectivesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
+salesObjectivesRoutes.put('/:id', checkPlanFeature('objectives'), async (req: AuthRequest, res, next) => {
   try {
     const data = objectiveSchema.partial().parse(req.body);
 
@@ -136,7 +137,7 @@ salesObjectivesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 });
 
 // DELETE objective
-salesObjectivesRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
+salesObjectivesRoutes.delete('/:id', checkPlanFeature('objectives'), async (req: AuthRequest, res, next) => {
   try {
     const objective = await prisma.salesObjective.findFirst({
       where: { id: req.params.id as string, organizationId: req.organizationId },

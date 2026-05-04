@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
-import auth from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
+import { checkPlanFeature } from '../middleware/planRestrictions.js';
 
 export const expensesRoutes = Router();
 const prisma = new PrismaClient();
@@ -33,7 +34,7 @@ const expenseSchema = z.object({
 const expenseUpdateSchema = expenseSchema.partial();
 
 // GET /expenses - List expenses with pagination
-expensesRoutes.get('/', async (req, res) => {
+expensesRoutes.get('/', checkPlanFeature('expenses'), async (req: AuthRequest, res, next) => {
   try {
     const userId = (req as any).userId;
     const organizationId = (req as any).organizationId;
@@ -105,14 +106,14 @@ expensesRoutes.get('/', async (req, res) => {
 });
 
 // GET /expenses/:id - Get expense by ID
-expensesRoutes.get('/:id', async (req, res) => {
+expensesRoutes.get('/:id', checkPlanFeature('expenses'), async (req: AuthRequest, res, next) => {
   try {
     const userId = (req as any).userId;
     const organizationId = (req as any).organizationId;
 
     const expense = await prisma.expense.findFirst({
       where: {
-        id: req.params.id,
+        id: req.params.id as string,
         organizationId,
         deletedAt: null,
       },
@@ -134,7 +135,7 @@ expensesRoutes.get('/:id', async (req, res) => {
 });
 
 // POST /expenses - Create expense
-expensesRoutes.post('/', async (req, res) => {
+expensesRoutes.post('/', checkPlanFeature('expenses'), async (req: AuthRequest, res, next) => {
   try {
     const userId = (req as any).userId;
     const organizationId = (req as any).organizationId;
@@ -162,20 +163,20 @@ expensesRoutes.post('/', async (req, res) => {
 });
 
 // PUT /expenses/:id - Update expense
-expensesRoutes.put('/:id', async (req, res) => {
+expensesRoutes.put('/:id', checkPlanFeature('expenses'), async (req: AuthRequest, res, next) => {
   try {
     const userId = (req as any).userId;
     const organizationId = (req as any).organizationId;
 
     const existing = await prisma.expense.findFirst({
-      where: { id: req.params.id, organizationId, deletedAt: null },
+      where: { id: req.params.id as string, organizationId, deletedAt: null },
     });
     if (!existing) return res.status(404).json({ error: 'Dépense non trouvée' });
 
     const data = expenseUpdateSchema.parse(req.body);
 
     const expense = await prisma.expense.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: {
         ...data,
         date: data.date ? new Date(data.date) : undefined,
@@ -194,17 +195,17 @@ expensesRoutes.put('/:id', async (req, res) => {
 });
 
 // DELETE /expenses/:id - Soft delete expense
-expensesRoutes.delete('/:id', async (req, res) => {
+expensesRoutes.delete('/:id', checkPlanFeature('expenses'), async (req: AuthRequest, res, next) => {
   try {
     const organizationId = (req as any).organizationId;
 
     const existing = await prisma.expense.findFirst({
-      where: { id: req.params.id, organizationId, deletedAt: null },
+      where: { id: req.params.id as string, organizationId, deletedAt: null },
     });
     if (!existing) return res.status(404).json({ error: 'Dépense non trouvée' });
 
     await prisma.expense.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: { deletedAt: new Date() },
     });
 

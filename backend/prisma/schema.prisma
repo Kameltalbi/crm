@@ -23,6 +23,7 @@ model Organization {
   logoUrl     String?  // URL du logo
   paymentStatus String @default("PENDING") // PENDING, APPROVED, REJECTED
   suspended   Boolean  @default(false)
+  plan        String   @default("FREE") // FREE, BUSINESS, ENTERPRISE
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

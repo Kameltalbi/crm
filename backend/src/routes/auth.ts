@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { UserRole, AuditAction } from '@prisma/client';
 import { logAudit } from '../lib/audit.js';
+import { checkUserLimit, AuthRequest } from '../middleware/planRestrictions.js';
 
 export const authRoutes = Router();
 

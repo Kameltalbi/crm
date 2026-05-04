@@ -21,7 +21,8 @@ model Organization {
   address     String?
   tva         String?  // Numéro TVA
   logoUrl     String?  // URL du logo
-  paymentStatus String @default("PENDING")
+  paymentStatus String @default("PENDING") // PENDING, APPROVED, REJECTED
+  suspended   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

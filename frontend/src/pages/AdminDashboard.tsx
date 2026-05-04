@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/form-controls';
+import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Users, Building2, CreditCard, Activity, CheckCircle, Clock, AlertTriangle, LogOut, LayoutDashboard, Receipt, Shield, DollarSign, TrendingUp, TrendingDown, Eye, EyeOff, Settings as SettingsIcon, Key, UserCheck, UserX, Plus, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -199,6 +199,15 @@ function OrganizationsTab() {
     },
   });
 
+  const toggleSuspendMutation = useMutation({
+    mutationFn: ({ id, suspended }: { id: string; suspended: boolean }) =>
+      api.put(`/superadmin/organizations/${id}/suspend`, { suspended: !suspended }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+
   const impersonateMutation = useMutation({
     mutationFn: (userId: string) => api.post('/superadmin/impersonate', { userId }),
     onSuccess: (data) => {
@@ -215,6 +224,13 @@ function OrganizationsTab() {
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{labels[status] || status}</span>;
   };
 
+  const suspendedBadge = (suspended: boolean) => {
+    if (suspended) {
+      return <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Suspendu</span>;
+    }
+    return null;
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Entreprises</h2>
@@ -228,6 +244,7 @@ function OrganizationsTab() {
                   <th className="text-left p-4 font-medium">Email</th>
                   <th className="text-left p-4 font-medium">Téléphone</th>
                   <th className="text-left p-4 font-medium">Plan</th>
+                  <th className="text-left p-4 font-medium">Statut paiement</th>
                   <th className="text-left p-4 font-medium">Statut</th>
                   <th className="text-center p-4 font-medium">Utilisateurs</th>
                   <th className="text-center p-4 font-medium">Clients</th>
@@ -244,24 +261,42 @@ function OrganizationsTab() {
                     <td className="p-4">{org.phone || '-'}</td>
                     <td className="p-4">{org.plan || 'Basic'}</td>
                     <td className="p-4">{paymentStatusBadge(org.paymentStatus)}</td>
+                    <td className="p-4">{suspendedBadge(org.suspended)}</td>
                     <td className="p-4 text-center">{org._count.users}</td>
                     <td className="p-4 text-center">{org._count.clients}</td>
                     <td className="p-4 text-center">{org._count.affaires}</td>
                     <td className="p-4 text-muted-foreground">{new Date(org.createdAt).toLocaleDateString('fr-FR')}</td>
-                    <td className="p-4 flex gap-2 justify-end">
-                      {org._count.users > 0 && (
-                        <Button size="sm" variant="outline" onClick={() => impersonateMutation.mutate(org.id)}>
-                          <UserCheck size={14} className="mr-1" /> Se connecter
-                        </Button>
-                      )}
-                      {org.paymentStatus !== 'APPROVED' && (
-                        <Button size="sm" onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'APPROVED' })} disabled={updateStatusMutation.isPending}>
-                          <CheckCircle size={14} className="mr-1" /> Approuver
-                        </Button>
-                      )}
-                      <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate(org.id)} disabled={deleteMutation.isPending}>
-                        <Trash2 size={14} />
-                      </Button>
+                    <td className="p-4 flex justify-end">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <Button variant="ghost" size="sm">
+                            <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
+                              <circle cx="2" cy="2" r="2" />
+                              <circle cx="2" cy="8" r="2" />
+                              <circle cx="2" cy="14" r="2" />
+                            </svg>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          {org._count.users > 0 && (
+                            <DropdownMenuItem onClick={() => impersonateMutation.mutate(org.id)}>
+                              <UserCheck size={14} className="mr-2" /> Se connecter
+                            </DropdownMenuItem>
+                          )}
+                          {org.paymentStatus !== 'APPROVED' && (
+                            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'APPROVED' })} disabled={updateStatusMutation.isPending}>
+                              <CheckCircle size={14} className="mr-2" /> Approuver
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => toggleSuspendMutation.mutate({ id: org.id, suspended: org.suspended })} disabled={toggleSuspendMutation.isPending}>
+                            {org.suspended ? <UserCheck size={14} className="mr-2" /> : <UserX size={14} className="mr-2" />}
+                            {org.suspended ? 'Réactiver' : 'Suspendre'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => deleteMutation.mutate(org.id)} disabled={deleteMutation.isPending} className="text-red-600">
+                            <Trash2 size={14} className="mr-2" /> Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 ))}

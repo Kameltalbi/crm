@@ -94,6 +94,20 @@ superadminRoutes.put('/organizations/:id/payment-status', async (req: AuthReques
   } catch (e) { next(e); }
 });
 
+// PUT toggle suspend
+superadminRoutes.put('/organizations/:id/suspend', async (req: AuthRequest, res, next) => {
+  try {
+    const { suspended } = req.body;
+    
+    const organization = await prisma.organization.update({
+      where: { id: req.params.id as string },
+      data: { suspended },
+    });
+    
+    res.json(organization);
+  } catch (e) { next(e); }
+});
+
 // GET statistics
 superadminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
   try {

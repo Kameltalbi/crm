@@ -62,7 +62,7 @@ commissionsRoutes.post('/config', async (req: AuthRequest, res, next) => {
         progressiveConfig: data.progressiveConfig,
         customFormula: data.customFormula,
         minThreshold: data.minThreshold || 0,
-        maxCap: data.maxCap && data.maxCap !== '' ? Number(data.maxCap) : null,
+        maxCap: typeof data.maxCap === 'string' ? (data.maxCap === '' ? null : Number(data.maxCap)) : (data.maxCap || null),
         includeNewClients: data.includeNewClients ?? true,
         includeRenewals: data.includeRenewals ?? true,
         includeRecurring: data.includeRecurring ?? true,

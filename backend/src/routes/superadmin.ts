@@ -108,6 +108,65 @@ superadminRoutes.put('/organizations/:id/suspend', async (req: AuthRequest, res,
   } catch (e) { next(e); }
 });
 
+// SUBSCRIPTIONS MANAGEMENT
+superadminRoutes.get('/subscriptions', async (req: AuthRequest, res, next) => {
+  try {
+    const subscriptions = await prisma.subscription.findMany({
+      include: {
+        organization: {
+          select: { name: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    const now = new Date();
+    res.json(subscriptions.map((s: any) => ({
+      ...s,
+      organizationName: s.organization?.name || 'N/A',
+      status: s.paymentStatus === 'PAID' && new Date(s.endDate) > now ? 'actif' : 
+              s.paymentStatus === 'PENDING' ? 'en_attente' : 
+              s.paymentStatus === 'REFUSED' ? 'refusé' : 'expiré',
+    })));
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.post('/subscriptions', async (req: AuthRequest, res, next) => {
+  try {
+    const { organizationId, plan, price, paymentMethod, startDate, endDate } = req.body;
+    
+    const subscription = await prisma.subscription.create({
+      data: {
+        organizationId,
+        plan,
+        price: Number(price),
+        paymentMethod,
+        paymentStatus: 'PAID',
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+      },
+    });
+    
+    res.status(201).json(subscription);
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.put('/subscriptions/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const { startDate, endDate, paymentStatus } = req.body;
+    
+    const subscription = await prisma.subscription.update({
+      where: { id: req.params.id as string },
+      data: {
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        paymentStatus: paymentStatus || undefined,
+      },
+    });
+    
+    res.json(subscription);
+  } catch (e) { next(e); }
+});
+
 // GET statistics
 superadminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
   try {

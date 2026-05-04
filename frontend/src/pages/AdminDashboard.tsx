@@ -310,15 +310,70 @@ function OrganizationsTab() {
 }
 
 function SubscriptionsTab() {
-  const { data: subs } = useQuery({ queryKey: ['admin-subscriptions'], queryFn: () => api.get('/admin/subscriptions').then(r => r.data) });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSubscription, setEditingSubscription] = useState<any>(null);
+  const [formData, setFormData] = useState({ organizationId: '', plan: 'STARTER', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
+  const queryClient = useQueryClient();
+  const { data: orgs } = useQuery({ queryKey: ['admin-organizations'], queryFn: () => api.get('/superadmin/organizations').then(r => r.data) });
+  const { data: subs } = useQuery({ queryKey: ['superadmin-subscriptions'], queryFn: () => api.get('/superadmin/subscriptions').then(r => r.data) });
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => api.post('/superadmin/subscriptions', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
+      setIsDialogOpen(false);
+      setFormData({ organizationId: '', plan: 'STARTER', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.put(`/superadmin/subscriptions/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
+      setIsDialogOpen(false);
+      setEditingSubscription(null);
+    },
+  });
+
   const statusBadge = (status: string) => {
     const colors: any = { actif: 'bg-green-100 text-green-700', en_attente: 'bg-yellow-100 text-yellow-700', expiré: 'bg-red-100 text-red-700', refusé: 'bg-red-100 text-red-700' };
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{status}</span>;
   };
 
+  const handleSubmit = () => {
+    if (editingSubscription) {
+      updateMutation.mutate({ id: editingSubscription.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  const openDialog = (sub?: any) => {
+    if (sub) {
+      setEditingSubscription(sub);
+      setFormData({
+        organizationId: sub.organizationId,
+        plan: sub.plan,
+        price: sub.price,
+        paymentMethod: sub.paymentMethod,
+        startDate: sub.startDate?.split('T')[0] || '',
+        endDate: sub.endDate?.split('T')[0] || '',
+      });
+    } else {
+      setEditingSubscription(null);
+      setFormData({ organizationId: '', plan: 'STARTER', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
+    }
+    setIsDialogOpen(true);
+  };
+
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Abonnements</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Abonnements</h2>
+        <Button onClick={() => openDialog()}>
+          <Plus size={16} className="mr-2" /> Nouvel Abonnement
+        </Button>
+      </div>
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -331,7 +386,8 @@ function SubscriptionsTab() {
                   <th className="text-left p-4 font-medium">Début</th>
                   <th className="text-left p-4 font-medium">Fin</th>
                   <th className="text-left p-4 font-medium">Statut</th>
-                  <th className="text-left p-4 font-medium">Paiement</th>
+                  <th className="text-left p-4 font-medium">Mode paiement</th>
+                  <th className="text-right p-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -344,6 +400,11 @@ function SubscriptionsTab() {
                     <td className="p-4">{new Date(s.endDate).toLocaleDateString('fr-FR')}</td>
                     <td className="p-4">{statusBadge(s.status)}</td>
                     <td className="p-4">{s.paymentMethod}</td>
+                    <td className="p-4 flex gap-2 justify-end">
+                      <Button size="sm" variant="outline" onClick={() => openDialog(s)}>
+                        <Edit size={14} />
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -351,6 +412,63 @@ function SubscriptionsTab() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingSubscription ? 'Modifier l\'Abonnement' : 'Nouvel Abonnement'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Entreprise</Label>
+              <Select value={formData.organizationId} onValueChange={(v) => setFormData({ ...formData, organizationId: v })}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner une entreprise" /></SelectTrigger>
+                <SelectContent>
+                  {orgs?.map((org: any) => (
+                    <SelectItem key={org.id} value={org.id}>{org.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Plan</Label>
+              <Select value={formData.plan} onValueChange={(v) => setFormData({ ...formData, plan: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STARTER">STARTER</SelectItem>
+                  <SelectItem value="PRO">PRO</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Prix (DT)</Label>
+              <Input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
+            </div>
+            <div>
+              <Label>Mode de paiement</Label>
+              <Select value={formData.paymentMethod} onValueChange={(v) => setFormData({ ...formData, paymentMethod: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="VIREMENT">Virement</SelectItem>
+                  <SelectItem value="ESPECES">Espèces</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Date de début</Label>
+              <Input type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
+            </div>
+            <div>
+              <Label>Date de fin</Label>
+              <Input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleSubmit}>{editingSubscription ? 'Modifier' : 'Créer'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

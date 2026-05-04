@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin, Menu, X } from 'lucide-react';
+import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin, Menu, X, Target, Lock, DollarSign, PieChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Landing() {
@@ -232,6 +232,42 @@ export function Landing() {
               <h3 className="text-xl font-semibold mb-2">Collaboration</h3>
               <p className="text-base text-muted-foreground">
                 Travaillez en équipe avec des rôles personnalisés et des permissions granulaires.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mb-4">
+                <Target size={24} className="text-indigo-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Objectifs de vente</h3>
+              <p className="text-base text-muted-foreground">
+                Définissez et suivez les objectifs de vente par commercial avec des tableaux de bord personnalisés.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-4">
+                <Lock size={24} className="text-amber-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Permissions d'accès</h3>
+              <p className="text-base text-muted-foreground">
+                Contrôlez l'accès à toutes les fonctions importantes avec des permissions granulaires par utilisateur.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mb-4">
+                <DollarSign size={24} className="text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Gestion des dépenses</h3>
+              <p className="text-base text-muted-foreground">
+                Suivez et gérez toutes vos dépenses avec des catégories personnalisées et des rapports détaillés.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center mb-4">
+                <PieChart size={24} className="text-cyan-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Taux de couverture</h3>
+              <p className="text-base text-muted-foreground">
+                Analysez le taux de couverture des dépenses par rapport à vos revenus pour une meilleure gestion financière.
               </p>
             </div>
           </div>

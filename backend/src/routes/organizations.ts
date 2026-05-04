@@ -136,6 +136,68 @@ organizationsRoutes.post('/', async (req: AuthRequest, res, next) => {
       data,
     });
 
+    // Create default email templates for new organization
+    await prisma.emailTemplate.createMany({
+      data: [
+        {
+          organizationId: organization.id,
+          name: 'Suivi de devis',
+          subject: 'Votre devis de {montant} DT pour {titre}',
+          body: `Bonjour {client},
+
+Nous avons le plaisir de vous envoyer votre devis de {montant} DT concernant : {titre}.
+
+Détails de l'affaire :
+- Montant : {montant} DT
+- Probabilité : {probabilite}
+- Statut : {statut}
+- Date : {date}
+
+N'hésitez pas à nous contacter pour toute question.
+
+Cordialement`,
+          variables: JSON.stringify(['client', 'montant', 'titre', 'probabilite', 'statut', 'date']),
+          isActive: true,
+        },
+        {
+          organizationId: organization.id,
+          name: 'Relance client',
+          subject: 'Relance : Votre affaire {titre}',
+          body: `Bonjour {client},
+
+Nous faisons suite à notre dernière échange concernant votre affaire : {titre}.
+
+Statut actuel : {statut}
+Montant : {montant} DT
+
+Nous restons à votre disposition pour avancer sur ce dossier.
+
+Cordialement`,
+          variables: JSON.stringify(['client', 'titre', 'statut', 'montant']),
+          isActive: true,
+        },
+        {
+          organizationId: organization.id,
+          name: 'Confirmation de commande',
+          subject: 'Confirmation de votre commande - {titre}',
+          body: `Bonjour {client},
+
+Nous avons bien reçu votre commande pour : {titre}.
+
+Montant : {montant} DT
+Date : {date}
+
+Votre commande est maintenant en cours de traitement. Nous vous tiendrons informé de son évolution.
+
+Merci pour votre confiance.
+
+Cordialement`,
+          variables: JSON.stringify(['client', 'titre', 'montant', 'date']),
+          isActive: true,
+        },
+      ],
+    });
+
     res.status(201).json(mapOrganizationLogoInPlace(organization));
   } catch (e) { next(e); }
 });

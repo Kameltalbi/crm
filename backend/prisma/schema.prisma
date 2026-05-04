@@ -47,6 +47,7 @@ model Organization {
   subscriptions Subscription[]
   salesObjectives SalesObjective[]
   userPermissions UserPermission[]
+  commissionConfig CommissionConfig?
 
   @@map("organizations")
 }
@@ -733,4 +734,63 @@ model UserPermission {
   @@index([organizationId])
   @@index([userId])
   @@map("user_permissions")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  COMMISSION CONFIG — Configuration des primes commerciales
+// ═══════════════════════════════════════════════════════════════
+model CommissionConfig {
+  id            String   @id @default(cuid())
+  organizationId String   @unique
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Type de calcul
+  calculationType CommissionType @default(SIMPLE)
+  
+  // Périodicité
+  periodicity   CommissionPeriodicity @default(MONTHLY)
+  
+  // Configuration simple (pourcentage fixe)
+  simpleRate    Decimal  @db.Decimal(5, 2) @default(0)
+  
+  // Configuration par paliers (JSON)
+  tierConfig    String?  @db.Text // JSON: [{"min": 0, "max": 50, "rate": 0}, {"min": 50, "max": 80, "rate": 5}, ...]
+  
+  // Configuration progressive (JSON)
+  progressiveConfig String? @db.Text // JSON: [{"min": 80, "max": 100, "multiplier": 1}, {"min": 100, "max": 110, "multiplier": 1.07}, ...]
+  
+  // Configuration personnalisée (formule)
+  customFormula String?  @db.Text // Formule personnalisée
+  
+  // Paramètres additionnels
+  minThreshold   Decimal  @db.Decimal(12, 3) @default(0) // Seuil minimum pour prime
+  maxCap         Decimal  @db.Decimal(12, 3) // Plafond maximum
+  
+  // Configuration des types de ventes
+  includeNewClients Boolean @default(true)
+  includeRenewals Boolean @default(true)
+  includeRecurring Boolean @default(true)
+  
+  // Délai de paiement (jours)
+  paymentDelay  Int      @default(30) // Délai minimum de paiement client pour que la vente compte
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("commission_configs")
+}
+
+enum CommissionType {
+  SIMPLE       // Pourcentage fixe sur tout le CA
+  TIERS        // Paliers par seuils d'atteinte
+  PROGRESSIVE  // Progressif linéaire (votre exemple)
+  CUSTOM       // Formule personnalisée
+}
+
+enum CommissionPeriodicity {
+  MONTHLY      // Mensuel
+  QUARTERLY    // Trimestriel
+  SEMI_ANNUAL  // Semestriel
+  ANNUAL       // Annuel
 }

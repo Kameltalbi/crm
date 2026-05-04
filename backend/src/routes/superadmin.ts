@@ -204,6 +204,16 @@ superadminRoutes.post('/subscriptions', async (req: AuthRequest, res, next) => {
   } catch (e) { next(e); }
 });
 
+// DELETE subscription
+superadminRoutes.delete('/subscriptions/:id', async (req: AuthRequest, res, next) => {
+  try {
+    await prisma.subscription.delete({
+      where: { id: req.params.id as string },
+    });
+    res.json({ success: true });
+  } catch (e) { next(e); }
+});
+
 superadminRoutes.put('/subscriptions/:id', async (req: AuthRequest, res, next) => {
   try {
     const { startDate, endDate, paymentStatus } = req.body;

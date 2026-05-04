@@ -33,8 +33,10 @@ import { subscriptionsRoutes } from './routes/subscriptions.js';
 import { adminRoutes } from './routes/admin.js';
 import { salesObjectivesRoutes } from './routes/sales-objectives.js';
 import { userPermissionsRoutes } from './routes/user-permissions.js';
+import { superadminRoutes } from './routes/superadmin.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { getUploadsDir } from './lib/uploadsDir.js';
+import { requirePaymentApproved } from './middleware/auth.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;
@@ -127,6 +129,14 @@ app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/sales-objectives', salesObjectivesRoutes);
 app.use('/api/user-permissions', userPermissionsRoutes);
+app.use('/api/superadmin', superadminRoutes);
+
+// Apply payment check to main data routes
+app.use('/api/affaires', requirePaymentApproved);
+app.use('/api/clients', requirePaymentApproved);
+app.use('/api/leads', requirePaymentApproved);
+app.use('/api/products', requirePaymentApproved);
+app.use('/api/activites', requirePaymentApproved);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

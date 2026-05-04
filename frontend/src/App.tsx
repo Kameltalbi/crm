@@ -25,6 +25,8 @@ import { EmailTemplates } from './pages/EmailTemplates';
 import { AIAssistant } from './pages/AIAssistant';
 import { Objectifs } from './pages/Objectifs';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { PaymentPending } from './pages/PaymentPending';
+import { PaymentGuard } from './components/PaymentGuard';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const accessToken = useAuth((s) => s.accessToken);
@@ -51,8 +53,9 @@ export default function App() {
         path="/*"
         element={
           <ProtectedRoute>
-            <Layout>
-              <Routes>
+            <PaymentGuard>
+              <Layout>
+                <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/affaires" element={<Affaires />} />
@@ -69,9 +72,11 @@ export default function App() {
                 <Route path="/email-templates" element={<EmailTemplates />} />
                 <Route path="/ai-assistant" element={<AIAssistant />} />
                 <Route path="/objectifs" element={<Objectifs />} />
+                <Route path="/payment-pending" element={<PaymentPending />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
+            </PaymentGuard>
           </ProtectedRoute>
         }
       />

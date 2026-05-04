@@ -39,6 +39,7 @@ authRoutes.post('/register', async (req, res, next) => {
       data: {
         name: organizationName,
         email: email,
+        paymentStatus: 'PENDING',
       },
     });
 
@@ -99,6 +100,7 @@ authRoutes.post('/register', async (req, res, next) => {
         role: user.role,
         organizationId: user.organizationId,
       },
+      paymentStatus: organization.paymentStatus,
     });
   } catch (e) {
     next(e);
@@ -178,10 +180,16 @@ authRoutes.post('/login', async (req, res, next) => {
       userAgent: req.headers['user-agent'],
     });
 
+    const organization = await prisma.organization.findUnique({
+      where: { id: user.organizationId },
+      select: { paymentStatus: true },
+    });
+
     res.json({
       accessToken,
       refreshToken,
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      paymentStatus: organization?.paymentStatus,
     });
   } catch (e) {
     next(e);
@@ -201,12 +209,19 @@ authRoutes.get('/me', async (req, res, next) => {
         id: true,
         email: true,
         name: true,
+        phone: true,
         role: true,
         organizationId: true,
       },
     });
     if (!user) return res.status(404).json({ error: 'User introuvable' });
-    res.json({ user });
+
+    const organization = await prisma.organization.findUnique({
+      where: { id: user.organizationId },
+      select: { paymentStatus: true },
+    });
+
+    res.json({ user, paymentStatus: organization?.paymentStatus });
   } catch (e) {
     next(e);
   }

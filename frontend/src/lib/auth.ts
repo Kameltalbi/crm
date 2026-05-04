@@ -6,6 +6,7 @@ interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
+  paymentStatus: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -17,6 +18,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   user: null,
   accessToken: localStorage.getItem('accessToken'),
   refreshToken: localStorage.getItem('refreshToken'),
+  paymentStatus: localStorage.getItem('paymentStatus'),
   loading: false,
 
   login: async (email, password) => {
@@ -26,7 +28,8 @@ export const useAuth = create<AuthState>((set, get) => ({
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
-      set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken, loading: false });
+      localStorage.setItem('paymentStatus', data.paymentStatus || 'PENDING');
+      set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken, paymentStatus: data.paymentStatus || 'PENDING', loading: false });
     } catch (e) {
       set({ loading: false });
       throw e;
@@ -43,7 +46,8 @@ export const useAuth = create<AuthState>((set, get) => ({
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    set({ user: null, accessToken: null, refreshToken: null });
+    localStorage.removeItem('paymentStatus');
+    set({ user: null, accessToken: null, refreshToken: null, paymentStatus: null });
   },
 
   fetchMe: async () => {
@@ -51,12 +55,15 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (!accessToken) return;
     try {
       const { data } = await api.get('/auth/me');
-      set({ user: data.user });
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('paymentStatus', data.paymentStatus || 'PENDING');
+      set({ user: data.user, paymentStatus: data.paymentStatus || 'PENDING' });
     } catch {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
-      set({ user: null, accessToken: null, refreshToken: null });
+      localStorage.removeItem('paymentStatus');
+      set({ user: null, accessToken: null, refreshToken: null, paymentStatus: null });
     }
   },
 

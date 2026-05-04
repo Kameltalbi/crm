@@ -21,6 +21,7 @@ model Organization {
   address     String?
   tva         String?  // Numéro TVA
   logoUrl     String?  // URL du logo
+  paymentStatus String @default("PENDING")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -84,9 +85,10 @@ model User {
 }
 
 enum UserRole {
-  OWNER     // Accès complet, gestion des utilisateurs
-  PARTNER   // Accès limité, lecture seule sur les données
-  COMMERCIAL // Accès limité aux opportunités assignées, objectifs
+  OWNER       // Accès complet, gestion des utilisateurs
+  PARTNER     // Accès limité, lecture seule sur les données
+  COMMERCIAL  // Accès limité aux opportunités assignées, objectifs
+  SUPERADMIN  // Super admin pour valider les paiements
 }
 
 // ═══════════════════════════════════════════════════════════════

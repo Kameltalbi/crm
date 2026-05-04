@@ -42,6 +42,14 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction) => {
   }
 };
 
+// Middleware to check if user is SUPERADMIN
+export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user || req.user.role !== 'SUPERADMIN') {
+    return res.status(403).json({ error: 'Accès réservé aux superadmins' });
+  }
+  next();
+};
+
 // Middleware to check if user has permission to access a page
 export const requirePage = (page: string) => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -69,6 +77,37 @@ export const requirePage = (page: string) => {
 
     next();
   };
+};
+
+// Middleware to check if organization payment is approved
+export const requirePaymentApproved = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Non authentifié' });
+  }
+
+  // SUPERADMIN bypasses payment check
+  if (req.user.role === 'SUPERADMIN') {
+    return next();
+  }
+
+  // Check organization payment status
+  const organization = await prisma.organization.findUnique({
+    where: { id: req.organizationId },
+    select: { paymentStatus: true },
+  });
+
+  if (!organization) {
+    return res.status(404).json({ error: 'Organisation introuvable' });
+  }
+
+  if (organization.paymentStatus !== 'APPROVED') {
+    return res.status(403).json({ 
+      error: 'Accès en attente de validation du paiement',
+      paymentStatus: organization.paymentStatus 
+    });
+  }
+
+  next();
 };
 
 export default auth;

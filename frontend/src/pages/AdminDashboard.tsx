@@ -124,10 +124,22 @@ function DashboardTab() {
 }
 
 function OrganizationsTab() {
-  const { data: orgs } = useQuery({ queryKey: ['admin-organizations'], queryFn: () => api.get('/admin/organizations').then(r => r.data) });
-  const statusBadge = (status: string) => {
-    const colors: any = { actif: 'bg-green-100 text-green-700', en_attente: 'bg-yellow-100 text-yellow-700', expiré: 'bg-red-100 text-red-700', aucun: 'bg-gray-100 text-gray-600' };
-    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || colors.aucun}`}>{status}</span>;
+  const { data: orgs } = useQuery({ queryKey: ['admin-organizations'], queryFn: () => api.get('/superadmin/organizations').then(r => r.data) });
+  const queryClient = useQueryClient();
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, paymentStatus }: { id: string; paymentStatus: 'PENDING' | 'APPROVED' | 'REJECTED' }) =>
+      api.put(`/superadmin/organizations/${id}/payment-status`, { paymentStatus }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+
+  const paymentStatusBadge = (status: string) => {
+    const colors: any = { PENDING: 'bg-yellow-100 text-yellow-700', APPROVED: 'bg-green-100 text-green-700', REJECTED: 'bg-red-100 text-red-700' };
+    const labels: any = { PENDING: 'En attente', APPROVED: 'Approuvé', REJECTED: 'Refusé' };
+    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{labels[status] || status}</span>;
   };
 
   return (
@@ -140,24 +152,39 @@ function OrganizationsTab() {
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="text-left p-4 font-medium">Entreprise</th>
-                  <th className="text-left p-4 font-medium">Responsable</th>
                   <th className="text-left p-4 font-medium">Email</th>
-                  <th className="text-left p-4 font-medium">Plan</th>
-                  <th className="text-left p-4 font-medium">Statut</th>
+                  <th className="text-left p-4 font-medium">Téléphone</th>
+                  <th className="text-left p-4 font-medium">Statut paiement</th>
+                  <th className="text-center p-4 font-medium">Utilisateurs</th>
+                  <th className="text-center p-4 font-medium">Clients</th>
+                  <th className="text-center p-4 font-medium">Affaires</th>
                   <th className="text-left p-4 font-medium">Inscription</th>
-                  <th className="text-left p-4 font-medium">Stats</th>
+                  <th className="text-right p-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {orgs?.map((org: any) => (
                   <tr key={org.id} className="hover:bg-gray-50">
                     <td className="p-4 font-medium">{org.name}</td>
-                    <td className="p-4">{org.responsable}</td>
-                    <td className="p-4">{org.emailResponsable}</td>
-                    <td className="p-4">{org.plan}</td>
-                    <td className="p-4">{statusBadge(org.status)}</td>
+                    <td className="p-4">{org.email || '-'}</td>
+                    <td className="p-4">{org.phone || '-'}</td>
+                    <td className="p-4">{paymentStatusBadge(org.paymentStatus)}</td>
+                    <td className="p-4 text-center">{org._count.users}</td>
+                    <td className="p-4 text-center">{org._count.clients}</td>
+                    <td className="p-4 text-center">{org._count.affaires}</td>
                     <td className="p-4">{new Date(org.createdAt).toLocaleDateString('fr-FR')}</td>
-                    <td className="p-4 text-xs text-muted-foreground">{org.usersCount} users · {org.clientsCount} clients · {org.affairesCount} affaires</td>
+                    <td className="p-4 flex gap-2 justify-end">
+                      {org.paymentStatus !== 'APPROVED' && (
+                        <Button size="sm" onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'APPROVED' })} disabled={updateStatusMutation.isPending}>
+                          <CheckCircle size={14} className="mr-1" /> Approuver
+                        </Button>
+                      )}
+                      {org.paymentStatus !== 'REJECTED' && (
+                        <Button size="sm" variant="destructive" onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'REJECTED' })} disabled={updateStatusMutation.isPending}>
+                          <AlertTriangle size={14} className="mr-1" /> Refuser
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

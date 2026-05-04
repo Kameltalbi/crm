@@ -133,6 +133,26 @@ superadminRoutes.put('/organizations/:id/plan', async (req: AuthRequest, res, ne
   } catch (e) { next(e); }
 });
 
+// POST sync all subscriptions with organization plans
+superadminRoutes.post('/subscriptions/sync-plans', async (req: AuthRequest, res, next) => {
+  try {
+    const organizations = await prisma.organization.findMany({
+      select: { id: true, plan: true },
+    });
+
+    let updatedCount = 0;
+    for (const org of organizations) {
+      const result = await prisma.subscription.updateMany({
+        where: { organizationId: org.id },
+        data: { plan: org.plan },
+      });
+      updatedCount += result.count;
+    }
+    
+    res.json({ message: `Synced ${updatedCount} subscriptions`, updatedCount });
+  } catch (e) { next(e); }
+});
+
 // SUBSCRIPTIONS MANAGEMENT
 superadminRoutes.get('/subscriptions', async (req: AuthRequest, res, next) => {
   try {

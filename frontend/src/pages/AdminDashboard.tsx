@@ -342,7 +342,7 @@ function OrganizationsTab() {
 function SubscriptionsTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<any>(null);
-  const [formData, setFormData] = useState({ organizationId: '', plan: 'STARTER', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
+  const [formData, setFormData] = useState({ organizationId: '', plan: 'FREE', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
   const queryClient = useQueryClient();
   const { data: orgs } = useQuery({ queryKey: ['admin-organizations'], queryFn: () => api.get('/superadmin/organizations').then(r => r.data) });
   const { data: subs } = useQuery({ queryKey: ['superadmin-subscriptions'], queryFn: () => api.get('/superadmin/subscriptions').then(r => r.data) });
@@ -352,7 +352,7 @@ function SubscriptionsTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
       setIsDialogOpen(false);
-      setFormData({ organizationId: '', plan: 'STARTER', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
+      setFormData({ organizationId: '', plan: 'FREE', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
     },
   });
 
@@ -391,7 +391,7 @@ function SubscriptionsTab() {
       });
     } else {
       setEditingSubscription(null);
-      setFormData({ organizationId: '', plan: 'STARTER', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
+      setFormData({ organizationId: '', plan: 'FREE', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
     }
     setIsDialogOpen(true);
   };
@@ -465,8 +465,9 @@ function SubscriptionsTab() {
               <Select value={formData.plan} onValueChange={(v) => setFormData({ ...formData, plan: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="STARTER">STARTER</SelectItem>
-                  <SelectItem value="PRO">PRO</SelectItem>
+                  <SelectItem value="FREE">Gratuit</SelectItem>
+                  <SelectItem value="BUSINESS">Business</SelectItem>
+                  <SelectItem value="ENTERPRISE">Entreprise</SelectItem>
                 </SelectContent>
               </Select>
             </div>

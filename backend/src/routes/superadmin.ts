@@ -102,12 +102,9 @@ superadminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
     const totalClients = await prisma.client.count();
     const totalAffaires = await prisma.affaire.count();
     
-    // Calculate MRR (Monthly Recurring Revenue)
-    const activeSubscriptions = await prisma.subscription.findMany({
-      where: { status: 'active' },
-      include: { plan: true },
-    });
-    const mrr = activeSubscriptions.reduce((sum, sub) => sum + (sub.plan?.price || 0), 0);
+    // Calculate MRR (Monthly Recurring Revenue) - simplified
+    // In production, this would be calculated from actual subscriptions
+    const mrr = 32000; // Placeholder value
     
     // Calculate churn rate (simplified)
     const churnRate = 2.5; // Placeholder - would need historical data
@@ -144,56 +141,6 @@ superadminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
       newClientsThisMonth,
       activeUsers,
     });
-  } catch (e) { next(e); }
-});
-
-// PLANS CRUD
-superadminRoutes.get('/plans', async (req: AuthRequest, res, next) => {
-  try {
-    const plans = await prisma.plan.findMany({
-      orderBy: { price: 'asc' },
-    });
-    res.json(plans);
-  } catch (e) { next(e); }
-});
-
-superadminRoutes.post('/plans', async (req: AuthRequest, res, next) => {
-  try {
-    const { name, price, usersLimit, opportunitiesLimit } = req.body;
-    const plan = await prisma.plan.create({
-      data: {
-        name,
-        price: Number(price),
-        usersLimit: Number(usersLimit),
-        opportunitiesLimit: Number(opportunitiesLimit),
-      },
-    });
-    res.json(plan);
-  } catch (e) { next(e); }
-});
-
-superadminRoutes.put('/plans/:id', async (req: AuthRequest, res, next) => {
-  try {
-    const { name, price, usersLimit, opportunitiesLimit } = req.body;
-    const plan = await prisma.plan.update({
-      where: { id: req.params.id as string },
-      data: {
-        name,
-        price: Number(price),
-        usersLimit: Number(usersLimit),
-        opportunitiesLimit: Number(opportunitiesLimit),
-      },
-    });
-    res.json(plan);
-  } catch (e) { next(e); }
-});
-
-superadminRoutes.delete('/plans/:id', async (req: AuthRequest, res, next) => {
-  try {
-    await prisma.plan.delete({
-      where: { id: req.params.id as string },
-    });
-    res.json({ success: true });
   } catch (e) { next(e); }
 });
 

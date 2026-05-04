@@ -15,7 +15,6 @@ const TABS = [
   { id: 'organizations', label: 'Entreprises', icon: Building2 },
   { id: 'subscriptions', label: 'Abonnements', icon: CreditCard },
   { id: 'payments', label: 'Paiements', icon: Receipt },
-  { id: 'plans', label: 'Plans', icon: DollarSign },
   { id: 'users', label: 'Utilisateurs', icon: Users },
   { id: 'settings', label: 'Paramètres', icon: SettingsIcon },
 ];
@@ -58,7 +57,6 @@ export function AdminDashboard() {
         {activeTab === 'organizations' && <OrganizationsTab />}
         {activeTab === 'subscriptions' && <SubscriptionsTab />}
         {activeTab === 'payments' && <PaymentsTab queryClient={queryClient} />}
-        {activeTab === 'plans' && <PlansTab />}
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'settings' && <SettingsTab />}
       </div>
@@ -449,135 +447,6 @@ function UsersTab() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function PlansTab() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<any>(null);
-  const [formData, setFormData] = useState({ name: '', price: '', usersLimit: '', opportunitiesLimit: '' });
-  const queryClient = useQueryClient();
-
-  const { data: plans } = useQuery({ queryKey: ['admin-plans'], queryFn: () => api.get('/superadmin/plans').then(r => r.data) });
-
-  const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/superadmin/plans', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
-      setIsDialogOpen(false);
-      setFormData({ name: '', price: '', usersLimit: '', opportunitiesLimit: '' });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => api.put(`/superadmin/plans/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
-      setIsDialogOpen(false);
-      setEditingPlan(null);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/superadmin/plans/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
-    },
-  });
-
-  const handleSubmit = () => {
-    if (editingPlan) {
-      updateMutation.mutate({ id: editingPlan.id, data: formData });
-    } else {
-      createMutation.mutate(formData);
-    }
-  };
-
-  const openDialog = (plan?: any) => {
-    if (plan) {
-      setEditingPlan(plan);
-      setFormData({ name: plan.name, price: plan.price, usersLimit: plan.usersLimit, opportunitiesLimit: plan.opportunitiesLimit });
-    } else {
-      setEditingPlan(null);
-      setFormData({ name: '', price: '', usersLimit: '', opportunitiesLimit: '' });
-    }
-    setIsDialogOpen(true);
-  };
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Plans</h2>
-        <Button onClick={() => openDialog()}>
-          <Plus size={16} className="mr-2" /> Nouveau Plan
-        </Button>
-      </div>
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left p-4 font-medium">Nom du Plan</th>
-                  <th className="text-left p-4 font-medium">Prix Annuel</th>
-                  <th className="text-left p-4 font-medium">Limite Utilisateurs</th>
-                  <th className="text-left p-4 font-medium">Limite Opportunités</th>
-                  <th className="text-right p-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {plans?.map((plan: any) => (
-                  <tr key={plan.id} className="hover:bg-gray-50">
-                    <td className="p-4 font-medium">{plan.name}</td>
-                    <td className="p-4">{plan.price} DT/an</td>
-                    <td className="p-4">{plan.usersLimit}</td>
-                    <td className="p-4">{plan.opportunitiesLimit}</td>
-                    <td className="p-4 flex gap-2 justify-end">
-                      <Button size="sm" variant="outline" onClick={() => openDialog(plan)}>
-                        <Edit size={14} />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate(plan.id)}>
-                        <Trash2 size={14} />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingPlan ? 'Modifier le Plan' : 'Nouveau Plan'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Nom du Plan</Label>
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-            </div>
-            <div>
-              <Label>Prix Annuel (DT)</Label>
-              <Input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
-            </div>
-            <div>
-              <Label>Limite Utilisateurs</Label>
-              <Input type="number" value={formData.usersLimit} onChange={(e) => setFormData({ ...formData, usersLimit: e.target.value })} />
-            </div>
-            <div>
-              <Label>Limite Opportunités</Label>
-              <Input type="number" value={formData.opportunitiesLimit} onChange={(e) => setFormData({ ...formData, opportunitiesLimit: e.target.value })} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Annuler</Button>
-            <Button onClick={handleSubmit}>{editingPlan ? 'Modifier' : 'Créer'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -764,7 +764,7 @@ model CommissionConfig {
   
   // Paramètres additionnels
   minThreshold   Decimal  @db.Decimal(12, 3) @default(0) // Seuil minimum pour prime
-  maxCap         Decimal  @db.Decimal(12, 3) // Plafond maximum
+  maxCap         Decimal? @db.Decimal(12, 3) // Plafond maximum
   
   // Configuration des types de ventes
   includeNewClients Boolean @default(true)

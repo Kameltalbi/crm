@@ -1,8 +1,11 @@
-import { Clock, RefreshCw } from 'lucide-react';
+import { Clock, RefreshCw, Home } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export function PaymentPending() {
+  const navigate = useNavigate();
+  
   const handleRefresh = () => {
     window.location.reload();
   };
@@ -33,10 +36,16 @@ export function PaymentPending() {
               • Le délai de traitement est généralement de 24h
             </p>
           </div>
-          <Button onClick={handleRefresh} className="w-full" variant="outline">
-            <RefreshCw size={16} className="mr-2" />
-            Actualiser la page
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/')} variant="outline" className="flex-1">
+              <Home size={16} className="mr-2" />
+              Retour accueil
+            </Button>
+            <Button onClick={handleRefresh} className="flex-1">
+              <RefreshCw size={16} className="mr-2" />
+              Actualiser
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

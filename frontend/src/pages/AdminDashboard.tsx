@@ -347,6 +347,14 @@ function SubscriptionsTab() {
   const { data: orgs } = useQuery({ queryKey: ['admin-organizations'], queryFn: () => api.get('/superadmin/organizations').then(r => r.data) });
   const { data: subs } = useQuery({ queryKey: ['superadmin-subscriptions'], queryFn: () => api.get('/superadmin/subscriptions').then(r => r.data) });
 
+  const syncSubscriptionsMutation = useMutation({
+    mutationFn: () => api.post('/superadmin/subscriptions/sync-plans'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
+      alert('Abonnements synchronisés avec succès !');
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: (data: any) => api.post('/superadmin/subscriptions', data),
     onSuccess: () => {
@@ -400,9 +408,14 @@ function SubscriptionsTab() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Abonnements</h2>
-        <Button onClick={() => openDialog()}>
-          <Plus size={16} className="mr-2" /> Nouvel Abonnement
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => syncSubscriptionsMutation.mutate()} disabled={syncSubscriptionsMutation.isPending}>
+            {syncSubscriptionsMutation.isPending ? 'Synchronisation...' : 'Synchroniser les plans'}
+          </Button>
+          <Button onClick={() => openDialog()}>
+            <Plus size={16} className="mr-2" /> Nouvel Abonnement
+          </Button>
+        </div>
       </div>
       <Card>
         <CardContent className="p-0">

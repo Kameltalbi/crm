@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin, Menu, X, Target, Lock, DollarSign, PieChart } from 'lucide-react';
+import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin, Menu, X, Target, Lock, DollarSign, PieChart, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Landing() {
@@ -268,6 +268,15 @@ export function Landing() {
               <h3 className="text-xl font-semibold mb-2">Taux de couverture</h3>
               <p className="text-base text-muted-foreground">
                 Analysez le taux de couverture des dépenses par rapport à vos revenus pour une meilleure gestion financière.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center mb-4">
+                <Award size={24} className="text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Gestion des primes</h3>
+              <p className="text-base text-muted-foreground">
+                Calculez et gérez les primes de vos commerciaux en fonction de leurs performances et objectifs atteints.
               </p>
             </div>
           </div>

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, CreditCard, Wallet, ArrowRight } from 'lucide-react';
+import { Check, CreditCard, Wallet, ArrowRight, X, Phone, Mail, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
 import { useMutation } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 
 const plans = [
   {
@@ -22,7 +23,7 @@ const plans = [
   },
   {
     name: 'Business',
-    monthlyPrice: 40,
+    monthlyPrice: 48,
     annualPrice: 480,
     features: [
       'Prospects illimités',
@@ -39,7 +40,7 @@ const plans = [
   },
   {
     name: 'Entreprise',
-    monthlyPrice: 80,
+    monthlyPrice: 96,
     annualPrice: 960,
     features: [
       'Tout du plan Business',
@@ -65,6 +66,7 @@ export function Pricing() {
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'VIREMENT' | 'ESPECES'>('VIREMENT');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(true);
 
   const subscribeMutation = useMutation({
     mutationFn: () =>
@@ -86,91 +88,190 @@ export function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Choisissez votre plan
-          </h1>
-          <p className="text-xl text-gray-600 mb-2">
-            Paiement annuel uniquement
-          </p>
-          <p className="text-sm text-gray-500">
-            Sans engagement – support inclus – mise en place rapide
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {plans.map((plan) => (
-            <Card 
-              key={plan.name} 
-              className={`border-2 transition-all hover:shadow-xl ${
-                plan.popular 
-                  ? 'border-leaf shadow-xl relative scale-105 z-10' 
-                  : 'border-gray-200'
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-leaf text-white text-sm font-semibold px-4 py-1 rounded-full shadow-md">
-                  Plus populaire
-                </div>
-              )}
-              <CardHeader className="pt-8">
-                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <p className="text-4xl font-bold text-gray-900">{plan.annualPrice} DT</p>
-                  <p className="text-sm text-gray-500">par an</p>
-                  <p className="text-xs text-gray-400">{plan.monthlyPrice} DT/mois</p>
-                </div>
-
-                <ul className="space-y-4">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <Check className="text-leaf flex-shrink-0 mt-0.5" size={20} />
-                      <span className="text-sm text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  className="w-full"
-                  variant={plan.popular ? 'default' : 'outline'}
-                  onClick={() => handleSubscribe(plan.name)}
-                  size="lg"
-                >
-                  {plan.cta}
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      {/* Header */}
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link to="/" className="flex items-center gap-2">
+              <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-foreground">CRM</span>
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link to="/login">
+                <Button variant="ghost" size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">
+                  Connexion
                 </Button>
+              </Link>
+              <Link to="/register">
+                <Button size="lg" className="bg-leaf hover:bg-leaf/90">
+                  S'inscrire
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="py-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Choisissez votre plan
+            </h1>
+            
+            {/* Toggle Monthly/Annual */}
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <span className={`text-lg ${!isAnnual ? 'font-semibold text-leaf' : 'text-gray-600'}`}>Mensuel</span>
+              <button
+                onClick={() => setIsAnnual(!isAnnual)}
+                className={`relative w-16 h-8 rounded-full transition-colors ${isAnnual ? 'bg-leaf' : 'bg-gray-300'}`}
+              >
+                <div
+                  className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white transition-transform ${isAnnual ? 'translate-x-8' : 'translate-x-0'}`}
+                />
+              </button>
+              <span className={`text-lg ${isAnnual ? 'font-semibold text-leaf' : 'text-gray-600'}`}>Annuel</span>
+              {isAnnual && (
+                <span className="text-sm bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-medium">
+                  Économisez 17%
+                </span>
+              )}
+            </div>
+            
+            <p className="text-sm text-gray-500">
+              Sans engagement – support inclus – mise en place rapide
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {plans.map((plan) => (
+              <Card 
+                key={plan.name} 
+                className={`border-2 transition-all hover:shadow-xl ${
+                  plan.popular 
+                    ? 'border-leaf shadow-xl relative scale-105 z-10' 
+                    : 'border-gray-200'
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-leaf text-white text-sm font-semibold px-4 py-1 rounded-full shadow-md">
+                    Plus populaire
+                  </div>
+                )}
+                <CardHeader className="pt-8">
+                  <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <p className="text-4xl font-bold text-gray-900">
+                      {isAnnual ? plan.annualPrice : plan.monthlyPrice} DT
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {isAnnual ? 'par an' : 'par mois'}
+                    </p>
+                    {plan.annualPrice > 0 && (
+                      <p className="text-xs text-gray-400">
+                        {isAnnual 
+                          ? `${plan.monthlyPrice} DT/mois` 
+                          : `${plan.annualPrice} DT/an`}
+                      </p>
+                    )}
+                  </div>
+
+                  <ul className="space-y-4">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <Check className="text-leaf flex-shrink-0 mt-0.5" size={20} />
+                        <span className="text-sm text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className="w-full"
+                    variant={plan.popular ? 'default' : 'outline'}
+                    onClick={() => handleSubscribe(plan.name)}
+                    size="lg"
+                  >
+                    {plan.cta}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-12 max-w-2xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>Modes de paiement acceptés</CardTitle>
+              </CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <CreditCard className="text-leaf" size={32} />
+                  <div>
+                    <p className="font-semibold">Virement bancaire</p>
+                    <p className="text-sm text-gray-600">Détails fournis après inscription</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                  <Wallet className="text-leaf" size={32} />
+                  <div>
+                    <p className="font-semibold">Espèces</p>
+                    <p className="text-sm text-gray-600">Paiement en main propre</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-
-        <div className="mt-12 max-w-2xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Modes de paiement acceptés</CardTitle>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                <CreditCard className="text-leaf" size={32} />
-                <div>
-                  <p className="font-semibold">Virement bancaire</p>
-                  <p className="text-sm text-gray-600">Détails fournis après inscription</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                <Wallet className="text-leaf" size={32} />
-                <div>
-                  <p className="font-semibold">Espèces</p>
-                  <p className="text-sm text-gray-600">Paiement en main propre</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
+                <span className="text-xl font-bold">CRM</span>
+              </div>
+              <p className="text-gray-400 text-sm">
+                Le CRM simple et puissant pour gérer vos ventes et vos clients.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Contact</h3>
+              <div className="space-y-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2">
+                  <Phone size={16} />
+                  <span>+216 XX XXX XXX</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail size={16} />
+                  <span>contact@ktoptima.com</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin size={16} />
+                  <span>Tunisie</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Liens rapides</h3>
+              <div className="space-y-2 text-sm text-gray-400">
+                <Link to="/" className="block hover:text-white transition-colors">Accueil</Link>
+                <Link to="/pricing" className="block hover:text-white transition-colors">Tarifs</Link>
+                <Link to="/legal/privacy" className="block hover:text-white transition-colors">Politique de confidentialité</Link>
+                <Link to="/legal/terms" className="block hover:text-white transition-colors">Conditions d'utilisation</Link>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
+            <p>© 2026 ktOptima CRM. Tous droits réservés.</p>
+          </div>
+        </div>
+      </footer>
 
       {/* Subscription Dialog */}
       {dialogOpen && (
@@ -183,7 +284,12 @@ export function Pricing() {
               <div>
                 <p className="text-sm text-gray-500">Plan sélectionné</p>
                 <p className="font-semibold text-lg">{selectedPlan}</p>
-                <p className="text-2xl font-bold">{plans.find(p => p.name === selectedPlan)?.annualPrice} DT/an</p>
+                <p className="text-2xl font-bold">
+                  {isAnnual 
+                    ? `${plans.find(p => p.name === selectedPlan)?.annualPrice} DT/an`
+                    : `${plans.find(p => p.name === selectedPlan)?.monthlyPrice} DT/mois`
+                  }
+                </p>
               </div>
 
               <div>

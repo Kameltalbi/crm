@@ -13,6 +13,10 @@ const updatePaymentStatusSchema = z.object({
   paymentStatus: z.enum(['PENDING', 'APPROVED', 'REJECTED']),
 });
 
+const updatePlanSchema = z.object({
+  plan: z.enum(['FREE', 'BUSINESS', 'ENTERPRISE']),
+});
+
 // GET all organizations with payment status
 superadminRoutes.get('/organizations', async (req: AuthRequest, res, next) => {
   try {
@@ -102,6 +106,20 @@ superadminRoutes.put('/organizations/:id/suspend', async (req: AuthRequest, res,
     const organization = await prisma.organization.update({
       where: { id: req.params.id as string },
       data: { suspended },
+    });
+    
+    res.json(organization);
+  } catch (e) { next(e); }
+});
+
+// PUT update organization plan
+superadminRoutes.put('/organizations/:id/plan', async (req: AuthRequest, res, next) => {
+  try {
+    const { plan } = updatePlanSchema.parse(req.body);
+    
+    const organization = await prisma.organization.update({
+      where: { id: req.params.id as string },
+      data: { plan },
     });
     
     res.json(organization);

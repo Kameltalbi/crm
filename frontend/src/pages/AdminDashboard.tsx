@@ -191,6 +191,15 @@ function OrganizationsTab() {
     },
   });
 
+  const updatePlanMutation = useMutation({
+    mutationFn: ({ id, plan }: { id: string; plan: 'FREE' | 'BUSINESS' | 'ENTERPRISE' }) =>
+      api.put(`/superadmin/organizations/${id}/plan`, { plan }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/superadmin/organizations/${id}`),
     onSuccess: () => {
@@ -222,6 +231,12 @@ function OrganizationsTab() {
     const colors: any = { PENDING: 'bg-yellow-100 text-yellow-700', APPROVED: 'bg-green-100 text-green-700', REJECTED: 'bg-red-100 text-red-700' };
     const labels: any = { PENDING: 'En attente', APPROVED: 'Approuvé', REJECTED: 'Refusé' };
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{labels[status] || status}</span>;
+  };
+
+  const planBadge = (plan: string) => {
+    const colors: any = { FREE: 'bg-gray-100 text-gray-700', BUSINESS: 'bg-blue-100 text-blue-700', ENTERPRISE: 'bg-purple-100 text-purple-700' };
+    const labels: any = { FREE: 'Gratuit', BUSINESS: 'Business', ENTERPRISE: 'Entreprise' };
+    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[plan] || 'bg-gray-100 text-gray-600'}`}>{labels[plan] || plan}</span>;
   };
 
   const suspendedBadge = (suspended: boolean) => {
@@ -259,7 +274,7 @@ function OrganizationsTab() {
                     <td className="p-4 font-medium">{org.name}</td>
                     <td className="p-4">{org.email || '-'}</td>
                     <td className="p-4">{org.phone || '-'}</td>
-                    <td className="p-4">{org.plan || 'Basic'}</td>
+                    <td className="p-4">{planBadge(org.plan || 'FREE')}</td>
                     <td className="p-4">{paymentStatusBadge(org.paymentStatus)}</td>
                     <td className="p-4">{suspendedBadge(org.suspended)}</td>
                     <td className="p-4 text-center">{org._count.users}</td>
@@ -277,10 +292,25 @@ function OrganizationsTab() {
                             </svg>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
+                        <DropdownMenuContent align="end">
                           {org._count.users > 0 && (
                             <DropdownMenuItem onClick={() => impersonateMutation.mutate(org.id)}>
                               <UserCheck size={14} className="mr-2" /> Se connecter
+                            </DropdownMenuItem>
+                          )}
+                          {org.plan !== 'FREE' && (
+                            <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'FREE' })} disabled={updatePlanMutation.isPending}>
+                              <Building2 size={14} className="mr-2" /> Passer Gratuit
+                            </DropdownMenuItem>
+                          )}
+                          {org.plan !== 'BUSINESS' && (
+                            <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'BUSINESS' })} disabled={updatePlanMutation.isPending}>
+                              <Building2 size={14} className="mr-2" /> Passer Business
+                            </DropdownMenuItem>
+                          )}
+                          {org.plan !== 'ENTERPRISE' && (
+                            <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'ENTERPRISE' })} disabled={updatePlanMutation.isPending}>
+                              <Building2 size={14} className="mr-2" /> Passer Entreprise
                             </DropdownMenuItem>
                           )}
                           {org.paymentStatus !== 'APPROVED' && (

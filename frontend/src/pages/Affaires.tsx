@@ -394,7 +394,6 @@ export function Affaires() {
                 <thead>
                   <tr className="border-b bg-sage">
                     <th className="text-left p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Client / Titre</th>
-                    <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Score</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">Probabilité</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">HT (DT)</th>
                     <th className="text-right p-2 md:p-2.5 uppercase tracking-wider text-leaf font-semibold">TTC</th>
@@ -423,15 +422,6 @@ export function Affaires() {
                             )}
                           </div>
                           <div className="text-[10px] text-muted-foreground">{a.title}</div>
-                        </td>
-                        <td className="p-2.5 text-right">
-                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
-                            (a.score || 0) >= 70 ? 'bg-green-100 text-green-700' :
-                            (a.score || 0) >= 40 ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
-                          }`}>
-                            {a.score || 0}
-                          </span>
                         </td>
                         <td className="p-2.5 text-right font-semibold">{a.probabilite}%</td>
                         <td className="p-2.5 text-right font-mono">{fmtDT(ht)}</td>

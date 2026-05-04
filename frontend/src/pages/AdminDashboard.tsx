@@ -191,6 +191,14 @@ function OrganizationsTab() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/superadmin/organizations/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+
   const impersonateMutation = useMutation({
     mutationFn: (userId: string) => api.post('/superadmin/impersonate', { userId }),
     onSuccess: (data) => {
@@ -251,6 +259,9 @@ function OrganizationsTab() {
                           <CheckCircle size={14} className="mr-1" /> Approuver
                         </Button>
                       )}
+                      <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate(org.id)} disabled={deleteMutation.isPending}>
+                        <Trash2 size={14} />
+                      </Button>
                     </td>
                   </tr>
                 ))}

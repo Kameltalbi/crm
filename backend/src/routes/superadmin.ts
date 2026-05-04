@@ -70,6 +70,16 @@ superadminRoutes.get('/organizations/:id', async (req: AuthRequest, res, next) =
   } catch (e) { next(e); }
 });
 
+// DELETE organization
+superadminRoutes.delete('/organizations/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const organization = await prisma.organization.delete({
+      where: { id: req.params.id as string },
+    });
+    res.json({ success: true, message: 'Organisation supprimée avec succès' });
+  } catch (e) { next(e); }
+});
+
 // PUT update payment status
 superadminRoutes.put('/organizations/:id/payment-status', async (req: AuthRequest, res, next) => {
   try {

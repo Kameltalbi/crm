@@ -122,7 +122,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Sidebar */}
         <aside
           className={cn(
-            'fixed z-40 flex flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-primary via-primary to-[hsl(148,58%,17%)] text-white shadow-[4px_0_24px_-4px_rgba(0,0,0,0.12)] transition-[width,transform] duration-300 ease-out lg:relative',
+            'fixed z-40 flex h-screen flex-col overflow-hidden border-r border-white/10 bg-gradient-to-b from-primary via-primary to-[hsl(148,58%,17%)] text-white shadow-[4px_0_24px_-4px_rgba(0,0,0,0.12)] transition-[width,transform] duration-300 ease-out lg:relative lg:h-auto',
             sidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full lg:w-0 lg:translate-x-0'
           )}
         >

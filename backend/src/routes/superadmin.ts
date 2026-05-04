@@ -122,6 +122,12 @@ superadminRoutes.put('/organizations/:id/plan', async (req: AuthRequest, res, ne
       where: { id: req.params.id as string },
       data: { plan },
     });
+
+    // Update all subscriptions for this organization
+    await prisma.subscription.updateMany({
+      where: { organizationId: req.params.id as string },
+      data: { plan },
+    });
     
     res.json(organization);
   } catch (e) { next(e); }

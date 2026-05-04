@@ -44,7 +44,7 @@ salesObjectivesRoutes.get('/:id', async (req: AuthRequest, res, next) => {
   try {
     const objective = await prisma.salesObjective.findFirst({
       where: {
-        id: req.params.id,
+        id: req.params.id as string,
         organizationId: req.organizationId,
       },
       include: {
@@ -103,7 +103,7 @@ salesObjectivesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 
     // Check if objective exists and belongs to organization
     const existing = await prisma.salesObjective.findFirst({
-      where: { id: req.params.id, organizationId: req.organizationId },
+      where: { id: req.params.id as string, organizationId: req.organizationId },
     });
     if (!existing) return res.status(404).json({ error: 'Objectif introuvable' });
 
@@ -115,14 +115,14 @@ salesObjectivesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
           userId: data.userId || existing.userId,
           year: data.year || existing.year,
           month: data.month || existing.month,
-          id: { not: req.params.id },
+          id: { not: req.params.id as string },
         },
       });
       if (checkDuplicate) return res.status(400).json({ error: 'Un objectif existe déjà pour ce commercial, année et mois' });
     }
 
     const objective = await prisma.salesObjective.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data,
       include: {
         user: {
@@ -139,11 +139,11 @@ salesObjectivesRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 salesObjectivesRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
     const objective = await prisma.salesObjective.findFirst({
-      where: { id: req.params.id, organizationId: req.organizationId },
+      where: { id: req.params.id as string, organizationId: req.organizationId },
     });
     if (!objective) return res.status(404).json({ error: 'Objectif introuvable' });
 
-    await prisma.salesObjective.delete({ where: { id: req.params.id } });
+    await prisma.salesObjective.delete({ where: { id: req.params.id as string } });
     res.status(204).send();
   } catch (e) { next(e); }
 });

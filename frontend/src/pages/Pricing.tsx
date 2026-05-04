@@ -134,7 +134,7 @@ export function Pricing() {
               <span className={`text-lg ${isAnnual ? 'font-semibold text-leaf' : 'text-gray-600'}`}>Annuel</span>
               {isAnnual && (
                 <span className="text-sm bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-medium">
-                  Économisez 17%
+                  Économisez 2 mois
                 </span>
               )}
             </div>

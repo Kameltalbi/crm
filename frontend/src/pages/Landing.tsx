@@ -75,12 +75,12 @@ export function Landing() {
             </nav>
               <div className="hidden md:flex items-center gap-3">
                 <Link to="/login">
-                  <Button variant="ghost" size="lg">
+                  <Button variant="ghost" size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">
                     Connexion
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="lg" className="bg-leaf hover:bg-leaf/90">
+                  <Button size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">
                     S'inscrire
                   </Button>
                 </Link>

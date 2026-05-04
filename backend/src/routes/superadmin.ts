@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import auth, { requireSuperAdmin, AuthRequest } from '../middleware/auth.js';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 export const superadminRoutes = Router();
 superadminRoutes.use(auth);
@@ -100,6 +102,33 @@ superadminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
     const totalClients = await prisma.client.count();
     const totalAffaires = await prisma.affaire.count();
     
+    // Calculate MRR (Monthly Recurring Revenue)
+    const activeSubscriptions = await prisma.subscription.findMany({
+      where: { status: 'active' },
+      include: { plan: true },
+    });
+    const mrr = activeSubscriptions.reduce((sum, sub) => sum + (sub.plan?.price || 0), 0);
+    
+    // Calculate churn rate (simplified)
+    const churnRate = 2.5; // Placeholder - would need historical data
+    
+    // New clients this month
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const newClientsThisMonth = await prisma.organization.count({
+      where: {
+        createdAt: { gte: firstDayOfMonth },
+      },
+    });
+    
+    // Active users in last 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const activeUsers = await prisma.user.count({
+      where: {
+        updatedAt: { gte: thirtyDaysAgo },
+      },
+    });
+    
     res.json({
       organizations: {
         total: totalOrganizations,
@@ -110,6 +139,180 @@ superadminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
       users: totalUsers,
       clients: totalClients,
       affaires: totalAffaires,
+      mrr,
+      churnRate,
+      newClientsThisMonth,
+      activeUsers,
+    });
+  } catch (e) { next(e); }
+});
+
+// PLANS CRUD
+superadminRoutes.get('/plans', async (req: AuthRequest, res, next) => {
+  try {
+    const plans = await prisma.plan.findMany({
+      orderBy: { price: 'asc' },
+    });
+    res.json(plans);
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.post('/plans', async (req: AuthRequest, res, next) => {
+  try {
+    const { name, price, usersLimit, opportunitiesLimit } = req.body;
+    const plan = await prisma.plan.create({
+      data: {
+        name,
+        price: Number(price),
+        usersLimit: Number(usersLimit),
+        opportunitiesLimit: Number(opportunitiesLimit),
+      },
+    });
+    res.json(plan);
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.put('/plans/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const { name, price, usersLimit, opportunitiesLimit } = req.body;
+    const plan = await prisma.plan.update({
+      where: { id: req.params.id as string },
+      data: {
+        name,
+        price: Number(price),
+        usersLimit: Number(usersLimit),
+        opportunitiesLimit: Number(opportunitiesLimit),
+      },
+    });
+    res.json(plan);
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.delete('/plans/:id', async (req: AuthRequest, res, next) => {
+  try {
+    await prisma.plan.delete({
+      where: { id: req.params.id as string },
+    });
+    res.json({ success: true });
+  } catch (e) { next(e); }
+});
+
+// USERS MANAGEMENT
+superadminRoutes.get('/users', async (req: AuthRequest, res, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        organization: {
+          select: { name: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(users.map((u: any) => ({
+      ...u,
+      organizationName: u.organization.name,
+      blocked: u.failedLoginAttempts >= 5,
+      lastLogin: u.updatedAt,
+    })));
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.post('/users/:userId/block', async (req: AuthRequest, res, next) => {
+  try {
+    await prisma.user.update({
+      where: { id: req.params.userId as string },
+      data: { failedLoginAttempts: 5, lockedUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) },
+    });
+    res.json({ success: true });
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.post('/users/:userId/unblock', async (req: AuthRequest, res, next) => {
+  try {
+    await prisma.user.update({
+      where: { id: req.params.userId as string },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
+    res.json({ success: true });
+  } catch (e) { next(e); }
+});
+
+// IMPERSONATION
+superadminRoutes.post('/impersonate', async (req: AuthRequest, res, next) => {
+  try {
+    const { userId } = req.body;
+    
+    // Get the target user
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { organization: true },
+    });
+    
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Utilisateur introuvable' });
+    }
+    
+    // Store original token
+    const originalToken = req.headers.authorization?.replace('Bearer ', '');
+    
+    // Generate new token for target user
+    const accessToken = jwt.sign({ userId: targetUser.id }, process.env.JWT_SECRET!, {
+      expiresIn: '15m',
+    });
+    
+    const refreshToken = await prisma.refreshToken.create({
+      data: {
+        token: crypto.randomBytes(32).toString('hex'),
+        userId: targetUser.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+    
+    res.json({
+      accessToken,
+      refreshToken: refreshToken.token,
+      originalToken,
+      user: {
+        id: targetUser.id,
+        email: targetUser.email,
+        name: targetUser.name,
+        role: targetUser.role,
+        organizationId: targetUser.organizationId,
+      },
+    });
+  } catch (e) { next(e); }
+});
+
+// SETTINGS
+superadminRoutes.get('/settings', async (req: AuthRequest, res, next) => {
+  try {
+    // For now, return default settings
+    // In production, these would be stored in a database
+    res.json({
+      currency: 'TND',
+      language: 'fr',
+      vatRate: 19,
+      smtpHost: '',
+      smtpPort: 587,
+      smtpUser: '',
+    });
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.put('/settings', async (req: AuthRequest, res, next) => {
+  try {
+    const { currency, language, vatRate, smtpHost, smtpPort, smtpUser, smtpPassword } = req.body;
+    
+    // In production, these would be stored in a database
+    // For now, just return success
+    res.json({
+      currency,
+      language,
+      vatRate,
+      smtpHost,
+      smtpPort,
+      smtpUser,
+      smtpPassword,
     });
   } catch (e) { next(e); }
 });

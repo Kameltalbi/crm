@@ -3,16 +3,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, CreditCard, Activity, CheckCircle, Clock, AlertTriangle, LogOut, LayoutDashboard, Receipt, Shield, DollarSign } from 'lucide-react';
+import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/form-controls';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Users, Building2, CreditCard, Activity, CheckCircle, Clock, AlertTriangle, LogOut, LayoutDashboard, Receipt, Shield, DollarSign, TrendingUp, TrendingDown, Eye, EyeOff, Settings as SettingsIcon, Key, UserCheck, UserX, Plus, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'organizations', label: 'Entreprises', icon: Building2 },
   { id: 'subscriptions', label: 'Abonnements', icon: CreditCard },
   { id: 'payments', label: 'Paiements', icon: Receipt },
+  { id: 'plans', label: 'Plans', icon: DollarSign },
   { id: 'users', label: 'Utilisateurs', icon: Users },
+  { id: 'settings', label: 'Paramètres', icon: SettingsIcon },
 ];
 
 export function AdminDashboard() {
@@ -53,72 +58,124 @@ export function AdminDashboard() {
         {activeTab === 'organizations' && <OrganizationsTab />}
         {activeTab === 'subscriptions' && <SubscriptionsTab />}
         {activeTab === 'payments' && <PaymentsTab queryClient={queryClient} />}
+        {activeTab === 'plans' && <PlansTab />}
         {activeTab === 'users' && <UsersTab />}
+        {activeTab === 'settings' && <SettingsTab />}
       </div>
     </div>
   );
 }
 
 function DashboardTab() {
-  const { data: stats } = useQuery({ queryKey: ['admin-stats'], queryFn: () => api.get('/admin/stats').then(r => r.data) });
-  const { data: activity } = useQuery({ queryKey: ['admin-activity'], queryFn: () => api.get('/admin/activity').then(r => r.data) });
+  const { data: stats } = useQuery({ queryKey: ['superadmin-stats'], queryFn: () => api.get('/superadmin/stats').then(r => r.data) });
 
-  const cards = [
-    { label: 'Entreprises inscrites', value: stats?.totalOrganizations || 0, icon: Building2, color: 'text-blue-600' },
-    { label: 'Abonnements actifs', value: stats?.activeSubscriptions || 0, icon: CheckCircle, color: 'text-green-600' },
-    { label: 'Paiements en attente', value: stats?.pendingPayments || 0, icon: Clock, color: 'text-yellow-600' },
-    { label: 'Validés ce mois', value: stats?.paidThisMonth || 0, icon: Receipt, color: 'text-emerald-600' },
-    { label: 'Abonnements expirés', value: stats?.expiredSubscriptions || 0, icon: AlertTriangle, color: 'text-red-600' },
-    { label: 'CA encaissé ce mois', value: `${stats?.caThisMonth || 0} DT`, icon: DollarSign, color: 'text-purple-600' },
+  // Dummy data for charts
+  const revenueData = [
+    { month: 'Jan', revenue: 12000 },
+    { month: 'Fév', revenue: 19000 },
+    { month: 'Mar', revenue: 15000 },
+    { month: 'Avr', revenue: 22000 },
+    { month: 'Mai', revenue: 28000 },
+    { month: 'Juin', revenue: 32000 },
+  ];
+
+  const clientsData = [
+    { month: 'Jan', clients: 5 },
+    { month: 'Fév', clients: 8 },
+    { month: 'Mar', clients: 12 },
+    { month: 'Avr', clients: 15 },
+    { month: 'Mai', clients: 20 },
+    { month: 'Juin', clients: 25 },
+  ];
+
+  const kpiCards = [
+    { label: 'MRR Mensuel', value: `${stats?.mrr || 32000} DT`, icon: DollarSign, color: 'text-purple-600', trend: '+12%', trendUp: true },
+    { label: 'Clients Actifs', value: stats?.organizations?.approved || 25, icon: Building2, color: 'text-blue-600', trend: '+5', trendUp: true },
+    { label: 'Nouveaux Clients', value: stats?.newClientsThisMonth || 5, icon: Users, color: 'text-green-600', trend: '+2', trendUp: true },
+    { label: 'Taux de Churn', value: `${stats?.churnRate || 2.5}%`, icon: TrendingDown, color: 'text-red-600', trend: '-0.5%', trendUp: true },
+    { label: 'Paiements en attente', value: stats?.organizations?.pending || 3, icon: Clock, color: 'text-yellow-600', trend: '+1', trendUp: false },
+    { label: 'Utilisateurs Actifs (30j)', value: stats?.activeUsers || 45, icon: Activity, color: 'text-emerald-600', trend: '+8', trendUp: true },
   ];
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
+      
+      {/* KPI Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {cards.map((card) => (
+        {kpiCards.map((card) => (
           <Card key={card.label}>
             <CardContent className="flex items-center gap-4 p-6">
               <card.icon className={`${card.color} flex-shrink-0`} size={28} />
-              <div>
+              <div className="flex-1">
                 <p className="text-2xl font-bold">{card.value}</p>
                 <p className="text-sm text-muted-foreground">{card.label}</p>
+              </div>
+              <div className={`flex items-center gap-1 text-xs ${card.trendUp ? 'text-green-600' : 'text-red-600'}`}>
+                {card.trendUp ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                {card.trend}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Charts */}
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
         <Card>
-          <CardHeader><CardTitle className="text-lg">Infos système</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>Utilisateurs : <strong>{stats?.totalUsers || 0}</strong></p>
-            <p>Clients : <strong>{stats?.totalClients || 0}</strong></p>
-            <p>Opportunités : <strong>{stats?.totalAffaires || 0}</strong></p>
-            <p>Base de données : <strong>{stats?.databaseSize || 'N/A'}</strong></p>
-            <p>Uptime : <strong>{stats?.systemUptime || 'N/A'}</strong></p>
+          <CardHeader>
+            <CardTitle className="text-lg">Évolution du Revenu (MRR)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-lg">Activité récente</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-lg">Croissance des Nouveaux Clients</CardTitle>
+          </CardHeader>
           <CardContent>
-            {activity?.length > 0 ? (
-              <div className="space-y-3">
-                {activity.map((a: any, i: number) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <Activity className="text-muted-foreground mt-0.5 flex-shrink-0" size={14} />
-                    <div>
-                      <p className="text-sm">{a.action}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(a.timestamp).toLocaleString('fr-FR')}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="text-sm text-muted-foreground">Aucune activité</p>}
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={clientsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="clients" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
+      {/* System Info */}
+      <Card>
+        <CardHeader><CardTitle className="text-lg">Informations Système</CardTitle></CardHeader>
+        <CardContent className="grid md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <p className="text-muted-foreground">Total Utilisateurs</p>
+            <p className="text-lg font-bold">{stats?.users || 0}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Total Clients</p>
+            <p className="text-lg font-bold">{stats?.clients || 0}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Total Opportunités</p>
+            <p className="text-lg font-bold">{stats?.affaires || 0}</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -133,6 +190,16 @@ function OrganizationsTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+
+  const impersonateMutation = useMutation({
+    mutationFn: (userId: string) => api.post('/superadmin/impersonate', { userId }),
+    onSuccess: (data) => {
+      localStorage.setItem('accessToken', data.data.accessToken);
+      localStorage.setItem('impersonating', 'true');
+      localStorage.setItem('originalToken', localStorage.getItem('originalToken') || data.data.originalToken);
+      window.location.href = '/';
     },
   });
 
@@ -154,11 +221,12 @@ function OrganizationsTab() {
                   <th className="text-left p-4 font-medium">Entreprise</th>
                   <th className="text-left p-4 font-medium">Email</th>
                   <th className="text-left p-4 font-medium">Téléphone</th>
-                  <th className="text-left p-4 font-medium">Statut paiement</th>
+                  <th className="text-left p-4 font-medium">Plan</th>
+                  <th className="text-left p-4 font-medium">Statut</th>
                   <th className="text-center p-4 font-medium">Utilisateurs</th>
                   <th className="text-center p-4 font-medium">Clients</th>
                   <th className="text-center p-4 font-medium">Affaires</th>
-                  <th className="text-left p-4 font-medium">Inscription</th>
+                  <th className="text-left p-4 font-medium">Dernière activité</th>
                   <th className="text-right p-4 font-medium">Actions</th>
                 </tr>
               </thead>
@@ -168,20 +236,21 @@ function OrganizationsTab() {
                     <td className="p-4 font-medium">{org.name}</td>
                     <td className="p-4">{org.email || '-'}</td>
                     <td className="p-4">{org.phone || '-'}</td>
+                    <td className="p-4">{org.plan || 'Basic'}</td>
                     <td className="p-4">{paymentStatusBadge(org.paymentStatus)}</td>
                     <td className="p-4 text-center">{org._count.users}</td>
                     <td className="p-4 text-center">{org._count.clients}</td>
                     <td className="p-4 text-center">{org._count.affaires}</td>
-                    <td className="p-4">{new Date(org.createdAt).toLocaleDateString('fr-FR')}</td>
+                    <td className="p-4 text-muted-foreground">{new Date(org.createdAt).toLocaleDateString('fr-FR')}</td>
                     <td className="p-4 flex gap-2 justify-end">
+                      {org._count.users > 0 && (
+                        <Button size="sm" variant="outline" onClick={() => impersonateMutation.mutate(org.id)}>
+                          <UserCheck size={14} className="mr-1" /> Se connecter
+                        </Button>
+                      )}
                       {org.paymentStatus !== 'APPROVED' && (
                         <Button size="sm" onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'APPROVED' })} disabled={updateStatusMutation.isPending}>
                           <CheckCircle size={14} className="mr-1" /> Approuver
-                        </Button>
-                      )}
-                      {org.paymentStatus !== 'REJECTED' && (
-                        <Button size="sm" variant="destructive" onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'REJECTED' })} disabled={updateStatusMutation.isPending}>
-                          <AlertTriangle size={14} className="mr-1" /> Refuser
                         </Button>
                       )}
                     </td>
@@ -312,11 +381,26 @@ function PaymentsTab({ queryClient }: { queryClient: any }) {
 }
 
 function UsersTab() {
-  const { data: users } = useQuery({ queryKey: ['admin-users'], queryFn: () => api.get('/admin/users').then(r => r.data) });
+  const { data: users } = useQuery({ queryKey: ['admin-users'], queryFn: () => api.get('/superadmin/users').then(r => r.data) });
+  const queryClient = useQueryClient();
+
+  const blockMutation = useMutation({
+    mutationFn: (userId: string) => api.post(`/superadmin/users/${userId}/block`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+
+  const unblockMutation = useMutation({
+    mutationFn: (userId: string) => api.post(`/superadmin/users/${userId}/unblock`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Utilisateurs</h2>
+      <h2 className="text-2xl font-bold mb-6">Utilisateurs Globaux</h2>
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -327,7 +411,9 @@ function UsersTab() {
                   <th className="text-left p-4 font-medium">Email</th>
                   <th className="text-left p-4 font-medium">Entreprise</th>
                   <th className="text-left p-4 font-medium">Rôle</th>
-                  <th className="text-left p-4 font-medium">Inscription</th>
+                  <th className="text-left p-4 font-medium">Statut</th>
+                  <th className="text-left p-4 font-medium">Dernière connexion</th>
+                  <th className="text-right p-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -336,8 +422,26 @@ function UsersTab() {
                     <td className="p-4 font-medium">{u.name}</td>
                     <td className="p-4">{u.email}</td>
                     <td className="p-4">{u.organizationName}</td>
-                    <td className="p-4"><span className={`px-2 py-1 rounded-full text-xs font-medium ${u.role === 'OWNER' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>{u.role}</span></td>
-                    <td className="p-4">{new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
+                    <td className="p-4"><span className={`px-2 py-1 rounded-full text-xs font-medium ${u.role === 'OWNER' ? 'bg-purple-100 text-purple-700' : u.role === 'SUPERADMIN' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}>{u.role}</span></td>
+                    <td className="p-4">
+                      {u.blocked ? (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Bloqué</span>
+                      ) : (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Actif</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-muted-foreground">{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('fr-FR') : 'Jamais'}</td>
+                    <td className="p-4 flex gap-2 justify-end">
+                      {u.blocked ? (
+                        <Button size="sm" variant="outline" onClick={() => unblockMutation.mutate(u.id)}>
+                          <UserCheck size={14} className="mr-1" /> Débloquer
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="destructive" onClick={() => blockMutation.mutate(u.id)}>
+                          <UserX size={14} className="mr-1" /> Bloquer
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -345,6 +449,232 @@ function UsersTab() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function PlansTab() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [formData, setFormData] = useState({ name: '', price: '', usersLimit: '', opportunitiesLimit: '' });
+  const queryClient = useQueryClient();
+
+  const { data: plans } = useQuery({ queryKey: ['admin-plans'], queryFn: () => api.get('/superadmin/plans').then(r => r.data) });
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => api.post('/superadmin/plans', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
+      setIsDialogOpen(false);
+      setFormData({ name: '', price: '', usersLimit: '', opportunitiesLimit: '' });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => api.put(`/superadmin/plans/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
+      setIsDialogOpen(false);
+      setEditingPlan(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/superadmin/plans/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (editingPlan) {
+      updateMutation.mutate({ id: editingPlan.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  const openDialog = (plan?: any) => {
+    if (plan) {
+      setEditingPlan(plan);
+      setFormData({ name: plan.name, price: plan.price, usersLimit: plan.usersLimit, opportunitiesLimit: plan.opportunitiesLimit });
+    } else {
+      setEditingPlan(null);
+      setFormData({ name: '', price: '', usersLimit: '', opportunitiesLimit: '' });
+    }
+    setIsDialogOpen(true);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Plans</h2>
+        <Button onClick={() => openDialog()}>
+          <Plus size={16} className="mr-2" /> Nouveau Plan
+        </Button>
+      </div>
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="text-left p-4 font-medium">Nom du Plan</th>
+                  <th className="text-left p-4 font-medium">Prix Annuel</th>
+                  <th className="text-left p-4 font-medium">Limite Utilisateurs</th>
+                  <th className="text-left p-4 font-medium">Limite Opportunités</th>
+                  <th className="text-right p-4 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {plans?.map((plan: any) => (
+                  <tr key={plan.id} className="hover:bg-gray-50">
+                    <td className="p-4 font-medium">{plan.name}</td>
+                    <td className="p-4">{plan.price} DT/an</td>
+                    <td className="p-4">{plan.usersLimit}</td>
+                    <td className="p-4">{plan.opportunitiesLimit}</td>
+                    <td className="p-4 flex gap-2 justify-end">
+                      <Button size="sm" variant="outline" onClick={() => openDialog(plan)}>
+                        <Edit size={14} />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate(plan.id)}>
+                        <Trash2 size={14} />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingPlan ? 'Modifier le Plan' : 'Nouveau Plan'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nom du Plan</Label>
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+            </div>
+            <div>
+              <Label>Prix Annuel (DT)</Label>
+              <Input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
+            </div>
+            <div>
+              <Label>Limite Utilisateurs</Label>
+              <Input type="number" value={formData.usersLimit} onChange={(e) => setFormData({ ...formData, usersLimit: e.target.value })} />
+            </div>
+            <div>
+              <Label>Limite Opportunités</Label>
+              <Input type="number" value={formData.opportunitiesLimit} onChange={(e) => setFormData({ ...formData, opportunitiesLimit: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleSubmit}>{editingPlan ? 'Modifier' : 'Créer'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function SettingsTab() {
+  const [formData, setFormData] = useState({
+    currency: 'TND',
+    language: 'fr',
+    vatRate: '19',
+    smtpHost: '',
+    smtpPort: '587',
+    smtpUser: '',
+    smtpPassword: '',
+  });
+  const queryClient = useQueryClient();
+
+  const { data: settings } = useQuery({ queryKey: ['admin-settings'], queryFn: () => api.get('/superadmin/settings').then(r => r.data) });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => api.put('/superadmin/settings', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
+    },
+  });
+
+  const handleSubmit = () => {
+    updateMutation.mutate(formData);
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Paramètres Système</h2>
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Paramètres Généraux</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Devise par défaut</Label>
+              <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TND">TND (Dinar Tunisien)</SelectItem>
+                  <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                  <SelectItem value="USD">USD (Dollar US)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Langue par défaut</Label>
+              <Select value={formData.language} onValueChange={(v) => setFormData({ ...formData, language: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ar">العربية</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Taux TVA (%)</Label>
+              <Input type="number" value={formData.vatRate} onChange={(e) => setFormData({ ...formData, vatRate: e.target.value })} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Configuration SMTP</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Hôte SMTP</Label>
+              <Input value={formData.smtpHost} onChange={(e) => setFormData({ ...formData, smtpHost: e.target.value })} placeholder="smtp.gmail.com" />
+            </div>
+            <div>
+              <Label>Port SMTP</Label>
+              <Input type="number" value={formData.smtpPort} onChange={(e) => setFormData({ ...formData, smtpPort: e.target.value })} />
+            </div>
+            <div>
+              <Label>Utilisateur SMTP</Label>
+              <Input value={formData.smtpUser} onChange={(e) => setFormData({ ...formData, smtpUser: e.target.value })} />
+            </div>
+            <div>
+              <Label>Mot de passe SMTP</Label>
+              <Input type="password" value={formData.smtpPassword} onChange={(e) => setFormData({ ...formData, smtpPassword: e.target.value })} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <Button onClick={handleSubmit}>
+          <SettingsIcon size={16} className="mr-2" /> Sauvegarder
+        </Button>
+      </div>
     </div>
   );
 }

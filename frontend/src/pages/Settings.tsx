@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Mail, Users, Package, FileText, Building2, Tag, DollarSign } from 'lucide-react';
 import { GmailSettings } from '@/components/settings/GmailSettings';
 import { SoftfactureSettings } from '@/components/settings/SoftfactureSettings';
@@ -7,6 +8,7 @@ import { ProductsSettings } from '@/components/settings/ProductsSettings';
 import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 import { CategoriesSettings } from '@/components/settings/CategoriesSettings';
 import { CommissionSettings } from '@/components/settings/CommissionSettings';
+import { api } from '@/lib/api';
 
 type Tab = 'organization' | 'gmail' | 'softfacture' | 'users' | 'products' | 'categories' | 'commissions';
 
@@ -22,6 +24,21 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<Tab>('organization');
+  const [visibleTabs, setVisibleTabs] = useState(TABS);
+
+  const { data: organization } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: () => api.get('/organizations').then(r => r.data),
+  });
+
+  useEffect(() => {
+    const org = Array.isArray(organization) ? organization[0] : organization;
+    if (org?.plan === 'ENTERPRISE') {
+      setVisibleTabs(TABS);
+    } else {
+      setVisibleTabs(TABS.filter(tab => tab.id !== 'commissions'));
+    }
+  }, [organization]);
 
   return (
     <div className="space-y-6 px-2 md:px-0">
@@ -32,7 +49,7 @@ export function Settings() {
 
       {/* Horizontal Tab Menu */}
       <div className="flex border-b">
-        {TABS.map((tab) => {
+        {visibleTabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button

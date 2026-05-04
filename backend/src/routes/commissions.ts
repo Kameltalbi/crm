@@ -2,9 +2,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import auth, { AuthRequest } from '../middleware/auth.js';
+import { checkPlanFeature } from '../middleware/planRestrictions.js';
 
 export const commissionsRoutes = Router();
 commissionsRoutes.use(auth);
+commissionsRoutes.use(checkPlanFeature('commissions'));
 
 const commissionConfigSchema = z.object({
   calculationType: z.enum(['SIMPLE', 'TIERS', 'PROGRESSIVE', 'CUSTOM']),

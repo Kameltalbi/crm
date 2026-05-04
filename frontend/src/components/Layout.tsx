@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Users, Settings, LogOut, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon, Receipt, Mail, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, Settings, LogOut, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon, Receipt, Mail, Sparkles, Target } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ const nav = [
   { to: '/activites',    label: 'Activités',     icon: FileText        },
   { to: '/email-templates', label: 'Templates Emails', icon: Mail },
   { to: '/ai-assistant', label: 'Assistant IA', icon: Sparkles },
+  { to: '/objectifs',    label: 'Objectifs',     icon: Target          },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

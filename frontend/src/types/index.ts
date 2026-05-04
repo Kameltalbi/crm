@@ -69,6 +69,8 @@ export interface Affaire {
   dateProchaineAction: string | null;
   viaPartenaire: boolean;
   tauxCommission: number;
+  assignedToId: string | null;
+  assignedTo?: User;
   devisId: string | null;
   devisNumero: string | null;
   devisPdfUrl: string | null;

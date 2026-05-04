@@ -72,6 +72,7 @@ const affaireSchema = z.object({
   anneePrevue: z.number().min(2020).max(2035),
   viaPartenaire: z.boolean().optional(),
   tauxCommission: z.number().min(0).max(100).optional(),
+  assignedToId: z.string().optional().transform(v => v === '' ? undefined : v),
   notes: z.string().optional(),
 });
 

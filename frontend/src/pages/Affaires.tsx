@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItemStyled } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { StatutBadge } from './Dashboard';
-import type { Affaire, Client, Product, AffaireType, StatutAffaire } from '@/types';
+import type { Affaire, Client, Product, AffaireType, StatutAffaire, User } from '@/types';
 
 type FormData = {
   id?: string;
@@ -23,6 +23,7 @@ type FormData = {
   anneePrevue: string;
   viaPartenaire: boolean;
   tauxCommission: string;
+  assignedToId: string;
   notes: string;
   prochaineAction: string;
   dateProchaineAction: string;
@@ -32,7 +33,7 @@ const EMPTY: FormData = {
   clientId: '', productId: '', type: '', montantHT: '',
   statut: 'PROSPECT', probabilite: '50',
   moisPrevu: String(new Date().getMonth() + 1), anneePrevue: '2026',
-  viaPartenaire: false, tauxCommission: '40', notes: '',
+  viaPartenaire: false, tauxCommission: '40', assignedToId: '', notes: '',
   prochaineAction: '', dateProchaineAction: '',
 };
 
@@ -102,6 +103,12 @@ export function Affaires() {
     queryFn: () => api.get('/products').then((r) => r.data),
   });
   const products = productsData?.data || [];
+
+  const { data: usersData } = useQuery<{ data: User[], pagination: any }>({
+    queryKey: ['users'],
+    queryFn: () => api.get('/users').then((r) => r.data),
+  });
+  const users = usersData?.data || [];
   const { data: revenueCategories = [] } = useQuery<any[]>({
     queryKey: ['categories', 'REVENUE'],
     queryFn: () => api.get('/categories', { params: { type: 'REVENUE' } }).then((r) => r.data),
@@ -120,6 +127,7 @@ export function Affaires() {
         anneePrevue: Number(data.anneePrevue),
         viaPartenaire: data.viaPartenaire,
         tauxCommission: Number(data.tauxCommission),
+        assignedToId: data.assignedToId || null,
         notes: data.notes,
         prochaineAction: data.prochaineAction || null,
         dateProchaineAction: data.dateProchaineAction || null,
@@ -203,6 +211,7 @@ export function Affaires() {
       anneePrevue: String(a.anneePrevue),
       viaPartenaire: a.viaPartenaire,
       tauxCommission: String(a.tauxCommission),
+      assignedToId: a.assignedToId || '',
       notes: a.notes || '',
       prochaineAction: a.prochaineAction || '',
       dateProchaineAction: a.dateProchaineAction ? a.dateProchaineAction.split('T')[0] : '',
@@ -720,7 +729,7 @@ export function Affaires() {
 
           {form.viaPartenaire && (
             <div className="space-y-1.5">
-              <Label>Taux de commission (%)</Label>
+              <Label>Taux commission (%)</Label>
               <Input
                 type="number"
                 min="0"
@@ -731,6 +740,19 @@ export function Affaires() {
               />
             </div>
           )}
+
+          <div className="space-y-1.5">
+            <Label>Commercial assigné</Label>
+            <Select value={form.assignedToId} onValueChange={(v) => setForm({ ...form, assignedToId: v })}>
+              <SelectTrigger><SelectValue placeholder="Aucun" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {form.viaPartenaire && ht > 0 && (
             <div className="bg-purple-light border border-purple/30 rounded-lg p-3 space-y-1 text-sm">

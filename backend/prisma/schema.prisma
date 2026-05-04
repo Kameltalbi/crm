@@ -42,6 +42,7 @@ model Organization {
   customCategories CustomCategory[]
   emailTemplates EmailTemplate[]
   subscriptions Subscription[]
+  salesObjectives SalesObjective[]
 
   @@map("organizations")
 }
@@ -66,12 +67,14 @@ model User {
   clientsCreated   Client[]
   leadsCreated     Lead[]
   affairesCreated  Affaire[]
+  assignedAffaires Affaire[] @relation("CommercialAffaires")
   calendarEventsCreated CalendarEvent[]
   expensesCreated  Expense[]
   gmailTokens      GmailToken?
   notifications    Notification[]
   refreshTokens    RefreshToken[]
   auditLogs        AuditLog[]
+  salesObjectives  SalesObjective[]
 
   @@index([organizationId])
   @@map("users")
@@ -318,23 +321,27 @@ model Affaire {
   title         String?       // ex: "Bilan Carbone UBCI 2026" - auto-généré si non fourni
   description   String?       @db.Text
   montantHT     Decimal       @db.Decimal(12, 3) // DT, 3 décimales
-  
+
   // Pipeline
   statut        StatutAffaire @default(PROSPECT)
   probabilite   Int           @default(50) // 0-100 %
   score         Int           @default(0) // Lead score 0-100
-  
+
   // Planning
   moisPrevu     Int           // 1-12
   anneePrevue   Int           // 2026, 2027, 2028
   dateClotureReelle DateTime?
   prochaineAction String?      // ex: "Appeler client", "Envoyer devis"
   dateProchaineAction DateTime?
-  
+
   // Partenaire & commission
   viaPartenaire Boolean       @default(false)
   tauxCommission Decimal      @db.Decimal(5, 2) @default(40.00) // 40%
-  
+
+  // Commercial assigné
+  assignedToId String?
+  assignedTo    User?         @relation("CommercialAffaires", fields: [assignedToId], references: [id], onDelete: SetNull)
+
   // Liens vers Softfacture (quand devis/facture créés)
   devisId       String?       // ID retourné par Softfacture API
   devisNumero   String?
@@ -342,7 +349,7 @@ model Affaire {
   factureId     String?
   factureNumero String?
   facturePdfUrl String?
-  
+
   // Méta
   notes         String?       @db.Text
   deletedAt     DateTime?     // Soft delete
@@ -362,6 +369,7 @@ model Affaire {
   @@index([statut, anneePrevue])
   @@index([clientId])
   @@index([productId])
+  @@index([assignedToId])
   @@index([deletedAt])
   @@map("affaires")
 }
@@ -671,4 +679,26 @@ model Subscription {
   @@index([organizationId])
   @@index([paymentStatus])
   @@map("subscriptions")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SALES OBJECTIVE — Objectifs commerciaux par commercial
+// ═══════════════════════════════════════════════════════════════
+model SalesObjective {
+  id            String   @id @default(cuid())
+  organizationId String
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year          Int
+  month         Int      // 1-12
+  targetAmount  Decimal  @db.Decimal(12, 3) // Objectif en DT
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId, year, month])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("sales_objectives")
 }

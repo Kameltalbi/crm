@@ -147,7 +147,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               title="Change language"
             >
               <Globe size={18} strokeWidth={2} />
-              <span className="ml-1 text-xs font-medium">{i18n.language.toUpperCase()}</span>
+              <span className={`ml-1 text-xs font-medium ${
+                i18n.language === 'ar' ? 'text-green-600' :
+                i18n.language === 'fr' ? 'text-blue-600' :
+                'text-red-600'
+              }`}>{i18n.language.toUpperCase()}</span>
             </button>
           </div>
           <div className="flex items-center gap-2 border-l border-border/60 pl-2 sm:pl-3">

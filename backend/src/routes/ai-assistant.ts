@@ -65,51 +65,145 @@ function sortMonthKeys(keys: string[]) {
 async function predictYearEndCA(organizationId: string) {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
+  const historyStartYear = currentYear - 2;
 
-  // 1. Toutes les affaires de l'année (sauf PERDU) — cohérent avec le dashboard
-  const allAffaires = await prisma.affaire.findMany({
-    where: {
-      organizationId,
-      deletedAt: null,
-      anneePrevue: currentYear,
-      statut: { not: 'PERDU' },
-    },
-    select: { montantHT: true, probabilite: true, moisPrevu: true, statut: true },
-  });
+  const [allAffaires, wonHistoryByMonth, currentYearPipeline] = await Promise.all([
+    prisma.affaire.findMany({
+      where: {
+        organizationId,
+        deletedAt: null,
+        anneePrevue: currentYear,
+        statut: { not: 'PERDU' },
+      },
+      select: { montantHT: true, probabilite: true, moisPrevu: true, statut: true },
+    }),
+    prisma.affaire.groupBy({
+      by: ['anneePrevue', 'moisPrevu'],
+      where: {
+        organizationId,
+        deletedAt: null,
+        statut: 'GAGNE',
+        anneePrevue: { gte: historyStartYear, lte: currentYear },
+      },
+      _sum: { montantHT: true },
+      orderBy: [{ anneePrevue: 'asc' }, { moisPrevu: 'asc' }],
+    }),
+    prisma.affaire.findMany({
+      where: {
+        organizationId,
+        deletedAt: null,
+        anneePrevue: currentYear,
+        statut: { in: ['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION'] },
+      },
+      select: { moisPrevu: true, montantHT: true, probabilite: true },
+    }),
+  ]);
 
-  // 2. CA Total (comme dashboard) = toutes affaires sauf PERDU
   const caTotalAll = allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
-
-  // 3. CA Réalisé (GAGNE uniquement)
-  const realise = allAffaires.filter(a => a.statut === 'GAGNE');
+  const realise = allAffaires.filter((a) => a.statut === 'GAGNE');
   const caRealise = realise.reduce((sum, a) => sum + Number(a.montantHT), 0);
 
-  // 4. Détail par mois (réalisé GAGNE)
   const monthlyCA: { [key: string]: number } = {};
   for (const a of realise) {
     const key = `${currentYear}-${a.moisPrevu}`;
     monthlyCA[key] = (monthlyCA[key] || 0) + Number(a.montantHT);
   }
 
-  // 5. Pipeline = affaires non gagnées
-  const pipeline = allAffaires.filter(a => a.statut !== 'GAGNE');
-  const pipelineTotal = pipeline.reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const pipelineTotal = currentYearPipeline.reduce((sum, a) => sum + Number(a.montantHT), 0);
+  const pipelinePondere = currentYearPipeline.reduce(
+    (sum, a) => sum + Number(a.montantHT) * (a.probabilite / 100),
+    0
+  );
 
-  // 6. Pipeline pondéré par probabilité
-  const pipelinePondere = pipeline.reduce((sum, a) => {
-    return sum + Number(a.montantHT) * (a.probabilite / 100);
-  }, 0);
+  // --- Seasonality from won history (month index 1..12) ---
+  const monthHistory: Record<number, number[]> = {};
+  for (let m = 1; m <= 12; m++) monthHistory[m] = [];
+  const fullSeries: number[] = [];
+  for (const g of wonHistoryByMonth) {
+    const val = Number(g._sum.montantHT ?? 0);
+    monthHistory[g.moisPrevu].push(val);
+    fullSeries.push(val);
+  }
 
-  // 7. Moyenne mensuelle réalisée pour extrapoler
-  const monthsWithCA = currentMonth - 1 || 1;
-  const avgMonthlyCA = caRealise / monthsWithCA;
-  const monthsRemaining = 12 - currentMonth + 1;
+  const avgSeries = fullSeries.length > 0
+    ? fullSeries.reduce((s, v) => s + v, 0) / fullSeries.length
+    : 0;
+  const monthSeasonality: Record<number, number> = {};
+  for (let m = 1; m <= 12; m++) {
+    const arr = monthHistory[m];
+    const monthAvg = arr.length > 0 ? arr.reduce((s, v) => s + v, 0) / arr.length : avgSeries;
+    monthSeasonality[m] = avgSeries > 0 ? monthAvg / avgSeries : 1;
+  }
 
-  // 8. Prédiction = CA réalisé + pipeline pondéré + extrapolation conservatrice
-  const extrapolation = Math.max(0, avgMonthlyCA * monthsRemaining - pipelineTotal);
-  const predictedCA = Math.round(caRealise + pipelinePondere + extrapolation * 0.5);
+  // --- Current-year won series (for trend + MoM growth) ---
+  const wonByMonthCurrentYear: Record<number, number> = {};
+  for (let m = 1; m <= 12; m++) wonByMonthCurrentYear[m] = 0;
+  for (const g of wonHistoryByMonth) {
+    if (g.anneePrevue === currentYear) {
+      wonByMonthCurrentYear[g.moisPrevu] = Number(g._sum.montantHT ?? 0);
+    }
+  }
+  const realizedSeries = Array.from({ length: Math.max(1, currentMonth - 1) }, (_, i) => wonByMonthCurrentYear[i + 1] ?? 0);
+  const avgMonthlyCA = realizedSeries.length > 0
+    ? realizedSeries.reduce((s, v) => s + v, 0) / realizedSeries.length
+    : 0;
 
-  // 9. Taux de croissance vs année précédente
+  // Robust MoM growth: median of non-extreme changes
+  const growthRates: number[] = [];
+  for (let i = 1; i < realizedSeries.length; i++) {
+    const prev = realizedSeries[i - 1];
+    const curr = realizedSeries[i];
+    if (prev > 0) {
+      const rate = (curr - prev) / prev;
+      // clamp noise/outliers to keep forecast stable
+      growthRates.push(Math.max(-0.5, Math.min(0.8, rate)));
+    }
+  }
+  growthRates.sort((a, b) => a - b);
+  const medianGrowth = growthRates.length === 0
+    ? 0
+    : growthRates[Math.floor(growthRates.length / 2)];
+
+  // Linear trend slope on recent realized months (simple and deterministic)
+  let trendSlope = 0;
+  if (realizedSeries.length >= 3) {
+    const n = realizedSeries.length;
+    const xs = Array.from({ length: n }, (_, i) => i + 1);
+    const xMean = xs.reduce((s, v) => s + v, 0) / n;
+    const yMean = realizedSeries.reduce((s, v) => s + v, 0) / n;
+    const num = xs.reduce((s, x, i) => s + (x - xMean) * (realizedSeries[i] - yMean), 0);
+    const den = xs.reduce((s, x) => s + (x - xMean) * (x - xMean), 0);
+    trendSlope = den > 0 ? num / den : 0;
+  }
+
+  // Pipeline weighted by target month
+  const pipelineWeightedByMonth: Record<number, number> = {};
+  for (let m = 1; m <= 12; m++) pipelineWeightedByMonth[m] = 0;
+  for (const p of currentYearPipeline) {
+    const weighted = Number(p.montantHT) * (p.probabilite / 100);
+    pipelineWeightedByMonth[p.moisPrevu] += weighted;
+  }
+
+  // Forecast remaining months: seasonality + trend + mom growth + weighted pipeline
+  const monthlyForecast: Record<number, number> = {};
+  const lastRealized = realizedSeries.length > 0 ? realizedSeries[realizedSeries.length - 1] : avgSeries;
+  const baseForProjection = lastRealized > 0 ? lastRealized : avgMonthlyCA;
+  let projectedFuture = 0;
+
+  for (let m = currentMonth; m <= 12; m++) {
+    const step = m - currentMonth + 1;
+    const seasonalBaseline = (avgSeries > 0 ? avgSeries : baseForProjection) * monthSeasonality[m];
+    const trendComponent = Math.max(0, baseForProjection + trendSlope * step);
+    const growthComponent = Math.max(0, trendComponent * (1 + medianGrowth * 0.6));
+    const structuralForecast = 0.45 * seasonalBaseline + 0.55 * growthComponent;
+    const monthForecast = Math.max(0, structuralForecast + pipelineWeightedByMonth[m]);
+    monthlyForecast[m] = monthForecast;
+    projectedFuture += monthForecast;
+  }
+
+  const predictedCA = Math.round(caRealise + projectedFuture);
+
+  // Taux de croissance vs année précédente
   const prevYearAgg = await prisma.affaire.aggregate({
     where: {
       organizationId,
@@ -131,6 +225,14 @@ async function predictYearEndCA(organizationId: string) {
     avgGrowth: growthVsPrev,
     monthsData: monthlyCA,
     avgMonthlyCA: Math.round(avgMonthlyCA),
+    projectionMeta: {
+      medianMoMGrowthPct: Math.round(medianGrowth * 100),
+      trendSlope: Math.round(trendSlope),
+      projectedFuture: Math.round(projectedFuture),
+      monthlyForecast: Object.fromEntries(
+        Object.entries(monthlyForecast).map(([k, v]) => [k, Math.round(v)])
+      ),
+    },
   };
 }
 

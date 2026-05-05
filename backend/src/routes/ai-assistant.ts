@@ -201,7 +201,24 @@ async function predictYearEndCA(organizationId: string) {
     projectedFuture += monthForecast;
   }
 
-  const predictedCA = Math.round(caRealise + projectedFuture);
+  // Guardrails to keep forecasts realistic:
+  // - floor anchored to weighted pipeline
+  // - cap anchored to current run-rate + weighted pipeline
+  const realizedMonthsCount = Math.max(1, currentMonth - 1);
+  const remainingMonthsCount = Math.max(0, 12 - currentMonth + 1);
+  const runRateRealized = caRealise / realizedMonthsCount;
+  const conservativeFutureFromRunRate = runRateRealized * remainingMonthsCount;
+  const minFutureBound = Math.max(0, pipelinePondere * 0.6);
+  const maxFutureBound = Math.max(
+    minFutureBound,
+    conservativeFutureFromRunRate * 1.2 + pipelinePondere * 1.05
+  );
+  const projectedFutureBounded = Math.max(
+    minFutureBound,
+    Math.min(projectedFuture, maxFutureBound)
+  );
+
+  const predictedCA = Math.round(caRealise + projectedFutureBounded);
 
   // Taux de croissance vs année précédente
   const prevYearAgg = await prisma.affaire.aggregate({
@@ -229,6 +246,11 @@ async function predictYearEndCA(organizationId: string) {
       medianMoMGrowthPct: Math.round(medianGrowth * 100),
       trendSlope: Math.round(trendSlope),
       projectedFuture: Math.round(projectedFuture),
+      projectedFutureBounded: Math.round(projectedFutureBounded),
+      forecastBounds: {
+        minFutureBound: Math.round(minFutureBound),
+        maxFutureBound: Math.round(maxFutureBound),
+      },
       monthlyForecast: Object.fromEntries(
         Object.entries(monthlyForecast).map(([k, v]) => [k, Math.round(v)])
       ),

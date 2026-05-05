@@ -22,17 +22,10 @@ const ACTIVITY_ICONS: Record<ActiviteType, any> = {
   AUTRE: FileText,
 };
 
-const ACTIVITY_LABELS: Record<ActiviteType, string> = {
-  NOTE: 'Note',
-  APPEL: 'Appel',
-  EMAIL_ENVOYE: 'Email envoyé',
-  EMAIL_RECU: 'Email reçu',
-  RDV: 'Rendez-vous',
-  CHANGEMENT_STATUT: 'Changement de statut',
-  DEVIS_CREE: 'Devis créé',
-  FACTURE_CREEE: 'Facture créée',
-  AUTRE: 'Autre',
-};
+const ACTIVITY_TYPE_KEYS: ActiviteType[] = [
+  'NOTE', 'APPEL', 'EMAIL_ENVOYE', 'EMAIL_RECU', 'RDV',
+  'CHANGEMENT_STATUT', 'DEVIS_CREE', 'FACTURE_CREEE', 'AUTRE',
+];
 
 type FormData = {
   id?: string;
@@ -50,7 +43,7 @@ const EMPTY: FormData = {
 };
 
 export function Activites() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -89,8 +82,10 @@ export function Activites() {
   });
 
   // Group by date
+  const dateLocale = i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-FR';
+
   const groupedByDate = filteredActivites.reduce((acc, a) => {
-    const date = new Date(a.createdAt).toLocaleDateString('fr-FR');
+    const date = new Date(a.createdAt).toLocaleDateString(dateLocale);
     if (!acc[date]) acc[date] = [];
     acc[date].push(a);
     return acc;
@@ -115,9 +110,9 @@ export function Activites() {
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateStr = date.toLocaleDateString('fr-FR');
+      const dateStr = date.toLocaleDateString(dateLocale);
       const dayActivities = filteredActivites.filter(a => {
-        const activityDate = new Date(a.createdAt).toLocaleDateString('fr-FR');
+        const activityDate = new Date(a.createdAt).toLocaleDateString(dateLocale);
         return activityDate === dateStr;
       });
       days.push({ date, activities: dayActivities });
@@ -126,8 +121,10 @@ export function Activites() {
   };
 
   const calendarDays = getCalendarDays();
-  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-  const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const monthKeys = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+  const monthNames = monthKeys.map(k => t(`expenses.months.${k}`));
+  const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayNames = dayKeys.map(k => t(`calendarPage.days.${k}`));
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
@@ -195,14 +192,14 @@ export function Activites() {
             size="sm"
             onClick={() => setView('timeline')}
           >
-            Timeline
+            {t('activites.timeline')}
           </Button>
           <Button
             variant={view === 'calendar' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setView('calendar')}
           >
-            Calendrier
+            {t('activites.calendar')}
           </Button>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -211,9 +208,9 @@ export function Activites() {
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous types</SelectItem>
-              {Object.entries(ACTIVITY_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
+              <SelectItem value="all">{t('activites.allTypes')}</SelectItem>
+              {ACTIVITY_TYPE_KEYS.map((key) => (
+                <SelectItem key={key} value={key}>{t(`activites.types.${key}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -222,7 +219,7 @@ export function Activites() {
               <SelectValue placeholder="Affaire" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes affaires</SelectItem>
+              <SelectItem value="all">{t('activites.allAffaires')}</SelectItem>
               {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -231,7 +228,7 @@ export function Activites() {
               <SelectValue placeholder="Mois" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous mois</SelectItem>
+              <SelectItem value="all">{t('activites.allMonths')}</SelectItem>
               {monthNames.map((label, idx) => (
                 <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
               ))}
@@ -256,13 +253,13 @@ export function Activites() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
-                <Calendar size={16} className="mr-2" /> Précédent
+                <Calendar size={16} className="mr-2" /> {t('activites.previous')}
               </Button>
               <CardTitle className="text-lg font-semibold">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </CardTitle>
               <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
-                Suivant <Calendar size={16} className="ml-2" />
+                {t('activites.next')} <Calendar size={16} className="ml-2" />
               </Button>
             </div>
           </CardHeader>
@@ -301,7 +298,7 @@ export function Activites() {
                         })}
                         {day.activities.length > 3 && (
                           <div className="text-xs text-muted-foreground">
-                            +{day.activities.length - 3} autres
+                            +{day.activities.length - 3} {t('activites.others')}
                           </div>
                         )}
                       </div>
@@ -354,17 +351,17 @@ export function Activites() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                                   <Badge variant="secondary" className="text-xs">
-                                    {ACTIVITY_LABELS[a.type]}
+                                    {t(`activites.types.${a.type}`)}
                                   </Badge>
                                   <span className="text-xs text-muted-foreground">
-                                    {new Date(a.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    {new Date(a.createdAt).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
                                 <p className="font-medium text-sm">{a.title}</p>
                                 {a.content && <p className="text-sm text-muted-foreground mt-1">{a.content}</p>}
                                 {affaire && (
                                   <p className="text-xs text-muted-foreground mt-1">
-                                    Affaire: <span className="font-medium">{affaire.title}</span>
+                                    {t('activites.affaireLabel')}: <span className="font-medium">{affaire.title}</span>
                                   </p>
                                 )}
                               </div>
@@ -410,12 +407,12 @@ export function Activites() {
                 <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as ActiviteType })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="NOTE">Note</SelectItem>
-                    <SelectItem value="APPEL">Appel</SelectItem>
-                    <SelectItem value="EMAIL_ENVOYE">Email envoyé</SelectItem>
-                    <SelectItem value="EMAIL_RECU">Email reçu</SelectItem>
-                    <SelectItem value="RDV">Rendez-vous</SelectItem>
-                    <SelectItem value="AUTRE">Autre</SelectItem>
+                    <SelectItem value="NOTE">{t('activites.types.NOTE')}</SelectItem>
+                    <SelectItem value="APPEL">{t('activites.types.APPEL')}</SelectItem>
+                    <SelectItem value="EMAIL_ENVOYE">{t('activites.types.EMAIL_ENVOYE')}</SelectItem>
+                    <SelectItem value="EMAIL_RECU">{t('activites.types.EMAIL_RECU')}</SelectItem>
+                    <SelectItem value="RDV">{t('activites.types.RDV')}</SelectItem>
+                    <SelectItem value="AUTRE">{t('activites.types.AUTRE')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

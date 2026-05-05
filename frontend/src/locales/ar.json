@@ -219,6 +219,35 @@
       "december": "ديسمبر"
     }
   },
+  "activites": {
+    "title": "الأنشطة",
+    "subtitle": "الجدول الزمني وتقويم التفاعلات",
+    "new": "نشاط جديد",
+    "none": "لا توجد أنشطة",
+    "chooseAffaire": "اختر صفقة",
+    "titlePlaceholder": "مثال: اتصال مع العميل",
+    "detailsPlaceholder": "تفاصيل النشاط...",
+    "timeline": "الجدول الزمني",
+    "calendar": "التقويم",
+    "allTypes": "كل الأنواع",
+    "allAffaires": "كل الصفقات",
+    "allMonths": "كل الأشهر",
+    "previous": "السابق",
+    "next": "التالي",
+    "others": "أخرى",
+    "affaireLabel": "الصفقة",
+    "types": {
+      "NOTE": "ملاحظة",
+      "APPEL": "مكالمة",
+      "EMAIL_ENVOYE": "بريد مرسل",
+      "EMAIL_RECU": "بريد مستلم",
+      "RDV": "موعد",
+      "CHANGEMENT_STATUT": "تغيير الحالة",
+      "DEVIS_CREE": "عرض أسعار",
+      "FACTURE_CREEE": "فاتورة",
+      "AUTRE": "أخرى"
+    }
+  },
   "leads": {
     "title": "العملاء المحتملون",
     "subtitle": "إدارة العملاء المحتملين",

@@ -219,6 +219,35 @@
       "december": "December"
     }
   },
+  "activites": {
+    "title": "Activities",
+    "subtitle": "Timeline and calendar of interactions",
+    "new": "New activity",
+    "none": "No activities",
+    "chooseAffaire": "Choose a deal",
+    "titlePlaceholder": "ex: Call with client",
+    "detailsPlaceholder": "Activity details...",
+    "timeline": "Timeline",
+    "calendar": "Calendar",
+    "allTypes": "All types",
+    "allAffaires": "All deals",
+    "allMonths": "All months",
+    "previous": "Previous",
+    "next": "Next",
+    "others": "others",
+    "affaireLabel": "Deal",
+    "types": {
+      "NOTE": "Note",
+      "APPEL": "Call",
+      "EMAIL_ENVOYE": "Email sent",
+      "EMAIL_RECU": "Email received",
+      "RDV": "Meeting",
+      "CHANGEMENT_STATUT": "Status change",
+      "DEVIS_CREE": "Quote created",
+      "FACTURE_CREEE": "Invoice created",
+      "AUTRE": "Other"
+    }
+  },
   "leads": {
     "title": "Leads",
     "subtitle": "Prospect management",

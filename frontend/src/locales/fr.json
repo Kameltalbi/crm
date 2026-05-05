@@ -219,6 +219,35 @@
       "december": "Décembre"
     }
   },
+  "activites": {
+    "title": "Activités",
+    "subtitle": "Timeline et calendrier des interactions",
+    "new": "Nouvelle activité",
+    "none": "Aucune activité",
+    "chooseAffaire": "Choisir une affaire",
+    "titlePlaceholder": "ex: Appel avec le client",
+    "detailsPlaceholder": "Détails de l'activité...",
+    "timeline": "Timeline",
+    "calendar": "Calendrier",
+    "allTypes": "Tous types",
+    "allAffaires": "Toutes affaires",
+    "allMonths": "Tous mois",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "others": "autres",
+    "affaireLabel": "Affaire",
+    "types": {
+      "NOTE": "Note",
+      "APPEL": "Appel",
+      "EMAIL_ENVOYE": "Email envoyé",
+      "EMAIL_RECU": "Email reçu",
+      "RDV": "Rendez-vous",
+      "CHANGEMENT_STATUT": "Changement de statut",
+      "DEVIS_CREE": "Devis créé",
+      "FACTURE_CREEE": "Facture créée",
+      "AUTRE": "Autre"
+    }
+  },
   "leads": {
     "title": "Leads",
     "subtitle": "Gestion des prospects",

@@ -248,6 +248,24 @@
       "AUTRE": "Other"
     }
   },
+  "objectifs": {
+    "title": "Sales Objectives",
+    "subtitle": "Manage your sales team objectives",
+    "new": "New objective",
+    "requiredFields": "Please fill all required fields",
+    "salesperson": "Salesperson",
+    "target": "Target",
+    "targetPlaceholder": "Ex: 50000",
+    "chooseSalesperson": "Choose a salesperson",
+    "noneForYear": "No objectives for this year",
+    "commissionsTitle": "Commissions",
+    "confirmDelete": "Are you sure you want to delete this objective?",
+    "salespersonCol": "Salesperson",
+    "targetCol": "Target",
+    "salesCol": "Sales",
+    "achievementCol": "Achievement",
+    "commissionCol": "Commission"
+  },
   "leads": {
     "title": "Leads",
     "subtitle": "Prospect management",

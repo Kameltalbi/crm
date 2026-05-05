@@ -26,10 +26,7 @@ const EMPTY: FormData = {
   targetAmount: '',
 };
 
-const MONTHS = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-];
+const monthKeys = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
 export function Objectifs() {
   const { t } = useTranslation();
@@ -81,7 +78,7 @@ export function Objectifs() {
       setForm(EMPTY);
     },
     onError: (error: any) => {
-      alert(`${t('productsPage.error')}: ${error.response?.data?.error || error.message}`);
+      alert(`${t('common.error')}: ${error.response?.data?.error || error.message}`);
     },
   });
 
@@ -112,7 +109,7 @@ export function Objectifs() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cet objectif ?')) {
+    if (confirm(t('objectifs.confirmDelete'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -126,8 +123,8 @@ export function Objectifs() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('objectifs.title', { defaultValue: 'Objectifs Commerciaux' })}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{t('objectifs.subtitle', { defaultValue: 'Gérez les objectifs de vos commerciaux' })}</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('objectifs.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('objectifs.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -145,12 +142,12 @@ export function Objectifs() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {MONTHS.map((month, idx) => (
-                <SelectItem key={idx} value={String(idx + 1)}>{month}</SelectItem>
+              {monthKeys.map((key, idx) => (
+                <SelectItem key={idx} value={String(idx + 1)}>{t(`expenses.months.${key}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={openNew}><Plus size={16} className="mr-2" />{t('objectifs.new', { defaultValue: 'Nouvel objectif' })}</Button>
+          <Button onClick={openNew}><Plus size={16} className="mr-2" />{t('objectifs.new')}</Button>
         </div>
       </div>
 
@@ -159,9 +156,9 @@ export function Objectifs() {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left p-4 font-semibold">{t('objectifs.salesperson', { defaultValue: 'Commercial' })}</th>
-                <th className="text-left p-4 font-semibold">{t('expenses.month', { defaultValue: 'Mois' })}</th>
-                <th className="text-right p-4 font-semibold">{t('objectifs.target', { defaultValue: 'Objectif' })}</th>
+                <th className="text-left p-4 font-semibold">{t('objectifs.salespersonCol')}</th>
+                <th className="text-left p-4 font-semibold">{t('expenses.month')}</th>
+                <th className="text-right p-4 font-semibold">{t('objectifs.targetCol')}</th>
                 <th className="text-right p-4 font-semibold">{t('common.actions')}</th>
               </tr>
             </thead>
@@ -177,7 +174,7 @@ export function Objectifs() {
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <Calendar size={16} className="text-muted-foreground" />
-                      <span>{MONTHS[obj.month - 1]} {obj.year}</span>
+                      <span>{t(`expenses.months.${monthKeys[obj.month - 1]}`)} {obj.year}</span>
                     </div>
                   </td>
                   <td className="p-4 text-right font-semibold">{fmtDT(Number(obj.targetAmount))} HT</td>
@@ -196,7 +193,7 @@ export function Objectifs() {
               {objectives.length === 0 && (
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                    {t('objectifs.noneForYear', { defaultValue: 'Aucun objectif pour cette année' })}
+                    {t('objectifs.noneForYear')}
                   </td>
                 </tr>
               )}
@@ -210,18 +207,18 @@ export function Objectifs() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign size={20} className="text-leaf" />
-              Primes - {MONTHS[Number(selectedMonth) - 1]} {selectedYear}
+              {t('objectifs.commissionsTitle')} - {t(`expenses.months.${monthKeys[Number(selectedMonth) - 1]}`)} {selectedYear}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left p-4 font-semibold">Commercial</th>
-                  <th className="text-right p-4 font-semibold">Objectif</th>
-                  <th className="text-right p-4 font-semibold">Ventes</th>
-                  <th className="text-right p-4 font-semibold">Atteinte</th>
-                  <th className="text-right p-4 font-semibold">Prime</th>
+                  <th className="text-left p-4 font-semibold">{t('objectifs.salespersonCol')}</th>
+                  <th className="text-right p-4 font-semibold">{t('objectifs.targetCol')}</th>
+                  <th className="text-right p-4 font-semibold">{t('objectifs.salesCol')}</th>
+                  <th className="text-right p-4 font-semibold">{t('objectifs.achievementCol')}</th>
+                  <th className="text-right p-4 font-semibold">{t('objectifs.commissionCol')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -254,13 +251,13 @@ export function Objectifs() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{form.id ? t('common.edit') : t('objectifs.new', { defaultValue: 'Nouvel objectif' })}</DialogTitle>
+            <DialogTitle>{form.id ? t('common.edit') : t('objectifs.new')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>{t('objectifs.salesperson', { defaultValue: 'Commercial' })} *</Label>
+              <Label>{t('objectifs.salesperson')} *</Label>
               <Select value={form.userId} onValueChange={(v) => setForm({ ...form, userId: v })}>
-                <SelectTrigger><SelectValue placeholder={t('objectifs.chooseSalesperson', { defaultValue: 'Choisir un commercial' })} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('objectifs.chooseSalesperson')} /></SelectTrigger>
                 <SelectContent>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>{user.name} ({user.email})</SelectItem>
@@ -285,16 +282,16 @@ export function Objectifs() {
                 <Select value={form.month} onValueChange={(v) => setForm({ ...form, month: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {MONTHS.map((month, idx) => (
-                      <SelectItem key={idx + 1} value={String(idx + 1)}>{month}</SelectItem>
+                    {monthKeys.map((key, idx) => (
+                      <SelectItem key={idx + 1} value={String(idx + 1)}>{t(`expenses.months.${key}`)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>{t('objectifs.target', { defaultValue: 'Objectif' })} (DT) *</Label>
-              <Input type="number" min="0" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} placeholder={t('objectifs.targetPlaceholder', { defaultValue: 'Ex: 50000' })} />
+              <Label>{t('objectifs.target')} (DT) *</Label>
+              <Input type="number" min="0" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} placeholder={t('objectifs.targetPlaceholder')} />
             </div>
           </div>
           <DialogFooter>

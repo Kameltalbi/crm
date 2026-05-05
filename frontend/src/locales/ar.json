@@ -248,6 +248,24 @@
       "AUTRE": "أخرى"
     }
   },
+  "objectifs": {
+    "title": "الأهداف التجارية",
+    "subtitle": "إدارة أهداف مندوبي المبيعات",
+    "new": "هدف جديد",
+    "requiredFields": "يرجى ملء جميع الحقول المطلوبة",
+    "salesperson": "مندوب المبيعات",
+    "target": "الهدف",
+    "targetPlaceholder": "مثال: 50000",
+    "chooseSalesperson": "اختر مندوب مبيعات",
+    "noneForYear": "لا توجد أهداف لهذه السنة",
+    "commissionsTitle": "المكافآت",
+    "confirmDelete": "هل أنت متأكد من حذف هذا الهدف؟",
+    "salespersonCol": "مندوب المبيعات",
+    "targetCol": "الهدف",
+    "salesCol": "المبيعات",
+    "achievementCol": "نسبة الإنجاز",
+    "commissionCol": "المكافأة"
+  },
   "leads": {
     "title": "العملاء المحتملون",
     "subtitle": "إدارة العملاء المحتملين",

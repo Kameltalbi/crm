@@ -248,6 +248,24 @@
       "AUTRE": "Autre"
     }
   },
+  "objectifs": {
+    "title": "Objectifs Commerciaux",
+    "subtitle": "Gérez les objectifs de vos commerciaux",
+    "new": "Nouvel objectif",
+    "requiredFields": "Veuillez remplir tous les champs obligatoires",
+    "salesperson": "Commercial",
+    "target": "Objectif",
+    "targetPlaceholder": "Ex: 50000",
+    "chooseSalesperson": "Choisir un commercial",
+    "noneForYear": "Aucun objectif pour cette année",
+    "commissionsTitle": "Primes",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet objectif ?",
+    "salespersonCol": "Commercial",
+    "targetCol": "Objectif",
+    "salesCol": "Ventes",
+    "achievementCol": "Atteinte",
+    "commissionCol": "Prime"
+  },
   "leads": {
     "title": "Leads",
     "subtitle": "Gestion des prospects",

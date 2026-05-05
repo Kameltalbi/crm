@@ -47,7 +47,7 @@ model Organization {
   subscriptions Subscription[]
   salesObjectives SalesObjective[]
   userPermissions UserPermission[]
-  commissionConfig CommissionConfig?
+  commissionConfigs CommissionConfig[]
 
   @@map("organizations")
 }
@@ -751,8 +751,11 @@ model UserPermission {
 // ═══════════════════════════════════════════════════════════════
 model CommissionConfig {
   id            String   @id @default(cuid())
-  organizationId String   @unique
+  organizationId String
   organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Nom du mécanisme de prime
+  name          String   @default("Prime par défaut")
   
   // Type de calcul
   calculationType CommissionType @default(SIMPLE)

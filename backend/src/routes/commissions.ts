@@ -9,6 +9,7 @@ commissionsRoutes.use(auth);
 commissionsRoutes.use(checkPlanFeature('commissions'));
 
 const commissionConfigSchema = z.object({
+  name: z.string().min(1).optional(),
   calculationType: z.enum(['SIMPLE', 'TIERS', 'PROGRESSIVE', 'CUSTOM']),
   periodicity: z.enum(['MONTHLY', 'QUARTERLY', 'SEMI_ANNUAL', 'ANNUAL']),
   simpleRate: z.number().min(0).max(100).optional(),
@@ -23,40 +24,27 @@ const commissionConfigSchema = z.object({
   paymentDelay: z.number().min(0).optional(),
 });
 
-// GET /api/commissions/config - Get organization's commission config
+// GET /api/commissions/config - Get all commission configs for organization
 commissionsRoutes.get('/config', async (req: AuthRequest, res, next) => {
   try {
-    const config = await prisma.commissionConfig.findUnique({
+    const configs = await prisma.commissionConfig.findMany({
       where: { organizationId: req.organizationId },
+      orderBy: { createdAt: 'desc' },
     });
 
-    // If no config exists, return default config
-    if (!config) {
-      return res.json({
-        calculationType: 'SIMPLE',
-        periodicity: 'MONTHLY',
-        simpleRate: 0,
-        minThreshold: 0,
-        includeNewClients: true,
-        includeRenewals: true,
-        includeRecurring: true,
-        paymentDelay: 30,
-      });
-    }
-
-    res.json(config);
+    res.json(configs);
   } catch (e) { next(e); }
 });
 
-// POST /api/commissions/config - Create or update commission config
+// POST /api/commissions/config - Create a new commission config
 commissionsRoutes.post('/config', async (req: AuthRequest, res, next) => {
   try {
     const data = commissionConfigSchema.parse(req.body);
 
-    const config = await prisma.commissionConfig.upsert({
-      where: { organizationId: req.organizationId },
-      create: {
+    const config = await (prisma.commissionConfig as any).create({
+      data: {
         organizationId: req.organizationId!,
+        name: data.name || 'Prime',
         calculationType: data.calculationType,
         periodicity: data.periodicity,
         simpleRate: data.simpleRate || 0,
@@ -70,23 +58,44 @@ commissionsRoutes.post('/config', async (req: AuthRequest, res, next) => {
         includeRecurring: data.includeRecurring ?? true,
         paymentDelay: data.paymentDelay || 30,
       },
-      update: {
-        calculationType: data.calculationType,
-        periodicity: data.periodicity,
-        simpleRate: data.simpleRate,
-        tierConfig: data.tierConfig,
-        progressiveConfig: data.progressiveConfig,
-        customFormula: data.customFormula,
-        minThreshold: data.minThreshold,
-        maxCap: typeof data.maxCap === 'string' ? (data.maxCap === '' ? null : Number(data.maxCap)) : (data.maxCap || null),
-        includeNewClients: data.includeNewClients,
-        includeRenewals: data.includeRenewals,
-        includeRecurring: data.includeRecurring,
-        paymentDelay: data.paymentDelay,
+    });
+
+    res.json(config);
+  } catch (e) { next(e); }
+});
+
+// PUT /api/commissions/config/:id - Update a commission config
+commissionsRoutes.put('/config/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const data = commissionConfigSchema.partial().parse(req.body);
+
+    const existing = await prisma.commissionConfig.findFirst({
+      where: { id: req.params.id as string, organizationId: req.organizationId },
+    });
+    if (!existing) return res.status(404).json({ error: 'Configuration introuvable' });
+
+    const config = await (prisma.commissionConfig as any).update({
+      where: { id: req.params.id as string },
+      data: {
+        ...data,
+        maxCap: typeof data.maxCap === 'string' ? (data.maxCap === '' ? null : Number(data.maxCap)) : (data.maxCap !== undefined ? (data.maxCap || null) : undefined),
       },
     });
 
     res.json(config);
+  } catch (e) { next(e); }
+});
+
+// DELETE /api/commissions/config/:id - Delete a commission config
+commissionsRoutes.delete('/config/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const existing = await prisma.commissionConfig.findFirst({
+      where: { id: req.params.id as string, organizationId: req.organizationId },
+    });
+    if (!existing) return res.status(404).json({ error: 'Configuration introuvable' });
+
+    await prisma.commissionConfig.delete({ where: { id: req.params.id as string } });
+    res.status(204).send();
   } catch (e) { next(e); }
 });
 
@@ -98,8 +107,8 @@ commissionsRoutes.post('/calculate', async (req: AuthRequest, res, next) => {
     const currentYear = year || new Date().getFullYear();
     const currentMonth = month || new Date().getMonth() + 1;
 
-    // Get organization commission config
-    const config = await prisma.commissionConfig.findUnique({
+    // Get first organization commission config
+    const config = await prisma.commissionConfig.findFirst({
       where: { organizationId: req.organizationId },
     });
 
@@ -223,7 +232,7 @@ commissionsRoutes.post('/preview', async (req: AuthRequest, res, next) => {
       return res.status(400).json({ error: 'Sales amount is required' });
     }
 
-    const config = await prisma.commissionConfig.findUnique({
+    const config = await prisma.commissionConfig.findFirst({
       where: { organizationId: req.organizationId },
     });
 

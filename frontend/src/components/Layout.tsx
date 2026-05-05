@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, Users, Settings, LogOut, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon, Receipt, Mail, Sparkles, Target } from 'lucide-react';
+import { LayoutDashboard, Briefcase, Users, Settings, LogOut, Menu, X, FileText, Building2, UserCheck, Calendar as CalendarIcon, Receipt, Mail, Sparkles, Target, Globe } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,7 @@ import { api } from '@/lib/api';
 import { useOrganizationLogoSrc } from '@/hooks/useOrganizationLogoSrc';
 import type { Organization } from '@/types';
 import { Notifications } from './Notifications';
+import { useTranslation } from 'react-i18next';
 
 const nav = [
   { to: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, page: 'dashboard' },
@@ -25,8 +26,10 @@ const nav = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const isRTL = i18n.language === 'ar';
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -84,7 +87,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const expensesAccessible = currentPlan === 'ENTERPRISE';
 
   return (
-    <div className="flex h-screen flex-col bg-gradient-to-br from-background via-background to-muted/50">
+    <div className={`flex h-screen flex-col bg-gradient-to-br from-background via-background to-muted/50 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <header className="relative z-[999] flex h-[3.75rem] flex-shrink-0 items-center justify-between border-b border-border/60 bg-white/85 px-4 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-md md:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
@@ -131,7 +134,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2">
           <Notifications />
-          <div className="ml-1 flex items-center gap-2 border-l border-border/60 pl-3 sm:ml-2 sm:pl-4">
+          <div className="flex items-center gap-1.5 border-l border-border/60 pl-2 sm:pl-3">
+            <button
+              type="button"
+              onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'ar' : 'fr')}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted"
+              title={i18n.language === 'fr' ? 'Switch to Arabic' : 'Switch to French'}
+            >
+              <Globe size={18} strokeWidth={2} />
+              <span className="ml-1 text-xs font-medium">{i18n.language === 'fr' ? 'AR' : 'FR'}</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-2 border-l border-border/60 pl-2 sm:pl-3">
             <div className="hidden text-right sm:block">
               <div className="max-w-[140px] truncate text-sm font-semibold leading-tight text-foreground md:max-w-[200px]">
                 {user?.name}

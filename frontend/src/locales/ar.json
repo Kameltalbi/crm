@@ -1,0 +1,102 @@
+{
+  "common": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "name": "الاسم",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "export": "تصدير",
+    "import": "استيراد",
+    "loading": "جاري التحميل...",
+    "noData": "لا توجد بيانات",
+    "actions": "الإجراءات",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "submit": "إرسال",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "clients": "العملاء",
+    "prospects": "العملاء المحتملون",
+    "affaires": "الصفقات",
+    "devis": "العروض",
+    "factures": "الفواتير",
+    "products": "المنتجات",
+    "expenses": "المصروفات",
+    "reports": "التقارير",
+    "settings": "الإعدادات",
+    "aiAssistant": "المساعد الذكي",
+    "commissions": "العمولات",
+    "objectives": "الأهداف",
+    "notifications": "الإشعارات"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "kpis": {
+      "totalClients": "إجمالي العملاء",
+      "totalAffaires": "إجمالي الصفقات",
+      "totalCA": "إجمالي المبيعات",
+      "conversionRate": "معدل التحويل"
+    },
+    "recentAffaires": "الصفقات الأخيرة",
+    "upcomingTasks": "المهام القادمة"
+  },
+  "clients": {
+    "title": "العملاء",
+    "addClient": "إضافة عميل",
+    "editClient": "تعديل العميل",
+    "deleteClient": "حذف العميل",
+    "clientName": "اسم العميل",
+    "clientEmail": "بريد العميل الإلكتروني",
+    "clientPhone": "هاتف العميل",
+    "clientAddress": "عنوان العميل"
+  },
+  "affaires": {
+    "title": "الصفقات",
+    "addAffaire": "إضافة صفقة",
+    "editAffaire": "تعديل الصفقة",
+    "deleteAffaire": "حذف الصفقة",
+    "affaireTitle": "عنوان الصفقة",
+    "affaireAmount": "المبلغ",
+    "affaireStatus": "الحالة",
+    "affaireProbability": "الاحتمالية",
+    "status": {
+      "prospect": "عميل محتمل",
+      "qualified": "مؤهل",
+      "proposal": "اقتراح",
+      "negotiation": "تفاوض",
+      "won": "مكتسبة",
+      "lost": "مفقودة"
+    }
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "organization": "المنظمة",
+    "users": "المستخدمون",
+    "preferences": "التفضيلات",
+    "billing": "الفوترة",
+    "language": "اللغة"
+  },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "loginSubtitle": "سجل الدخول إلى حسابك",
+    "registerTitle": "التسجيل",
+    "registerSubtitle": "أنشئ حسابك",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "signUp": "التسجيل",
+    "signIn": "تسجيل الدخول"
+  }
+}

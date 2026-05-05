@@ -579,8 +579,34 @@ aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest
   try {
     const { message } = querySchema.parse(req.body);
     const organizationId = req.organizationId!;
+    const lowerMessage = message.toLowerCase();
 
-    // Fetch CRM context for the AI
+    // Use rule-based predictions for forecast-related queries
+    if (lowerMessage.includes('prévision') || lowerMessage.includes('prévoir') || 
+        lowerMessage.includes('prédiction') || lowerMessage.includes('chiffre d\'affaires') ||
+        lowerMessage.includes('ca') || lowerMessage.includes('fin d\'année') ||
+        lowerMessage.includes('année')) {
+      const prediction = await predictYearEndCA(organizationId);
+      const recommendations = await generateRecommendations(organizationId, prediction);
+      
+      res.json({
+        intent: 'prediction',
+        result: {
+          message: `Voici votre prévision de chiffre d'affaires pour l'année ${new Date().getFullYear()}:\n\n` +
+                   `• CA réalisé: ${prediction.caRealise} DT\n` +
+                   `• CA du pipeline: ${prediction.pipelineCA} DT\n` +
+                   `• Pipeline pondéré: ${prediction.pipelinePondere} DT\n` +
+                   `• Prédiction CA fin d'année: ${prediction.predictedCA} DT\n` +
+                   `• Croissance vs année précédente: ${prediction.avgGrowth}%\n\n` +
+                   `Recommandations:\n${recommendations.join('\n')}`,
+          prediction,
+          recommendations,
+        },
+      });
+      return;
+    }
+
+    // Use OpenAI for other queries (email drafting, general advice, etc.)
     const [affaires, clients, objectifs] = await Promise.all([
       prisma.affaire.findMany({
         where: { organizationId, deletedAt: null, statut: { not: 'PERDU' } },
@@ -619,7 +645,7 @@ aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest
 
     const systemPrompt = `Tu es un assistant CRM professionnel et expert en vente. 
 Tu aides les équipes commerciales avec:
-- Analyse de pipeline et prédictions de vente
+- Analyse de pipeline
 - Conseils stratégiques pour améliorer les conversions
 - Rédaction d'emails personnalisés
 - Scoring de leads et recommandations
@@ -628,22 +654,13 @@ Tu aides les équipes commerciales avec:
 Contexte CRM actuel:
 - Nombre d'affaires en cours: ${context.affairesCount}
 - Nombre de clients: ${context.clientsCount}
-- CA total du pipeline (toutes affaires en cours): ${context.totalCA} DT
+- CA total du pipeline: ${context.totalCA} DT
 
-Affaires récentes (affichage des 5 dernières):
+Affaires récentes:
 ${context.recentAffaires.map(a => `- ${a.titre}: ${a.montant} DT, statut: ${a.statut}, probabilité: ${a.probabilite}%`).join('\n')}
 
 Objectifs mensuels:
 ${context.objectifs.map(o => `- ${o.mois}: ${o.cible} DT`).join('\n') || 'Aucun objectif défini'}
-
-INSTRUCTIONS IMPORTANTES POUR LES PRÉVISIONS:
-- Le CA total du pipeline (${context.totalCA} DT) représente les affaires EN COURS, PAS le CA déjà réalisé
-- Pour prévoir le CA de fin d'année, NE PAS additionner le CA pipeline avec le CA pipeline pondéré (double comptage)
-- Utilise plutôt une approche d'extrapolation: si on est au mois X de l'année, estime le CA annuel basé sur le CA réalisé jusqu'à maintenant divisé par X, multiplié par 12
-- OU analyse uniquement le pipeline: somme des affaires gagnées + (affaires qualifiées × probabilité) + (affaires prospects × probabilité)
-- Sois transparent sur ta méthode de calcul
-
-Quand tu fais des calculs, utilise uniquement les montants en DT. Les montants sont déjà en DT.
 
 Réponds de manière professionnelle, concise et actionnable. En français.`;
 

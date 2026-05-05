@@ -1,0 +1,102 @@
+{
+  "common": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "name": "Nom",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "import": "Importer",
+    "loading": "Chargement...",
+    "noData": "Aucune donnée",
+    "actions": "Actions",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "clients": "Clients",
+    "prospects": "Prospects",
+    "affaires": "Affaires",
+    "devis": "Devis",
+    "factures": "Factures",
+    "products": "Produits",
+    "expenses": "Dépenses",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "aiAssistant": "Assistant IA",
+    "commissions": "Commissions",
+    "objectives": "Objectifs",
+    "notifications": "Notifications"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "kpis": {
+      "totalClients": "Total Clients",
+      "totalAffaires": "Total Affaires",
+      "totalCA": "CA Total",
+      "conversionRate": "Taux de conversion"
+    },
+    "recentAffaires": "Affaires récentes",
+    "upcomingTasks": "Tâches à venir"
+  },
+  "clients": {
+    "title": "Clients",
+    "addClient": "Ajouter un client",
+    "editClient": "Modifier le client",
+    "deleteClient": "Supprimer le client",
+    "clientName": "Nom du client",
+    "clientEmail": "Email du client",
+    "clientPhone": "Téléphone du client",
+    "clientAddress": "Adresse du client"
+  },
+  "affaires": {
+    "title": "Affaires",
+    "addAffaire": "Ajouter une affaire",
+    "editAffaire": "Modifier l'affaire",
+    "deleteAffaire": "Supprimer l'affaire",
+    "affaireTitle": "Titre de l'affaire",
+    "affaireAmount": "Montant",
+    "affaireStatus": "Statut",
+    "affaireProbability": "Probabilité",
+    "status": {
+      "prospect": "Prospect",
+      "qualified": "Qualifiée",
+      "proposal": "Proposition",
+      "negotiation": "Négociation",
+      "won": "Gagnée",
+      "lost": "Perdue"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "organization": "Organisation",
+    "users": "Utilisateurs",
+    "preferences": "Préférences",
+    "billing": "Facturation",
+    "language": "Langue"
+  },
+  "auth": {
+    "loginTitle": "Connexion",
+    "loginSubtitle": "Connectez-vous à votre compte",
+    "registerTitle": "Inscription",
+    "registerSubtitle": "Créez votre compte",
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Pas de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "signUp": "S'inscrire",
+    "signIn": "Se connecter"
+  }
+}

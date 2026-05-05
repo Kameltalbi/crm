@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Building2, Plus, Pencil, Trash2, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,7 @@ type FormData = {
 };
 
 export function Organizations() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -127,8 +129,8 @@ export function Organizations() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Mon Organisation</h1>
-        <p className="text-muted-foreground">Gérez les informations de votre organisation</p>
+        <h1 className="text-2xl font-bold">{t('organizations.title')}</h1>
+        <p className="text-muted-foreground">{t('organizations.subtitle')}</p>
       </div>
 
       <div className="max-w-2xl">
@@ -157,13 +159,13 @@ export function Organizations() {
             <CardContent className="space-y-3 text-sm">
               {userOrganization.phone && <p className="text-muted-foreground">📞 {userOrganization.phone}</p>}
               {userOrganization.address && <p className="text-muted-foreground">📍 {userOrganization.address}</p>}
-              {userOrganization.tva && <p className="text-muted-foreground">🧾 TVA: {userOrganization.tva}</p>}
+              {userOrganization.tva && <p className="text-muted-foreground">🧾 {t('organizations.vatLabel')}: {userOrganization.tva}</p>}
             </CardContent>
           </Card>
         ) : (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
-              Aucune organisation trouvée
+              {t('organizations.noneFound')}
             </CardContent>
           </Card>
         )}
@@ -172,11 +174,11 @@ export function Organizations() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Modifier mon organisation</DialogTitle>
+            <DialogTitle>{t('organizations.editDialogTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="name">Nom *</Label>
+              <Label htmlFor="name">{t('organizations.fields.name')} *</Label>
               <Input
                 id="name"
                 value={form.name}
@@ -186,7 +188,7 @@ export function Organizations() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('common.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -195,7 +197,7 @@ export function Organizations() {
                 />
               </div>
               <div>
-                <Label htmlFor="phone">Téléphone</Label>
+                <Label htmlFor="phone">{t('organizations.fields.phone')}</Label>
                 <Input
                   id="phone"
                   value={form.phone}
@@ -204,7 +206,7 @@ export function Organizations() {
               </div>
             </div>
             <div>
-              <Label htmlFor="address">Adresse</Label>
+              <Label htmlFor="address">{t('organizations.fields.address')}</Label>
               <Textarea
                 id="address"
                 value={form.address}
@@ -213,7 +215,7 @@ export function Organizations() {
               />
             </div>
             <div>
-              <Label htmlFor="tva">Numéro TVA</Label>
+              <Label htmlFor="tva">{t('organizations.fields.vatNumber')}</Label>
               <Input
                 id="tva"
                 value={form.tva}
@@ -221,7 +223,7 @@ export function Organizations() {
               />
             </div>
             <div>
-              <Label htmlFor="logo">Logo</Label>
+              <Label htmlFor="logo">{t('organizations.fields.logo')}</Label>
               <div className="flex items-center gap-4">
                 {form.logoUrl && (
                   <img src={form.logoUrl} alt="Logo" className="w-16 h-16 rounded-lg object-cover" />
@@ -257,10 +259,10 @@ export function Organizations() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Annuler
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {createMutation.isPending || updateMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                {createMutation.isPending || updateMutation.isPending ? t('organizations.saving') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>

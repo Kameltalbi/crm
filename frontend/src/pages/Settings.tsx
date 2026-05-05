@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Mail, Users, Package, FileText, Building2, Tag, DollarSign } from 'lucide-react';
 import { GmailSettings } from '@/components/settings/GmailSettings';
 import { SoftfactureSettings } from '@/components/settings/SoftfactureSettings';
@@ -23,6 +24,7 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
 ];
 
 export function Settings() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('organization');
   const [visibleTabs, setVisibleTabs] = useState(TABS);
 
@@ -43,8 +45,8 @@ export function Settings() {
   return (
     <div className="space-y-6 px-2 md:px-0">
       <div>
-        <h1 className="font-serif text-2xl md:text-3xl">Paramètres</h1>
-        <p className="text-sm text-muted-foreground">Intégrations et configuration</p>
+        <h1 className="font-serif text-2xl md:text-3xl">{t('settings.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('settings.integrationsSubtitle')}</p>
       </div>
 
       {/* Horizontal Tab Menu */}
@@ -62,7 +64,7 @@ export function Settings() {
               }`}
             >
               <Icon size={16} />
-              {tab.label}
+              {t(`settings.tabs.${tab.id}`)}
             </button>
           );
         })}

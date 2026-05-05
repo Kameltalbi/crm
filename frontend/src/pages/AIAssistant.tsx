@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,19 +13,19 @@ interface Message {
   data?: any;
 }
 
-const suggestions = [
-  "Prédire CA fin d'année",
-  "Conseils pour atteindre mes objectifs",
-  "Analyse des objectifs mensuels",
-  "Actions prioritaires",
-  "Alertes opportunités à risque",
-];
-
 export function AIAssistant() {
+  const { t } = useTranslation();
+  const suggestions = [
+    t('aiAssistant.suggestions.predictYearEnd'),
+    t('aiAssistant.suggestions.recommendations'),
+    t('aiAssistant.suggestions.targetAnalysis'),
+    t('aiAssistant.suggestions.priorityActions'),
+    t('aiAssistant.suggestions.riskAlerts'),
+  ];
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Bonjour ! Je suis votre assistant IA. Que puis-je faire pour vous ?',
+      content: t('aiAssistant.welcomeMessage'),
     },
   ]);
   const [input, setInput] = useState('');
@@ -150,10 +151,10 @@ export function AIAssistant() {
         <div>
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight flex items-center gap-2">
             <Sparkles className="text-purple-600" size={32} />
-            Assistant IA
+            {t('nav.aiAssistant')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Posez vos questions en langage naturel
+            {t('aiAssistant.subtitle')}
           </p>
         </div>
       </div>
@@ -162,7 +163,7 @@ export function AIAssistant() {
         <CardHeader className="border-b">
           <CardTitle className="flex items-center gap-2">
             <Bot className="text-purple-600" size={20} />
-            Conversation
+            {t('aiAssistant.conversation')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -200,7 +201,7 @@ export function AIAssistant() {
                 <Bot size={16} className="text-purple-600" />
               </div>
               <div className="bg-gray-100 rounded-lg p-3">
-                <p className="text-sm text-muted-foreground">En train de réfléchir...</p>
+                <p className="text-sm text-muted-foreground">{t('aiAssistant.thinking')}</p>
               </div>
             </div>
           )}
@@ -223,8 +224,8 @@ export function AIAssistant() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Posez votre question..."
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder={t('aiAssistant.inputPlaceholder')}
               className="flex-1"
             />
             <Button onClick={handleSend} disabled={queryMutation.isPending || !input.trim()}>

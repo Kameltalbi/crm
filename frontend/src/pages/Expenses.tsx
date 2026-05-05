@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Receipt, Repeat, TrendingUp, TrendingDown, Scale, Search } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
@@ -50,6 +51,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function Expenses() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -243,11 +245,11 @@ export function Expenses() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Dépenses</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gestion des frais et dépenses</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('expenses.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('expenses.subtitle')}</p>
         </div>
         <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
-          <Plus size={16} className="mr-2" /> Nouvelle dépense
+          <Plus size={16} className="mr-2" /> {t('expenses.newExpense')}
         </Button>
       </div>
 
@@ -277,9 +279,9 @@ export function Expenses() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Total Dépenses ({filterYear})</p>
+                <p className="text-xs text-muted-foreground">{t('expenses.totalExpenses')} ({filterYear})</p>
                 <p className="text-xl font-bold text-red-600 mt-1">{fmtDT(totalExpenses)} TND</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{allExpenses.length} dépenses</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{allExpenses.length} {t('expenses.expensesCount')}</p>
               </div>
               <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
                 <TrendingDown size={20} className="text-red-600" />
@@ -292,12 +294,12 @@ export function Expenses() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Solde (CA - Dépenses)</p>
+                <p className="text-xs text-muted-foreground">{t('expenses.balance')}</p>
                 <p className={`text-xl font-bold mt-1 ${solde >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {solde >= 0 ? '+' : ''}{fmtDT(solde)} TND
                 </p>
                 <p className={`text-[10px] mt-1 ${solde >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {solde >= 0 ? 'Les revenus couvrent les dépenses' : 'Les dépenses dépassent les revenus'}
+                  {solde >= 0 ? t('expenses.balancePositive') : t('expenses.balanceNegative')}
                 </p>
               </div>
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${solde >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
@@ -311,11 +313,11 @@ export function Expenses() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Taux de couverture</p>
+                <p className="text-xs text-muted-foreground">{t('expenses.coverageRate')}</p>
                 <p className="text-xl font-bold text-gray-900 mt-1">
                   {totalExpenses > 0 ? Math.round((caTotalTTC / totalExpenses) * 100) : '—'}%
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-1">CA / Dépenses</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{t('expenses.coverageFormula')}</p>
               </div>
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
                 <Receipt size={20} className="text-blue-600" />
@@ -330,7 +332,7 @@ export function Expenses() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Rechercher..."
+            placeholder={t('common.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 h-9 w-40 text-xs"
@@ -338,10 +340,10 @@ export function Expenses() {
         </div>
         <Select value={filterCategory} onValueChange={(v) => handleFilterChange(setFilterCategory, v)}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Catégorie" />
+            <SelectValue placeholder={t('expenses.category')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Toutes catégories</SelectItem>
+            <SelectItem value="all">{t('expenses.allCategories')}</SelectItem>
             {expenseCategories.map((cat: any) => (
               <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
             ))}
@@ -349,21 +351,34 @@ export function Expenses() {
         </Select>
         <Select value={filterSemester} onValueChange={(v) => { handleFilterChange(setFilterSemester, v); setFilterMonth('all'); }}>
           <SelectTrigger className="w-28">
-            <SelectValue placeholder="Période" />
+            <SelectValue placeholder={t('expenses.period')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Année</SelectItem>
-            <SelectItem value="S1">S1 (Jan-Juin)</SelectItem>
-            <SelectItem value="S2">S2 (Juil-Déc)</SelectItem>
+            <SelectItem value="all">{t('expenses.year')}</SelectItem>
+            <SelectItem value="S1">{t('expenses.semester1')}</SelectItem>
+            <SelectItem value="S2">{t('expenses.semester2')}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterMonth} onValueChange={(v) => { handleFilterChange(setFilterMonth, v); setFilterSemester('all'); }}>
           <SelectTrigger className="w-32">
-            <SelectValue placeholder="Mois" />
+            <SelectValue placeholder={t('expenses.month')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les mois</SelectItem>
-            {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map((label, idx) => (
+            <SelectItem value="all">{t('expenses.allMonths')}</SelectItem>
+            {[
+              t('expenses.months.january'),
+              t('expenses.months.february'),
+              t('expenses.months.march'),
+              t('expenses.months.april'),
+              t('expenses.months.may'),
+              t('expenses.months.june'),
+              t('expenses.months.july'),
+              t('expenses.months.august'),
+              t('expenses.months.september'),
+              t('expenses.months.october'),
+              t('expenses.months.november'),
+              t('expenses.months.december'),
+            ].map((label, idx) => (
               <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
             ))}
           </SelectContent>
@@ -385,7 +400,7 @@ export function Expenses() {
         <CardContent className="p-0">
           {filteredExpenses.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-sm text-muted-foreground">Aucune dépense</p>
+              <p className="text-sm text-muted-foreground">{t('expenses.none')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -394,10 +409,10 @@ export function Expenses() {
                   <span className="text-sm font-medium text-red-700">{selectedIds.size} sélectionnée(s)</span>
                   <Button size="sm" variant="destructive" onClick={() => bulkDeleteMutation.mutate(Array.from(selectedIds))} disabled={bulkDeleteMutation.isPending}>
                     <Trash2 size={14} className="mr-1" />
-                    {bulkDeleteMutation.isPending ? 'Suppression...' : `Supprimer (${selectedIds.size})`}
+                    {bulkDeleteMutation.isPending ? t('expenses.deleting') : `${t('common.delete')} (${selectedIds.size})`}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
-                    Annuler
+                    {t('common.cancel')}
                   </Button>
                 </div>
               )}
@@ -412,11 +427,11 @@ export function Expenses() {
                         className="rounded border-gray-300 text-primary focus:ring-primary"
                       />
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Titre</th>
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Catégorie</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Montant</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t('expenses.date')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t('expenses.titleCol')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">{t('expenses.category')}</th>
+                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">{t('expenses.amount')}</th>
+                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -481,7 +496,7 @@ export function Expenses() {
               {expensesData?.pagination && expensesData.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between py-4 px-4 border-t">
                   <p className="text-sm text-muted-foreground">
-                    {expensesData.pagination.total} dépenses
+                    {expensesData.pagination.total} {t('expenses.expensesCount')}
                   </p>
                   <div className="flex items-center gap-1">
                     <Button
@@ -491,7 +506,7 @@ export function Expenses() {
                       disabled={page === 1}
                       className="px-3"
                     >
-                      ← Précédent
+                      {t('common.previous')}
                     </Button>
                     {Array.from({ length: expensesData.pagination.totalPages }, (_, i) => i + 1).map((p) => (
                       <Button
@@ -511,7 +526,7 @@ export function Expenses() {
                       disabled={page === expensesData.pagination.totalPages}
                       className="px-3"
                     >
-                      Suivant →
+                      {t('common.next')}
                     </Button>
                   </div>
                 </div>
@@ -525,20 +540,20 @@ export function Expenses() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouvelle'} dépense</DialogTitle>
+            <DialogTitle>{form.id ? t('expenses.editExpense') : t('expenses.newExpense')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Titre *</Label>
-              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Loyer bureau, Abonnement..." />
+              <Label>{t('expenses.titleCol')} *</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t('expenses.titlePlaceholder')} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Montant (TND) *</Label>
+                <Label>{t('expenses.amount')} (TND) *</Label>
                 <Input type="number" step="0.001" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.000" />
               </div>
               <div className="space-y-1.5">
-                <Label>Catégorie</Label>
+                <Label>{t('expenses.category')}</Label>
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -550,7 +565,7 @@ export function Expenses() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Date de début</Label>
+              <Label>{t('expenses.startDate')}</Label>
               <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             </div>
 
@@ -564,35 +579,35 @@ export function Expenses() {
                   className="rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <Repeat size={16} className="text-muted-foreground" />
-                <span className="text-sm font-medium">Dépense récurrente</span>
+                <span className="text-sm font-medium">{t('expenses.recurringExpense')}</span>
               </label>
               {form.isRecurrent && (
                 <div className="space-y-3">
                   <div className="space-y-1.5">
-                    <Label>Fréquence</Label>
+                    <Label>{t('expenses.frequency')}</Label>
                     <Select value={form.recurrenceType} onValueChange={(v) => {
                       const monthsMap: Record<string, string> = { mensuel: '12', trimestriel: '4', semestriel: '2', personnalise: form.recurrenceMonths };
                       setForm({ ...form, recurrenceType: v, recurrenceMonths: monthsMap[v] || form.recurrenceMonths });
                     }}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="mensuel">Mensuel (12 mois)</SelectItem>
-                        <SelectItem value="trimestriel">Trimestriel (4 trimestres)</SelectItem>
-                        <SelectItem value="semestriel">Semestriel (2 semestres)</SelectItem>
-                        <SelectItem value="personnalise">Personnalisé</SelectItem>
+                        <SelectItem value="mensuel">{t('expenses.frequencyMonthly')}</SelectItem>
+                        <SelectItem value="trimestriel">{t('expenses.frequencyQuarterly')}</SelectItem>
+                        <SelectItem value="semestriel">{t('expenses.frequencySemester')}</SelectItem>
+                        <SelectItem value="personnalise">{t('expenses.frequencyCustom')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   {form.recurrenceType === 'personnalise' && (
                     <div className="space-y-1.5">
-                      <Label>Nombre de répétitions</Label>
+                      <Label>{t('expenses.repetitionCount')}</Label>
                       <Input
                         type="number"
                         min="2"
                         max="36"
                         value={form.recurrenceMonths}
                         onChange={(e) => setForm({ ...form, recurrenceMonths: e.target.value })}
-                        placeholder="Ex: 6"
+                        placeholder={t('expenses.repetitionPlaceholder')}
                       />
                     </div>
                   )}
@@ -607,13 +622,13 @@ export function Expenses() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={saveMutation.isPending}>
                 {saveMutation.isPending
-                  ? 'Enregistrement...'
+                  ? t('organizations.saving')
                   : form.isRecurrent && !form.id && parseInt(form.recurrenceMonths) > 1
-                    ? `Créer ${form.recurrenceMonths} dépenses`
-                    : 'Enregistrer'}
+                    ? `${t('expenses.createMany')} ${form.recurrenceMonths} ${t('expenses.expensesCount')}`
+                    : t('common.save')}
               </Button>
             </DialogFooter>
           </form>

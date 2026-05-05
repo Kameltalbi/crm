@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Leaf, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/form-controls';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export function Register() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,29 +45,29 @@ export function Register() {
           </div>
           <div>
             <CardTitle>ktOptima</CardTitle>
-            <CardDescription>Créer votre organisation et compte</CardDescription>
+            <CardDescription>{t('auth.registerSubtitle')}</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="organizationName">Nom de l'organisation *</Label>
+              <Label htmlFor="organizationName">{t('settings.organization')} *</Label>
               <Input id="organizationName" type="text" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="name">Votre nom *</Label>
+              <Label htmlFor="name">{t('common.name')} *</Label>
               <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Téléphone</Label>
+              <Label htmlFor="phone">{t('clients.clientPhone')}</Label>
               <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t('common.email')} *</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Mot de passe (min. 6 caractères) *</Label>
+              <Label htmlFor="password">{t('common.password')} (min. 6 caractères) *</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -86,14 +88,14 @@ export function Register() {
             </div>
             {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Inscription...' : 'S\'inscrire'}
+              {loading ? t('common.loading') : t('auth.signUp')}
             </Button>
             <div className="flex justify-between text-sm text-center">
               <Link to="/" className="text-muted-foreground hover:text-foreground">
-                ← Retour à l'accueil
+                ← {t('common.back')}
               </Link>
               <Link to="/login" className="text-leaf hover:underline">
-                Déjà un compte ? Se connecter
+                {t('auth.hasAccount')} {t('auth.signIn')}
               </Link>
             </div>
           </form>

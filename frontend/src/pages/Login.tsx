@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Leaf, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/form-controls';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export function Login() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const login = useAuth((s) => s.login);
   const user = useAuth((s) => s.user);
@@ -47,17 +49,17 @@ export function Login() {
           </div>
           <div>
             <CardTitle>ktOptima</CardTitle>
-            <CardDescription>Connexion à votre espace</CardDescription>
+            <CardDescription>{t('auth.loginSubtitle')}</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('common.email')}</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">{t('common.password')}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -78,14 +80,14 @@ export function Login() {
             </div>
             {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Connexion...' : 'Se connecter'}
+              {loading ? t('common.loading') : t('auth.signIn')}
             </Button>
             <div className="flex justify-between text-sm text-center">
               <Link to="/" className="text-muted-foreground hover:text-foreground">
-                ← Retour à l'accueil
+                ← {t('common.back')}
               </Link>
               <Link to="/register" className="text-leaf hover:underline">
-                Pas de compte ? S'inscrire
+                {t('auth.noAccount')} {t('auth.signUp')}
               </Link>
             </div>
           </form>

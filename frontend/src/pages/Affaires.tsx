@@ -91,6 +91,26 @@ export function Affaires() {
     }
     return 0;
   });
+  const filteredAllAffaires = searchTerm ? allAffaires.filter(a =>
+    a.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.client?.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.montantHT?.toString().includes(searchTerm) ||
+    a.statut?.toLowerCase().includes(searchTerm) ||
+    a.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) : allAffaires;
+
+  const sortedAllAffaires = [...filteredAllAffaires].sort((a, b) => {
+    if (filters.sortBy === 'score') {
+      return (b.score || 0) - (a.score || 0);
+    } else if (filters.sortBy === 'montant') {
+      return Number(b.montantHT) - Number(a.montantHT);
+    } else if (filters.sortBy === 'date') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return 0;
+  });
   const { data: clientsData } = useQuery<{ data: Client[], pagination: any }>({
     queryKey: ['clients'],
     queryFn: () => api.get('/clients').then((r) => r.data),
@@ -332,76 +352,82 @@ export function Affaires() {
         </Card>
       </div>
 
+      {/* Shared Filters */}
+      <Card>
+        <CardContent className="pt-4">
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Rechercher..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-8 w-40 text-xs"
+              />
+            </div>
+            <Select value={filters.statut || 'all'} onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}>
+              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous statuts</SelectItem>
+                <SelectItem value="PROSPECT">🟡 Prospect</SelectItem>
+                <SelectItem value="QUALIFIE">🔵 Qualifié</SelectItem>
+                <SelectItem value="PROPOSITION">🟠 Proposition</SelectItem>
+                <SelectItem value="NEGOCIATION">🟣 Négociation</SelectItem>
+                <SelectItem value="GAGNE">✅ Gagné</SelectItem>
+                <SelectItem value="PERDU">❌ Perdu</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filters.type || 'all'} onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}>
+              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes catégories</SelectItem>
+                {revenueCategories.map((cat: any) => (
+                  <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.viaPartenaire || 'all'} onValueChange={(v) => setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })}>
+              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous apports</SelectItem>
+                <SelectItem value="true">🤝 Partenaire</SelectItem>
+                <SelectItem value="false">👤 Direct</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filters.mois || 'all'} onValueChange={(v) => setFilters({ ...filters, mois: v === 'all' ? '' : v })}>
+              <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Mois" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous mois</SelectItem>
+                {MOIS.map((label, idx) => (
+                  <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.sortBy || 'score'} onValueChange={(v) => setFilters({ ...filters, sortBy: v })}>
+              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Trier par" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="score">📊 Score ↓</SelectItem>
+                <SelectItem value="montant">💰 Montant ↓</SelectItem>
+                <SelectItem value="date">📅 Date ↓</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
+              <SelectTrigger className="h-8 w-20 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2026">2026</SelectItem>
+                <SelectItem value="2027">2027</SelectItem>
+                <SelectItem value="2028">2028</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Table View */}
       {view === 'table' && (
         <Card>
           <CardHeader className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
             <CardTitle className="text-base">{sortedAffaires.length} affaires</CardTitle>
-            <div className="flex flex-wrap gap-2 items-center">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Rechercher..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 h-8 w-40 text-xs"
-                />
-              </div>
-              <Select value={filters.statut || 'all'} onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}>
-                <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous statuts</SelectItem>
-                  <SelectItem value="PROSPECT">🟡 Prospect</SelectItem>
-                  <SelectItem value="QUALIFIE">🔵 Qualifié</SelectItem>
-                  <SelectItem value="PROPOSITION">🟠 Proposition</SelectItem>
-                  <SelectItem value="NEGOCIATION">🟣 Négociation</SelectItem>
-                  <SelectItem value="GAGNE">✅ Gagné</SelectItem>
-                  <SelectItem value="PERDU">❌ Perdu</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filters.type || 'all'} onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}>
-                <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Catégorie" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes catégories</SelectItem>
-                  {revenueCategories.map((cat: any) => (
-                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filters.viaPartenaire || 'all'} onValueChange={(v) => setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })}>
-                <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous apports</SelectItem>
-                  <SelectItem value="true">🤝 Partenaire</SelectItem>
-                  <SelectItem value="false">👤 Direct</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filters.mois || 'all'} onValueChange={(v) => setFilters({ ...filters, mois: v === 'all' ? '' : v })}>
-                <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Mois" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous mois</SelectItem>
-                  {MOIS.map((label, idx) => (
-                    <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filters.sortBy || 'score'} onValueChange={(v) => setFilters({ ...filters, sortBy: v })}>
-                <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Trier par" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="score">📊 Score ↓</SelectItem>
-                  <SelectItem value="montant">💰 Montant ↓</SelectItem>
-                  <SelectItem value="date">📅 Date ↓</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
-                <SelectTrigger className="h-8 w-20 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2026">2026</SelectItem>
-                  <SelectItem value="2027">2027</SelectItem>
-                  <SelectItem value="2028">2028</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -559,17 +585,18 @@ export function Affaires() {
 
       {/* Kanban View */}
       {view === 'kanban' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="overflow-x-auto pb-2">
+          <div className="grid grid-cols-6 gap-4 min-w-[1320px]">
           {(['PROSPECT', 'QUALIFIE', 'PROPOSITION', 'NEGOCIATION', 'GAGNE', 'PERDU'] as const).map((statut) => {
-            const statutAffaires = sortedAffaires.filter(a => a.statut === statut);
+            const statutAffaires = sortedAllAffaires.filter(a => a.statut === statut);
             const statutCA = statutAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0);
             const statutLabels = {
-              PROSPECT: { label: 'Prospect', color: 'bg-yellow-50 border-yellow-200' },
-              QUALIFIE: { label: 'Qualifié', color: 'bg-blue-50 border-blue-200' },
-              PROPOSITION: { label: 'Proposition', color: 'bg-orange-50 border-orange-200' },
-              NEGOCIATION: { label: 'Négociation', color: 'bg-purple-50 border-purple-200' },
-              GAGNE: { label: 'Gagné', color: 'bg-green-50 border-green-200' },
-              PERDU: { label: 'Perdu', color: 'bg-red-50 border-red-200' },
+              PROSPECT: { label: t('affaires.status.prospect'), color: 'bg-yellow-50 border-yellow-200' },
+              QUALIFIE: { label: t('affaires.status.qualified'), color: 'bg-blue-50 border-blue-200' },
+              PROPOSITION: { label: t('affaires.status.proposal'), color: 'bg-orange-50 border-orange-200' },
+              NEGOCIATION: { label: t('affaires.status.negotiation'), color: 'bg-purple-50 border-purple-200' },
+              GAGNE: { label: t('affaires.status.won'), color: 'bg-green-50 border-green-200' },
+              PERDU: { label: t('affaires.status.lost'), color: 'bg-red-50 border-red-200' },
             };
             const statutInfo = statutLabels[statut];
             return (
@@ -578,7 +605,7 @@ export function Affaires() {
                   <CardTitle className="text-sm font-semibold">{statutInfo.label}</CardTitle>
                   <p className="text-xs text-muted-foreground">{statutAffaires.length} affaires • {fmtDT(statutCA)}</p>
                 </CardHeader>
-                <CardContent className="flex-1 space-y-2">
+                <CardContent className="flex-1 space-y-2 overflow-y-auto max-h-[68vh]">
                   {statutAffaires.map((a) => {
                     const ht = Number(a.montantHT);
                     return (
@@ -602,6 +629,7 @@ export function Affaires() {
               </Card>
             );
           })}
+          </div>
         </div>
       )}
 

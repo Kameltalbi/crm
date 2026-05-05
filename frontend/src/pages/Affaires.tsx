@@ -4,7 +4,7 @@ import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertica
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import { fmtDT, MOIS } from '@/lib/utils';
+import { cn, fmtDT, MOIS } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItemStyled } from '@/components/ui/form-controls';
@@ -54,6 +54,8 @@ export function Affaires() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [clientSearch, setClientSearch] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [draggedAffaireId, setDraggedAffaireId] = useState<string | null>(null);
+  const [dropTargetStatus, setDropTargetStatus] = useState<StatutAffaire | null>(null);
 
   const { data: affairesData } = useQuery<{ data: Affaire[], pagination: any }>({
     queryKey: ['affaires', filters, page],
@@ -220,6 +222,15 @@ export function Affaires() {
     },
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, statut }: { id: string; statut: StatutAffaire }) =>
+      api.patch(`/affaires/${id}/status`, { statut }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['affaires'] });
+      qc.invalidateQueries({ queryKey: ['kpis'] });
+    },
+  });
+
   const handleEdit = (a: Affaire) => {
     setForm({
       id: a.id,
@@ -266,6 +277,26 @@ export function Affaires() {
       mois: duplicateDate.mois,
       annee: duplicateDate.annee,
     });
+  };
+
+  const handleDragStart = (id: string) => {
+    setDraggedAffaireId(id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedAffaireId(null);
+    setDropTargetStatus(null);
+  };
+
+  const handleDropOnStatus = (targetStatus: StatutAffaire) => {
+    if (!draggedAffaireId) return;
+    const current = sortedAllAffaires.find((a) => a.id === draggedAffaireId);
+    if (!current || current.statut === targetStatus) {
+      handleDragEnd();
+      return;
+    }
+    updateStatusMutation.mutate({ id: draggedAffaireId, statut: targetStatus });
+    handleDragEnd();
   };
 
   const openNew = () => {
@@ -605,11 +636,37 @@ export function Affaires() {
                   <CardTitle className="text-sm font-semibold">{statutInfo.label}</CardTitle>
                   <p className="text-xs text-muted-foreground">{statutAffaires.length} affaires • {fmtDT(statutCA)}</p>
                 </CardHeader>
-                <CardContent className="flex-1 space-y-2 overflow-y-auto max-h-[68vh]">
+                <CardContent
+                  className={cn(
+                    'flex-1 space-y-2 overflow-y-auto max-h-[68vh] rounded-b-lg transition-colors',
+                    dropTargetStatus === statut ? 'bg-primary/5 ring-1 ring-primary/20' : ''
+                  )}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDropTargetStatus(statut);
+                  }}
+                  onDragLeave={() => {
+                    if (dropTargetStatus === statut) setDropTargetStatus(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleDropOnStatus(statut);
+                  }}
+                >
                   {statutAffaires.map((a) => {
                     const ht = Number(a.montantHT);
                     return (
-                      <Card key={a.id} className="p-3 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/affaires/${a.id}`)}>
+                      <Card
+                        key={a.id}
+                        draggable
+                        onDragStart={() => handleDragStart(a.id)}
+                        onDragEnd={handleDragEnd}
+                        className={cn(
+                          'p-3 hover:shadow-md transition-shadow cursor-pointer',
+                          draggedAffaireId === a.id ? 'opacity-60' : ''
+                        )}
+                        onClick={() => navigate(`/affaires/${a.id}`)}
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div className="font-semibold text-sm">{a.client?.name || 'N/A'}</div>
                           <div className="text-sm font-bold">{fmtDT(ht)}</div>

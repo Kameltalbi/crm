@@ -150,11 +150,10 @@ export function Landing() {
               Le CRM simple pour gérer vos ventes et vos clients
             </div>
             <h1 className="text-6xl md:text-8xl font-serif font-bold text-foreground mb-6">
-              Gérez votre entreprise avec{' '}
-              <span className="text-leaf">intelligence</span>
+              Ne laissez plus passer vos opportunités de vente
             </h1>
             <p className="text-2xl md:text-3xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              ktOptima vous aide à suivre vos affaires, gérer vos clients et optimiser vos prévisions avec une interface simple et puissante.
+              Suivez vos prospects, gérez votre pipeline et relancez au bon moment pour conclure plus d'affaires.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">

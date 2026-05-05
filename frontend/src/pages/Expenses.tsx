@@ -259,13 +259,13 @@ export function Expenses() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">CA Total TTC ({filterYear})</p>
+                <p className="text-xs text-muted-foreground">{t('expenses.caTotalTTC')} ({filterYear})</p>
                 <p className="text-xl font-bold text-emerald-600 mt-1">{fmtDT(caTotalTTC)} TND</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">HT: {fmtDT(caTotalHT)} TND</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t('expenses.htLabel')}: {fmtDT(caTotalHT)} TND</p>
                 <div className="flex gap-2 mt-1 text-[10px] text-muted-foreground">
-                  <span>R: {fmtDT(caRealiseTTC)}</span>
-                  <span>P: {fmtDT(caPipelineTTC)}</span>
-                  <span>Pr: {fmtDT(caProspectionTTC)}</span>
+                  <span>{t('expenses.realised')}: {fmtDT(caRealiseTTC)}</span>
+                  <span>{t('expenses.pipeline')}: {fmtDT(caPipelineTTC)}</span>
+                  <span>{t('expenses.prospection')}: {fmtDT(caProspectionTTC)}</span>
                 </div>
               </div>
               <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -406,7 +406,7 @@ export function Expenses() {
             <div className="overflow-x-auto">
               {selectedIds.size > 0 && (
                 <div className="flex items-center gap-3 px-4 py-2 bg-red-50 border-b">
-                  <span className="text-sm font-medium text-red-700">{selectedIds.size} sélectionnée(s)</span>
+                  <span className="text-sm font-medium text-red-700">{selectedIds.size} {t('expenses.selected')}</span>
                   <Button size="sm" variant="destructive" onClick={() => bulkDeleteMutation.mutate(Array.from(selectedIds))} disabled={bulkDeleteMutation.isPending}>
                     <Trash2 size={14} className="mr-1" />
                     {bulkDeleteMutation.isPending ? t('expenses.deleting') : `${t('common.delete')} (${selectedIds.size})`}
@@ -612,10 +612,10 @@ export function Expenses() {
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    {form.recurrenceType === 'mensuel' && `12 dépenses de ${form.amount || '0'} TND (une par mois)`}
-                    {form.recurrenceType === 'trimestriel' && `4 dépenses de ${form.amount || '0'} TND (une par trimestre)`}
-                    {form.recurrenceType === 'semestriel' && `2 dépenses de ${form.amount || '0'} TND (une par semestre)`}
-                    {form.recurrenceType === 'personnalise' && parseInt(form.recurrenceMonths) > 1 && `${form.recurrenceMonths} dépenses de ${form.amount || '0'} TND`}
+                    {form.recurrenceType === 'mensuel' && t('expenses.recurrenceMonthly', { count: 12, amount: form.amount || '0' })}
+                    {form.recurrenceType === 'trimestriel' && t('expenses.recurrenceQuarterly', { count: 4, amount: form.amount || '0' })}
+                    {form.recurrenceType === 'semestriel' && t('expenses.recurrenceSemester', { count: 2, amount: form.amount || '0' })}
+                    {form.recurrenceType === 'personnalise' && parseInt(form.recurrenceMonths) > 1 && t('expenses.recurrenceCustom', { count: form.recurrenceMonths, amount: form.amount || '0' })}
                   </p>
                 </div>
               )}

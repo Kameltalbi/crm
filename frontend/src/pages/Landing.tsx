@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin, Menu, X, Target, Lock, DollarSign, PieChart, Award } from 'lucide-react';
+import { Leaf, TrendingUp, Shield, Zap, Users, BarChart3, CheckCircle2, ArrowRight, Mail, Phone, MapPin, Menu, X, Target, Lock, DollarSign, PieChart, Award, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 
 export function Landing() {
+  const { i18n } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   
@@ -67,6 +69,23 @@ export function Landing() {
               </a>
             </nav>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  const languages = ['fr', 'en', 'ar'];
+                  const currentIndex = languages.indexOf(i18n.language);
+                  const nextIndex = (currentIndex + 1) % languages.length;
+                  i18n.changeLanguage(languages[nextIndex]);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                title="Change language"
+              >
+                <Globe size={18} />
+                <span className={`font-semibold ${
+                  i18n.language === 'ar' ? 'text-green-600' :
+                  i18n.language === 'fr' ? 'text-blue-600' :
+                  'text-red-600'
+                }`}>{i18n.language.toUpperCase()}</span>
+              </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg"

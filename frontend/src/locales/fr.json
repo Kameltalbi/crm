@@ -60,6 +60,11 @@
   },
   "clients": {
     "title": "Clients",
+    "manageClients": "Gestion des clients et prospects",
+    "totalClients": "Total clients",
+    "totalAffaires": "Total affaires",
+    "avgPerClient": "Moyenne/client",
+    "searchPlaceholder": "Rechercher par nom, contact ou email...",
     "addClient": "Ajouter un client",
     "editClient": "Modifier le client",
     "deleteClient": "Supprimer le client",

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Trash2, Mail, Phone, FileBadge, Search, TrendingUp, MoreVertical, Upload } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,7 @@ import * as XLSX from 'xlsx';
 const EMPTY = { id: '', name: '', contactName: '', email: '', phone: '', address: '', matricule: '', qualificatif: 'NON_SPECIFIE', notes: '' };
 
 export function Clients() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -117,15 +119,15 @@ export function Clients() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl md:text-3xl">Clients</h1>
-          <p className="text-sm text-muted-foreground">Gestion des clients et prospects</p>
+          <h1 className="font-serif text-2xl md:text-3xl">{t('clients.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('clients.manageClients')}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setImportOpen(true)} variant="outline" className="w-full sm:w-auto">
-            <Upload size={16} />Importer Excel
+            <Upload size={16} />{t('common.import')} Excel
           </Button>
           <Button onClick={() => { console.log('Opening form'); setForm(EMPTY); setOpen(true); console.log('Form should be open'); }} className="w-full sm:w-auto">
-            <Plus size={16} />Nouveau client
+            <Plus size={16} />{t('clients.addClient')}
           </Button>
         </div>
       </div>
@@ -139,7 +141,7 @@ export function Clients() {
                 <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-gray-600" />
               </div>
               <div>
-                <p className="text-[9px] md:text-[10px] text-muted-foreground">Total clients</p>
+                <p className="text-[9px] md:text-[10px] text-muted-foreground">{t('clients.totalClients')}</p>
                 <p className="text-sm md:text-lg font-bold">{clients.length}</p>
               </div>
             </div>
@@ -152,7 +154,7 @@ export function Clients() {
                 <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-emerald-600" />
               </div>
               <div>
-                <p className="text-[9px] md:text-[10px] text-muted-foreground">Total affaires</p>
+                <p className="text-[9px] md:text-[10px] text-muted-foreground">{t('clients.totalAffaires')}</p>
                 <p className="text-sm md:text-lg font-bold text-emerald-600">{totalAffaires}</p>
               </div>
             </div>
@@ -165,7 +167,7 @@ export function Clients() {
                 <TrendingUp className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
               </div>
               <div>
-                <p className="text-[9px] md:text-[10px] text-muted-foreground">Moyenne/client</p>
+                <p className="text-[9px] md:text-[10px] text-muted-foreground">{t('clients.avgPerClient')}</p>
                 <p className="text-sm md:text-lg font-bold text-blue-600">{avgAffairesPerClient}</p>
               </div>
             </div>
@@ -179,7 +181,7 @@ export function Clients() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Rechercher par nom, contact ou email..."
+              placeholder={t('clients.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"

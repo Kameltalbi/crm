@@ -60,6 +60,11 @@
   },
   "clients": {
     "title": "العملاء",
+    "manageClients": "إدارة العملاء والعملاء المحتملين",
+    "totalClients": "إجمالي العملاء",
+    "totalAffaires": "إجمالي الصفقات",
+    "avgPerClient": "المتوسط لكل عميل",
+    "searchPlaceholder": "بحث بالاسم، جهة الاتصال أو البريد الإلكتروني...",
     "addClient": "إضافة عميل",
     "editClient": "تعديل العميل",
     "deleteClient": "حذف العميل",

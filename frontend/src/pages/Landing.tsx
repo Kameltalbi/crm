@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 
 export function Landing() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   
@@ -56,16 +56,16 @@ export function Landing() {
             </div>
             <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
               <a href="#features" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
-                Fonctionnalités
+                {t('landing.navFeatures')}
               </a>
               <a href="#why" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
-                Pourquoi nous ?
+                {t('landing.navWhy')}
               </a>
               <Link to="/pricing" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
-                Tarifs
+                {t('landing.navPricing')}
               </Link>
               <a href="#contact" className="text-lg text-muted-foreground hover:text-foreground transition-colors">
-                Contact
+                {t('landing.navContact')}
               </a>
             </nav>
             <div className="flex items-center gap-3">
@@ -95,12 +95,12 @@ export function Landing() {
               <div className="hidden md:flex items-center gap-3">
                 <Link to="/login">
                   <Button variant="ghost" size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">
-                    Connexion
+                    {t('auth.signIn')}
                   </Button>
                 </Link>
                 <Link to="/register">
                   <Button size="lg" className="bg-leaf hover:bg-leaf/90">
-                    S'inscrire
+                    {t('auth.signUp')}
                   </Button>
                 </Link>
               </div>
@@ -113,26 +113,26 @@ export function Landing() {
           <div className="md:hidden border-t bg-white">
             <div className="px-4 py-4 space-y-3">
               <a href="#features" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                Fonctionnalités
+                {t('landing.navFeatures')}
               </a>
               <a href="#why" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                Pourquoi nous ?
+                {t('landing.navWhy')}
               </a>
               <Link to="/pricing" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                Tarifs
+                {t('landing.navPricing')}
               </Link>
               <a href="#contact" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                Contact
+                {t('landing.navContact')}
               </a>
               <div className="pt-4 space-y-2">
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="ghost" size="lg" className="w-full bg-[#d1fae4] hover:bg-[#c1ebe0]">
-                    Connexion
+                    {t('auth.signIn')}
                   </Button>
                 </Link>
                 <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
                   <Button size="lg" className="w-full bg-leaf hover:bg-leaf/90">
-                    S'inscrire
+                    {t('auth.signUp')}
                   </Button>
                 </Link>
               </div>
@@ -147,39 +147,39 @@ export function Landing() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-lg font-medium mb-6">
               <TrendingUp size={24} />
-              CRM de vente pour PME et indépendants
+              {t('landing.badge')}
             </div>
             <h1 className="text-6xl md:text-8xl font-serif font-bold text-foreground mb-6">
-              Ne laissez plus passer vos opportunités de vente
+              {t('landing.heroTitle')}
             </h1>
             <p className="text-2xl md:text-3xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Suivez vos prospects, gérez votre pipeline et relancez au bon moment pour conclure plus d'affaires.
+              {t('landing.heroSubtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">
                 <Button size="lg" className="bg-leaf hover:bg-leaf/90 text-lg px-8">
-                  Commencer gratuitement
+                  {t('landing.cta')}
                   <ArrowRight size={20} className="ml-2" />
                 </Button>
               </Link>
               <Link to="/login">
                 <Button size="lg" variant="outline" className="text-lg px-8">
-                  Démo gratuite
+                  {t('landing.demo')}
                 </Button>
               </Link>
             </div>
             <div className="flex items-center gap-3 text-base">
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={18} className="text-emerald-500" />
-                Sans engagement
+                {t('landing.noCommitment')}
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={18} className="text-emerald-500" />
-                Support local
+                {t('landing.localSupport')}
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={18} className="text-emerald-500" />
-                Sécurisé
+                {t('landing.secure')}
               </div>
             </div>
           </div>
@@ -191,10 +191,10 @@ export function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-              Fonctionnalités puissantes
+              {t('landing.featuresTitle')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Tout ce dont vous avez besoin pour gérer votre entreprise en un seul endroit
+              {t('landing.featuresSubtitle')}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -202,99 +202,99 @@ export function Landing() {
               <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
                 <BarChart3 size={24} className="text-emerald-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Tableau de bord</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureDashboard')}</h3>
               <p className="text-base text-muted-foreground">
-                Visualisez vos KPIs en temps réel avec des graphiques interactifs et des prévisions intelligentes.
+                {t('landing.featureDashboardDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
                 <Users size={24} className="text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Gestion des clients</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureClients')}</h3>
               <p className="text-base text-muted-foreground">
-                Suivez vos affaires et clients avec un pipeline personnalisé et des notifications automatiques.
+                {t('landing.featureClientsDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-4">
                 <Zap size={24} className="text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Prévisions IA</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureAI')}</h3>
               <p className="text-base text-muted-foreground">
-                Prédisez vos revenus futurs avec notre algorithme d'intelligence artificielle avancé.
+                {t('landing.featureAIDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-4">
                 <Shield size={24} className="text-orange-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Sécurité</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureSecurity')}</h3>
               <p className="text-base text-muted-foreground">
-                Vos données sont protégées avec un chiffrement de bout en bout et des sauvegardes automatiques.
+                {t('landing.featureSecurityDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center mb-4">
                 <TrendingUp size={24} className="text-rose-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Analytics</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureAnalytics')}</h3>
               <p className="text-base text-muted-foreground">
-                Analysez vos performances avec des rapports détaillés et des insights actionnables.
+                {t('landing.featureAnalyticsDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center mb-4">
                 <Users size={24} className="text-teal-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Collaboration</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureCollaboration')}</h3>
               <p className="text-base text-muted-foreground">
-                Travaillez en équipe avec des rôles personnalisés et des permissions granulaires.
+                {t('landing.featureCollaborationDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mb-4">
                 <Target size={24} className="text-indigo-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Objectifs de vente</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureObjectives')}</h3>
               <p className="text-base text-muted-foreground">
-                Définissez et suivez les objectifs de vente par commercial avec des tableaux de bord personnalisés.
+                {t('landing.featureObjectivesDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-4">
                 <Lock size={24} className="text-amber-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Permissions d'accès</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featurePermissions')}</h3>
               <p className="text-base text-muted-foreground">
-                Contrôlez l'accès à toutes les fonctions importantes avec des permissions granulaires par utilisateur.
+                {t('landing.featurePermissionsDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mb-4">
                 <DollarSign size={24} className="text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Gestion des dépenses</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureExpenses')}</h3>
               <p className="text-base text-muted-foreground">
-                Suivez et gérez toutes vos dépenses avec des catégories personnalisées et des rapports détaillés.
+                {t('landing.featureExpensesDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center mb-4">
                 <PieChart size={24} className="text-cyan-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Taux de couverture</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureCoverage')}</h3>
               <p className="text-base text-muted-foreground">
-                Analysez le taux de couverture des dépenses par rapport à vos revenus pour une meilleure gestion financière.
+                {t('landing.featureCoverageDesc')}
               </p>
             </div>
             <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center mb-4">
                 <Award size={24} className="text-yellow-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Gestion des primes</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureBonuses')}</h3>
               <p className="text-base text-muted-foreground">
-                Calculez et gérez les primes de vos commerciaux en fonction de leurs performances et objectifs atteints.
+                {t('landing.featureBonusesDesc')}
               </p>
             </div>
           </div>
@@ -307,10 +307,10 @@ export function Landing() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6">
-                Pourquoi choisir ktOptima ?
+                {t('landing.whyTitle')}
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
-                Conçu spécifiquement pour les entreprises tunisiennes, ktOptima s'adapte à vos besoins locaux avec une interface intuitive et des fonctionnalités puissantes.
+                {t('landing.whySubtitle')}
               </p>
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
@@ -318,9 +318,9 @@ export function Landing() {
                     <CheckCircle2 size={16} className="text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">100% Tunisien</h4>
+                    <h4 className="font-semibold mb-1">{t('landing.whyLocal')}</h4>
                     <p className="text-base text-muted-foreground">
-                      Développé localement avec un support en arabe et en français.
+                      {t('landing.whyLocalDesc')}
                     </p>
                   </div>
                 </div>
@@ -329,9 +329,9 @@ export function Landing() {
                     <CheckCircle2 size={16} className="text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Facile à utiliser</h4>
+                    <h4 className="font-semibold mb-1">{t('landing.whyEasy')}</h4>
                     <p className="text-base text-muted-foreground">
-                      Interface intuitive, pas besoin de formation technique.
+                      {t('landing.whyEasyDesc')}
                     </p>
                   </div>
                 </div>
@@ -340,9 +340,9 @@ export function Landing() {
                     <CheckCircle2 size={16} className="text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Support réactif</h4>
+                    <h4 className="font-semibold mb-1">{t('landing.whySupport')}</h4>
                     <p className="text-base text-muted-foreground">
-                      Équipe disponible pour vous aider à tout moment.
+                      {t('landing.whySupportDesc')}
                     </p>
                   </div>
                 </div>
@@ -351,9 +351,9 @@ export function Landing() {
                     <CheckCircle2 size={16} className="text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Prix transparent</h4>
+                    <h4 className="font-semibold mb-1">{t('landing.whyPrice')}</h4>
                     <p className="text-base text-muted-foreground">
-                      Pas de frais cachés, payez uniquement ce que vous utilisez.
+                      {t('landing.whyPriceDesc')}
                     </p>
                   </div>
                 </div>
@@ -361,13 +361,13 @@ export function Landing() {
             </div>
             <div className="relative">
               <div className="bg-gradient-to-br from-leaf to-emerald-600 rounded-3xl p-8 text-white">
-                <h3 className="text-2xl font-bold mb-4">Prêt à transformer votre entreprise ?</h3>
+                <h3 className="text-2xl font-bold mb-4">{t('landing.ctaTitle')}</h3>
                 <p className="text-emerald-100 mb-6">
-                  Rejoignez des centaines d'entreprises tunisiennes qui utilisent déjà ktOptima.
+                  {t('landing.ctaSubtitle')}
                 </p>
                 <Link to="/register">
                   <Button size="lg" className="bg-white text-leaf hover:bg-white/90 w-full">
-                    Commencer maintenant
+                    {t('landing.ctaButton')}
                     <ArrowRight size={20} className="ml-2" />
                   </Button>
                 </Link>
@@ -386,7 +386,7 @@ export function Landing() {
                 <img src="/logo.png" alt="ktOptima" className="h-8 w-auto" />
               </div>
               <p className="text-gray-400 mb-4 max-w-md text-base">
-                La solution CRM moderne pour les entreprises tunisiennes. Gérez vos affaires, vos clients et vos prévisions en toute simplicité.
+                {t('landing.footerDesc')}
               </p>
               <div className="flex items-center gap-4">
                 <a href="#" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors">
@@ -398,32 +398,32 @@ export function Landing() {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-lg">Liens rapides</h4>
+              <h4 className="font-semibold mb-4 text-lg">{t('landing.footerLinks')}</h4>
               <ul className="space-y-2 text-gray-400 text-base">
                 <li>
                   <a href="#features" className="hover:text-white transition-colors">
-                    Fonctionnalités
+                    {t('landing.navFeatures')}
                   </a>
                 </li>
                 <li>
                   <a href="#why" className="hover:text-white transition-colors">
-                    Pourquoi nous ?
+                    {t('landing.navWhy')}
                   </a>
                 </li>
                 <li>
                   <Link to="/login" className="hover:text-white transition-colors">
-                    Connexion
+                    {t('auth.signIn')}
                   </Link>
                 </li>
                 <li>
                   <Link to="/register" className="hover:text-white transition-colors">
-                    Inscription
+                    {t('auth.signUp')}
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4 text-lg">Contact</h4>
+              <h4 className="font-semibold mb-4 text-lg">{t('landing.footerContact')}</h4>
               <ul className="space-y-2 text-gray-400 text-base">
                 <li className="flex items-center gap-2">
                   <Mail size={16} />
@@ -441,7 +441,7 @@ export function Landing() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400 text-base">
-            <p>&copy; 2026 ktOptima. Tous droits réservés.</p>
+            <p>{t('landing.footerRights')}</p>
           </div>
         </div>
       </footer>

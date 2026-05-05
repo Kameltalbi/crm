@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Mail, Eye, Save, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +37,7 @@ const EMPTY: FormData = {
 };
 
 export function EmailTemplates() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -86,7 +88,7 @@ export function EmailTemplates() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Supprimer ce template ?')) deleteMutation.mutate(id);
+    if (confirm(t('emailTemplates.confirmDelete'))) deleteMutation.mutate(id);
   };
 
   const handlePreview = (template: EmailTemplate) => {
@@ -116,11 +118,11 @@ export function EmailTemplates() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Templates d'emails</h1>
-          <p className="text-sm text-muted-foreground mt-1">Créez et gérez vos templates d'emails personnalisés</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('emailTemplates.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('emailTemplates.subtitle')}</p>
         </div>
         <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
-          <Plus size={16} className="mr-2" /> Nouveau template
+          <Plus size={16} className="mr-2" /> {t('emailTemplates.newTemplate')}
         </Button>
       </div>
 
@@ -135,16 +137,16 @@ export function EmailTemplates() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <p className="text-xs text-muted-foreground">Sujet</p>
+                <p className="text-xs text-muted-foreground">{t('emailTemplates.subject')}</p>
                 <p className="text-sm font-medium truncate">{template.subject}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Variables</p>
+                <p className="text-xs text-muted-foreground">{t('emailTemplates.variables')}</p>
                 <p className="text-xs">{JSON.parse(template.variables).join(', ')}</p>
               </div>
               <div className="flex gap-2 pt-2">
                 <Button size="sm" variant="outline" onClick={() => handlePreview(template)}>
-                  <Eye size={14} className="mr-1" /> Aperçu
+                  <Eye size={14} className="mr-1" /> {t('emailTemplates.preview')}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => handleEdit(template)}>
                   <Pencil size={14} className="mr-1" />
@@ -162,46 +164,46 @@ export function EmailTemplates() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouveau'} template</DialogTitle>
+            <DialogTitle>{form.id ? t('common.edit') : t('common.add')} {t('emailTemplates.template')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave}>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label>Nom *</Label>
+                <Label>{t('common.name')} *</Label>
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="ex: Suivi devis"
+                  placeholder={t('emailTemplates.namePlaceholder')}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Sujet *</Label>
+                <Label>{t('emailTemplates.subject')} *</Label>
                 <Input
                   value={form.subject}
                   onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                  placeholder="ex: Devis {montant} pour {client}"
+                  placeholder={t('emailTemplates.subjectPlaceholder')}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Corps *</Label>
+                <Label>{t('emailTemplates.body')} *</Label>
                 <Textarea
                   value={form.body}
                   onChange={(e) => setForm({ ...form, body: e.target.value })}
-                  placeholder="Bonjour {client},&#10;&#10;Votre devis de {montant} DT est en attente.&#10;&#10;Cordialement"
+                  placeholder={t('emailTemplates.bodyPlaceholder')}
                   rows={8}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Variables disponibles</Label>
+                <Label>{t('emailTemplates.availableVariables')}</Label>
                 <p className="text-xs text-muted-foreground">
                   {`{client}, {montant}, {date}, {statut}, {titre}, {probabilite}`}
                 </p>
               </div>
             </div>
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {createMutation.isPending || updateMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                {createMutation.isPending || updateMutation.isPending ? t('organizations.saving') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>
@@ -212,20 +214,20 @@ export function EmailTemplates() {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Aperçu de l'email</DialogTitle>
+            <DialogTitle>{t('emailTemplates.previewTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <p className="text-xs text-muted-foreground">Sujet</p>
+              <p className="text-xs text-muted-foreground">{t('emailTemplates.subject')}</p>
               <p className="font-medium">{previewData.subject}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Corps</p>
+              <p className="text-xs text-muted-foreground">{t('emailTemplates.body')}</p>
               <div className="p-4 bg-gray-50 rounded text-sm whitespace-pre-wrap">{previewData.body}</div>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setPreviewOpen(false)}>Fermer</Button>
+            <Button onClick={() => setPreviewOpen(false)}>{t('emailTemplates.close')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

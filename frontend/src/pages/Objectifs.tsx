@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Target, User, Calendar, DollarSign } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT } from '@/lib/utils';
@@ -31,6 +32,7 @@ const MONTHS = [
 ];
 
 export function Objectifs() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -79,7 +81,7 @@ export function Objectifs() {
       setForm(EMPTY);
     },
     onError: (error: any) => {
-      alert(`Erreur: ${error.response?.data?.error || error.message}`);
+      alert(`${t('productsPage.error')}: ${error.response?.data?.error || error.message}`);
     },
   });
 
@@ -92,7 +94,7 @@ export function Objectifs() {
 
   const handleSave = () => {
     if (!form.userId || !form.targetAmount) {
-      alert('Veuillez remplir tous les champs obligatoires');
+      alert(t('objectifs.requiredFields', { defaultValue: 'Veuillez remplir tous les champs obligatoires' }));
       return;
     }
     saveMutation.mutate(form);
@@ -124,8 +126,8 @@ export function Objectifs() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Objectifs Commerciaux</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gérez les objectifs de vos commerciaux</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('objectifs.title', { defaultValue: 'Objectifs Commerciaux' })}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('objectifs.subtitle', { defaultValue: 'Gérez les objectifs de vos commerciaux' })}</p>
         </div>
         <div className="flex gap-2">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -148,7 +150,7 @@ export function Objectifs() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={openNew}><Plus size={16} className="mr-2" />Nouvel objectif</Button>
+          <Button onClick={openNew}><Plus size={16} className="mr-2" />{t('objectifs.new', { defaultValue: 'Nouvel objectif' })}</Button>
         </div>
       </div>
 
@@ -157,10 +159,10 @@ export function Objectifs() {
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left p-4 font-semibold">Commercial</th>
-                <th className="text-left p-4 font-semibold">Mois</th>
-                <th className="text-right p-4 font-semibold">Objectif</th>
-                <th className="text-right p-4 font-semibold">Actions</th>
+                <th className="text-left p-4 font-semibold">{t('objectifs.salesperson', { defaultValue: 'Commercial' })}</th>
+                <th className="text-left p-4 font-semibold">{t('expenses.month', { defaultValue: 'Mois' })}</th>
+                <th className="text-right p-4 font-semibold">{t('objectifs.target', { defaultValue: 'Objectif' })}</th>
+                <th className="text-right p-4 font-semibold">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -194,7 +196,7 @@ export function Objectifs() {
               {objectives.length === 0 && (
                 <tr>
                   <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                    Aucun objectif pour cette année
+                    {t('objectifs.noneForYear', { defaultValue: 'Aucun objectif pour cette année' })}
                   </td>
                 </tr>
               )}
@@ -252,13 +254,13 @@ export function Objectifs() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouvel'} objectif</DialogTitle>
+            <DialogTitle>{form.id ? t('common.edit') : t('objectifs.new', { defaultValue: 'Nouvel objectif' })}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Commercial *</Label>
+              <Label>{t('objectifs.salesperson', { defaultValue: 'Commercial' })} *</Label>
               <Select value={form.userId} onValueChange={(v) => setForm({ ...form, userId: v })}>
-                <SelectTrigger><SelectValue placeholder="Choisir un commercial" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('objectifs.chooseSalesperson', { defaultValue: 'Choisir un commercial' })} /></SelectTrigger>
                 <SelectContent>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>{user.name} ({user.email})</SelectItem>
@@ -268,7 +270,7 @@ export function Objectifs() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Année *</Label>
+              <Label>{t('expenses.year')} *</Label>
                 <Select value={form.year} onValueChange={(v) => setForm({ ...form, year: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -279,7 +281,7 @@ export function Objectifs() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Mois *</Label>
+                <Label>{t('expenses.month')} *</Label>
                 <Select value={form.month} onValueChange={(v) => setForm({ ...form, month: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -291,14 +293,14 @@ export function Objectifs() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Objectif (DT) *</Label>
-              <Input type="number" min="0" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} placeholder="Ex: 50000" />
+              <Label>{t('objectifs.target', { defaultValue: 'Objectif' })} (DT) *</Label>
+              <Input type="number" min="0" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} placeholder={t('objectifs.targetPlaceholder', { defaultValue: 'Ex: 50000' })} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleSave} disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+              {saveMutation.isPending ? t('organizations.saving') : t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

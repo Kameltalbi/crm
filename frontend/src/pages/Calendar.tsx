@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus, Calendar as CalendarIcon, Clock, MapPin, Phone, Mail, UserCheck, Trash2, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +49,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function Calendar() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -132,8 +134,21 @@ export function Calendar() {
   };
 
   const calendarDays = getCalendarDays();
-  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-  const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const monthNames = [
+    t('expenses.months.january'),
+    t('expenses.months.february'),
+    t('expenses.months.march'),
+    t('expenses.months.april'),
+    t('expenses.months.may'),
+    t('expenses.months.june'),
+    t('expenses.months.july'),
+    t('expenses.months.august'),
+    t('expenses.months.september'),
+    t('expenses.months.october'),
+    t('expenses.months.november'),
+    t('expenses.months.december'),
+  ];
+  const dayNames = [t('calendarPage.days.sun'), t('calendarPage.days.mon'), t('calendarPage.days.tue'), t('calendarPage.days.wed'), t('calendarPage.days.thu'), t('calendarPage.days.fri'), t('calendarPage.days.sat')];
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
@@ -155,15 +170,15 @@ export function Calendar() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Calendrier</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gestion des événements</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('calendarPage.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('calendarPage.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={navigateToToday}>
-            Aujourd'hui
+            {t('calendarPage.today')}
           </Button>
           <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
-            <Plus size={16} className="mr-2" /> Nouvel événement
+            <Plus size={16} className="mr-2" /> {t('calendarPage.newEvent')}
           </Button>
         </div>
       </div>
@@ -221,7 +236,7 @@ export function Calendar() {
                       })}
                       {day.events.length > 3 && (
                         <div className="text-xs text-muted-foreground">
-                          +{day.events.length - 3} autres
+                          +{day.events.length - 3} {t('calendarPage.others')}
                         </div>
                       )}
                     </div>
@@ -236,12 +251,12 @@ export function Calendar() {
       {/* Upcoming Events List */}
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Événements à venir</CardTitle>
+          <CardTitle className="text-lg font-semibold">{t('calendarPage.upcoming')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {events.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Aucun événement</p>
+              <p className="text-sm text-muted-foreground text-center py-8">{t('calendarPage.none')}</p>
             ) : (
               events.slice(0, 5).map((event: any) => {
                 const statusInfo = STATUS_LABELS[event.status] || STATUS_LABELS.SCHEDULED;
@@ -291,37 +306,37 @@ export function Calendar() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouvel'} événement</DialogTitle>
+            <DialogTitle>{form.id ? t('common.edit') : t('common.add')} {t('calendarPage.event')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label>Titre *</Label>
-                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Réunion client ABC" />
+                <Label>{t('expenses.titleCol')} *</Label>
+                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t('calendarPage.titlePlaceholder')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Date début *</Label>
+                  <Label>{t('calendarPage.startDate')} *</Label>
                   <Input type="date" value={form.startDateDate} onChange={(e) => setForm({ ...form, startDateDate: e.target.value, endDateDate: form.endDateDate || e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Heure début *</Label>
+                  <Label>{t('calendarPage.startTime')} *</Label>
                   <Input type="time" value={form.startDateTime} onChange={(e) => setForm({ ...form, startDateTime: e.target.value })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Date fin *</Label>
+                  <Label>{t('calendarPage.endDate')} *</Label>
                   <Input type="date" value={form.endDateDate} onChange={(e) => setForm({ ...form, endDateDate: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Heure fin *</Label>
+                  <Label>{t('calendarPage.endTime')} *</Label>
                   <Input type="time" value={form.endDateTime} onChange={(e) => setForm({ ...form, endDateTime: e.target.value })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Type</Label>
+                  <Label>{t('calendarPage.type')}</Label>
                   <Select value={form.eventType} onValueChange={(v) => setForm({ ...form, eventType: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -332,19 +347,19 @@ export function Calendar() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Lieu</Label>
-                  <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Optionnel" />
+                  <Label>{t('calendarPage.location')}</Label>
+                  <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder={t('calendarPage.optional')} />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label>Description</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Notes..." rows={2} />
+                <Label>{t('leads.notes')}</Label>
+                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t('leads.notes')} rows={2} />
               </div>
             </div>
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                {saveMutation.isPending ? t('organizations.saving') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>

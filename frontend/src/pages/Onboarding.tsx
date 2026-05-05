@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, Label } from '@/components/ui/form-controls';
@@ -33,6 +34,7 @@ const steps = [
 ];
 
 export function Onboarding() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({ companyName: '', amount: '' });
@@ -79,7 +81,7 @@ export function Onboarding() {
               onClick={handleSkip}
               className="text-sm text-gray-500 hover:text-gray-700 underline"
             >
-              Ignorer
+              {t('onboarding.skip', { defaultValue: 'Ignorer' })}
             </button>
           </div>
           <CardTitle className="text-2xl">{step.title}</CardTitle>
@@ -108,15 +110,15 @@ export function Onboarding() {
             <div className="space-y-3 pt-4">
               <div className="flex items-center gap-2 text-sm text-green-700">
                 <Check size={16} />
-                <span>Lead scoring automatique activé</span>
+                <span>{t('onboarding.done1', { defaultValue: 'Lead scoring automatique activé' })}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-green-700">
                 <Check size={16} />
-                <span>Assistant IA disponible</span>
+                <span>{t('onboarding.done2', { defaultValue: 'Assistant IA disponible' })}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-green-700">
                 <Check size={16} />
-                <span>Templates d'emails configurés</span>
+                <span>{t('onboarding.done3', { defaultValue: "Templates d'emails configurés" })}</span>
               </div>
             </div>
           )}
@@ -128,10 +130,10 @@ export function Onboarding() {
               disabled={currentStep === 0}
             >
               <ArrowLeft size={16} className="mr-2" />
-              Retour
+              {t('common.back')}
             </Button>
             <Button onClick={handleNext}>
-              {currentStep === steps.length - 1 ? 'Commencer' : 'Suivant'}
+              {currentStep === steps.length - 1 ? t('onboarding.start', { defaultValue: 'Commencer' }) : t('common.next')}
               <ArrowRight size={16} className="ml-2" />
             </Button>
           </div>

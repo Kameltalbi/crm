@@ -1,7 +1,9 @@
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function Legal() {
+  const { t } = useTranslation();
   const { type } = useParams<{ type: 'cgu' | 'privacy' | 'terms' }>();
 
   const content = {
@@ -121,7 +123,7 @@ export function Legal() {
               ))}
             </div>
             <div className="mt-8 pt-8 border-t text-sm text-gray-500">
-              <p>Dernière mise à jour : Mai 2026</p>
+              <p>{t('legal.lastUpdated', { defaultValue: 'Dernière mise à jour : Mai 2026' })}</p>
             </div>
           </CardContent>
         </Card>

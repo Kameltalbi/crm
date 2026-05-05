@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Plus, Phone, Mail, Calendar, FileText, Trash2, Pencil, DollarSign, Target, TrendingUp, Building2, Package, Clock, MoreVertical, Edit, Send } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
@@ -48,6 +49,7 @@ const EMPTY_ACTIVITY: ActivityFormData = {
 };
 
 export function AffaireDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -87,7 +89,7 @@ export function AffaireDetail() {
       qc.invalidateQueries({ queryKey: ['affaire', id] });
       setTemplateOpen(false);
       setSelectedTemplateId('');
-      alert('Email envoyé avec succès !');
+      alert(t('affaireDetail.emailSent', { defaultValue: 'Email envoyé avec succès !' }));
     },
   });
 
@@ -100,7 +102,7 @@ export function AffaireDetail() {
 
   const handleSendTemplate = () => {
     if (!selectedTemplateId) return;
-    if (confirm('Envoyer cet email ?')) {
+    if (confirm(t('affaireDetail.confirmSendEmail', { defaultValue: 'Envoyer cet email ?' }))) {
       sendEmailMutation.mutate(selectedTemplateId);
     }
   };
@@ -123,11 +125,11 @@ export function AffaireDetail() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-20 text-muted-foreground">Chargement...</div>;
+    return <div className="text-center py-20 text-muted-foreground">{t('common.loading')}</div>;
   }
 
   if (!affaire) {
-    return <div className="text-center py-20 text-muted-foreground">Affaire introuvable</div>;
+    return <div className="text-center py-20 text-muted-foreground">{t('affaireDetail.notFound', { defaultValue: 'Affaire introuvable' })}</div>;
   }
 
   const handleActivitySubmit = (e: React.FormEvent) => {
@@ -151,19 +153,19 @@ export function AffaireDetail() {
         <div className="flex gap-2">
           {affaire.client?.phone && (
             <Button variant="outline" size="sm" onClick={handleCallClient}>
-              <Phone size={16} className="mr-2" /> Appeler
+              <Phone size={16} className="mr-2" /> {t('affaireDetail.call', { defaultValue: 'Appeler' })}
             </Button>
           )}
           {affaire.client?.email && (
             <Button variant="outline" size="sm" onClick={handleEmailClient}>
-              <Mail size={16} className="mr-2" /> Email
+              <Mail size={16} className="mr-2" /> {t('common.email')}
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => setTemplateOpen(true)}>
-            <Send size={16} className="mr-2" /> Template Email
+            <Send size={16} className="mr-2" /> {t('emailTemplates.template')}
           </Button>
           <Button size="sm" onClick={() => setActivityOpen(true)}>
-            <Plus size={16} className="mr-2" /> Ajouter activité
+            <Plus size={16} className="mr-2" /> {t('affaireDetail.addActivity', { defaultValue: 'Ajouter activité' })}
           </Button>
         </div>
       </div>
@@ -339,16 +341,16 @@ export function AffaireDetail() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Historique des activités</CardTitle>
+              <CardTitle>{t('affaireDetail.activitiesHistory', { defaultValue: 'Historique des activités' })}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 {affaire.activites?.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText size={48} className="mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-4">Aucune activité enregistrée</p>
+                    <p className="text-muted-foreground mb-4">{t('affaireDetail.noActivity', { defaultValue: 'Aucune activité enregistrée' })}</p>
                     <Button size="sm" onClick={() => setActivityOpen(true)}>
-                      <Plus size={14} className="mr-2" /> Ajouter la première activité
+                      <Plus size={14} className="mr-2" /> {t('affaireDetail.addFirstActivity', { defaultValue: 'Ajouter la première activité' })}
                     </Button>
                   </div>
                 ) : (
@@ -399,7 +401,7 @@ export function AffaireDetail() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              onClick={() => confirm('Supprimer cette activité ?') && deleteActivityMutation.mutate(a.id)}
+                              onClick={() => confirm(t('affaireDetail.confirmDeleteActivity', { defaultValue: 'Supprimer cette activité ?' })) && deleteActivityMutation.mutate(a.id)}
                             >
                               <Trash2 size={14} />
                             </Button>
@@ -419,7 +421,7 @@ export function AffaireDetail() {
       <Dialog open={activityOpen} onOpenChange={setActivityOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Nouvelle activité</DialogTitle>
+            <DialogTitle>{t('activites.new', { defaultValue: 'Nouvelle activité' })}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleActivitySubmit}>
             <div className="space-y-4">
@@ -456,9 +458,9 @@ export function AffaireDetail() {
               </div>
             </div>
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setActivityOpen(false)}>Annuler</Button>
+              <Button type="button" variant="outline" onClick={() => setActivityOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={saveActivityMutation.isPending}>
-                {saveActivityMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                {saveActivityMutation.isPending ? t('organizations.saving') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>
@@ -469,13 +471,13 @@ export function AffaireDetail() {
       <Dialog open={templateOpen} onOpenChange={setTemplateOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Envoyer email via template</DialogTitle>
+            <DialogTitle>{t('affaireDetail.sendTemplateEmail', { defaultValue: 'Envoyer email via template' })}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Sélectionner un template</Label>
+              <Label>{t('affaireDetail.selectTemplate', { defaultValue: 'Sélectionner un template' })}</Label>
               <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-                <SelectTrigger><SelectValue placeholder="Choisir un template..." /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('affaireDetail.chooseTemplate', { defaultValue: 'Choisir un template...' })} /></SelectTrigger>
                 <SelectContent>
                   {emailTemplates?.map((t: any) => (
                     <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
@@ -485,12 +487,12 @@ export function AffaireDetail() {
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => setTemplateOpen(false)}>Annuler</Button>
+            <Button type="button" variant="outline" onClick={() => setTemplateOpen(false)}>{t('common.cancel')}</Button>
             <Button type="button" variant="outline" onClick={handlePreviewTemplate} disabled={!selectedTemplateId}>
-              Aperçu
+              {t('emailTemplates.preview')}
             </Button>
             <Button type="button" onClick={handleSendTemplate} disabled={!selectedTemplateId || sendEmailMutation.isPending}>
-              {sendEmailMutation.isPending ? 'Envoi...' : 'Envoyer'}
+              {sendEmailMutation.isPending ? t('affaireDetail.sending', { defaultValue: 'Envoi...' }) : t('affaireDetail.send', { defaultValue: 'Envoyer' })}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -500,7 +502,7 @@ export function AffaireDetail() {
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Aperçu de l'email</DialogTitle>
+            <DialogTitle>{t('emailTemplates.previewTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -513,7 +515,7 @@ export function AffaireDetail() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setPreviewOpen(false)}>Fermer</Button>
+            <Button onClick={() => setPreviewOpen(false)}>{t('emailTemplates.close')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

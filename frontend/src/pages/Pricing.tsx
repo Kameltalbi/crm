@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Check, CreditCard, Wallet, ArrowRight, X, Phone, Mail, MapPin, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,6 +63,7 @@ const plans = [
 ];
 
 export function Pricing() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'VIREMENT' | 'ESPECES'>('VIREMENT');
@@ -73,7 +75,7 @@ export function Pricing() {
     mutationFn: () =>
       api.post('/subscriptions', { plan: selectedPlan, paymentMethod: selectedPaymentMethod }).then((r) => r.data),
     onSuccess: () => {
-      alert('Demande d\'abonnement envoyée ! Nous vous contacterons pour confirmer le paiement.');
+      alert(t('pricingPage.requestSent', { defaultValue: "Demande d'abonnement envoyée ! Nous vous contacterons pour confirmer le paiement." }));
       setDialogOpen(false);
       navigate('/dashboard');
     },
@@ -122,12 +124,12 @@ export function Pricing() {
               <div className="hidden md:flex items-center gap-3">
                 <Link to="/login">
                   <Button variant="ghost" size="lg" className="bg-[#d1fae4] hover:bg-[#c1ebe0]">
-                    Connexion
+                    {t('common.login')}
                   </Button>
                 </Link>
                 <Link to="/register">
                   <Button size="lg" className="bg-leaf hover:bg-leaf/90">
-                    S'inscrire
+                    {t('auth.signUp')}
                   </Button>
                 </Link>
               </div>
@@ -140,16 +142,16 @@ export function Pricing() {
           <div className="md:hidden border-t bg-white">
             <div className="px-4 py-4 space-y-3">
               <Link to="/#features" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                Fonctionnalités
+                {t('landing.navFeatures')}
               </Link>
               <Link to="/#why" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                Pourquoi nous ?
+                {t('landing.navWhy')}
               </Link>
               <Link to="/pricing" className="block text-lg text-foreground font-semibold" onClick={() => setMobileMenuOpen(false)}>
-                Tarifs
+                {t('landing.navPricing')}
               </Link>
               <Link to="/#contact" className="block text-lg text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                Contact
+                {t('landing.navContact')}
               </Link>
               <div className="pt-4 space-y-2">
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
@@ -189,7 +191,7 @@ export function Pricing() {
               <span className={`text-lg ${isAnnual ? 'font-semibold text-leaf' : 'text-gray-600'}`}>Annuel</span>
               {isAnnual && (
                 <span className="text-sm bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-medium">
-                  Économisez 2 mois
+                  {t('pricingPage.saveTwoMonths', { defaultValue: 'Économisez 2 mois' })}
                 </span>
               )}
             </div>
@@ -223,7 +225,7 @@ export function Pricing() {
                       {isAnnual ? plan.annualPrice : plan.monthlyPrice} DT
                     </p>
                     <p className="text-sm text-gray-500">
-                      {isAnnual ? 'par an' : 'par mois'}
+                      {isAnnual ? t('pricingPage.perYear', { defaultValue: 'par an' }) : t('pricingPage.perMonth', { defaultValue: 'par mois' })}
                     </p>
                     {plan.annualPrice > 0 && (
                       <p className="text-xs text-gray-400">
@@ -259,20 +261,20 @@ export function Pricing() {
           <div className="mt-12 max-w-2xl mx-auto">
             <Card>
               <CardHeader>
-                <CardTitle>Modes de paiement acceptés</CardTitle>
+                <CardTitle>{t('pricingPage.acceptedPayments', { defaultValue: 'Modes de paiement acceptés' })}</CardTitle>
               </CardHeader>
               <CardContent className="grid md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
                   <CreditCard className="text-leaf" size={32} />
                   <div>
-                    <p className="font-semibold">Virement bancaire</p>
+                    <p className="font-semibold">{t('pricingPage.bankTransfer', { defaultValue: 'Virement bancaire' })}</p>
                     <p className="text-sm text-gray-600">Détails fournis après inscription</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
                   <Wallet className="text-leaf" size={32} />
                   <div>
-                    <p className="font-semibold">Espèces</p>
+                    <p className="font-semibold">{t('pricingPage.cash', { defaultValue: 'Espèces' })}</p>
                     <p className="text-sm text-gray-600">Paiement en main propre</p>
                   </div>
                 </div>

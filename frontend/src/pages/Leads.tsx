@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus, Phone, Mail, Building2, Trash2, Pencil, TrendingUp, UserCheck } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,6 +57,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function Leads() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -138,7 +140,7 @@ export function Leads() {
   };
 
   const handleConvert = (id: string) => {
-    if (confirm('Convertir ce lead en client ?')) {
+    if (confirm(t('leads.confirmConvert'))) {
       convertMutation.mutate(id);
     }
   };
@@ -147,11 +149,11 @@ export function Leads() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Leads</h1>
-          <p className="text-sm text-muted-foreground mt-1">Gestion des prospects</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('leads.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('leads.subtitle')}</p>
         </div>
         <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
-          <Plus size={16} className="mr-2" /> Nouveau lead
+          <Plus size={16} className="mr-2" /> {t('leads.newLead')}
         </Button>
       </div>
 
@@ -159,32 +161,32 @@ export function Leads() {
       <div className="flex flex-wrap gap-3">
         <Select value={filterStatus || 'all'} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Tous statuts" />
+            <SelectValue placeholder={t('leads.allStatuses')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous statuts</SelectItem>
+            <SelectItem value="all">{t('leads.allStatuses')}</SelectItem>
             {Object.entries(STATUS_LABELS).map(([key, { label }]) => (
-              <SelectItem key={key} value={key}>{label}</SelectItem>
+              <SelectItem key={key} value={key}>{t(`leads.status.${key.toLowerCase()}`, { defaultValue: label })}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterSource || 'all'} onValueChange={setFilterSource}>
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="Toutes sources" />
+            <SelectValue placeholder={t('leads.allSources')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Toutes sources</SelectItem>
+            <SelectItem value="all">{t('leads.allSources')}</SelectItem>
             {Object.entries(SOURCE_LABELS).map(([key, label]) => (
-              <SelectItem key={key} value={key}>{label}</SelectItem>
+              <SelectItem key={key} value={key}>{t(`leads.sources.${key.toLowerCase()}`, { defaultValue: label })}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={filterMonth || 'all'} onValueChange={setFilterMonth}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Tous mois" />
+            <SelectValue placeholder={t('expenses.allMonths')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous mois</SelectItem>
+            <SelectItem value="all">{t('expenses.allMonths')}</SelectItem>
             {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map((label, idx) => (
               <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
             ))}
@@ -215,13 +217,13 @@ export function Leads() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardContent className="py-3 px-4">
-                <p className="text-xs text-muted-foreground">Total leads</p>
+              <p className="text-xs text-muted-foreground">{t('leads.kpiTotal')}</p>
                 <p className="text-xl font-bold mt-1">{leads.length}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="py-3 px-4">
-                <p className="text-xs text-muted-foreground">Valeur leads TTC</p>
+                <p className="text-xs text-muted-foreground">{t('leads.kpiValueTTC')}</p>
                 <p className="text-xl font-bold text-primary mt-1">
                   {totalLeadsValue.toLocaleString('fr-FR')} DT
                 </p>
@@ -229,7 +231,7 @@ export function Leads() {
             </Card>
             <Card>
               <CardContent className="py-3 px-4">
-                <p className="text-xs text-muted-foreground">Score moyen</p>
+                <p className="text-xs text-muted-foreground">{t('leads.kpiAvgScore')}</p>
                 <p className="text-xl font-bold mt-1">
                   {Math.round(leads.reduce((sum: number, l: any) => sum + (Number(l.score) || 0), 0) / leads.length)}
                 </p>
@@ -237,7 +239,7 @@ export function Leads() {
             </Card>
             <Card>
               <CardContent className="py-3 px-4">
-                <p className="text-xs text-muted-foreground">Taux de couverture potentiel</p>
+                <p className="text-xs text-muted-foreground">{t('leads.kpiCoverage')}</p>
                 <p className={`text-xl font-bold mt-1 ${tauxCouverture >= 100 ? 'text-primary' : 'text-orange-500'}`}>
                   {tauxCouverture}%
                 </p>
@@ -255,7 +257,7 @@ export function Leads() {
         {leads.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="text-center py-12">
-              <p className="text-sm text-muted-foreground">Aucun lead</p>
+              <p className="text-sm text-muted-foreground">{t('leads.none')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -269,7 +271,7 @@ export function Leads() {
                       <CardTitle className="text-base font-semibold">{lead.name}</CardTitle>
                       {lead.company && <p className="text-sm text-muted-foreground">{lead.company}</p>}
                     </div>
-                    <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
+                    <Badge className={statusInfo.color}>{t(`leads.status.${lead.status.toLowerCase()}`, { defaultValue: statusInfo.label })}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -296,7 +298,7 @@ export function Leads() {
                   <div className="flex items-center justify-between pt-2 border-t">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <TrendingUp size={14} />
-                      <span>Score: {lead.score}</span>
+                      <span>{t('leads.score')}: {lead.score}</span>
                     </div>
                     {lead.estimatedValue && (
                       <div className="text-right">
@@ -308,7 +310,7 @@ export function Leads() {
                   <div className="flex gap-2 pt-2">
                     {lead.status !== 'CONVERTED' && lead.status !== 'LOST' && (
                       <Button size="sm" variant="outline" className="flex-1" onClick={() => handleConvert(lead.id)}>
-                        <Building2 size={14} className="mr-1" /> Convertir
+                        <Building2 size={14} className="mr-1" /> {t('leads.convert')}
                       </Button>
                     )}
                     <Button size="sm" variant="ghost" onClick={() => openEdit(lead)}>
@@ -329,7 +331,7 @@ export function Leads() {
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {pagination.total} leads
+            {pagination.total} {t('leads.title')}
           </p>
           <div className="flex items-center gap-1">
             <Button
@@ -339,7 +341,7 @@ export function Leads() {
               disabled={page === 1}
               className="px-3"
             >
-              ← Précédent
+              {t('common.previous')}
             </Button>
             {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
               <Button
@@ -359,7 +361,7 @@ export function Leads() {
               disabled={page === pagination.totalPages}
               className="px-3"
             >
-              Suivant →
+              {t('common.next')}
             </Button>
           </div>
         </div>
@@ -369,69 +371,69 @@ export function Leads() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouveau'} lead</DialogTitle>
+            <DialogTitle>{form.id ? t('leads.editLead') : t('leads.newLead')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 col-span-2">
-                <Label>Nom *</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nom du lead" />
+                <Label>{t('common.name')} *</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t('leads.leadName')} />
               </div>
               <div className="space-y-1.5">
-                <Label>Contact</Label>
-                <Input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} placeholder="Nom du contact" />
+                <Label>{t('leads.contact')}</Label>
+                <Input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} placeholder={t('leads.contactName')} />
               </div>
               <div className="space-y-1.5">
-                <Label>Entreprise</Label>
-                <Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="Nom de l'entreprise" />
+                <Label>{t('leads.company')}</Label>
+                <Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder={t('leads.companyName')} />
               </div>
               <div className="space-y-1.5">
-                <Label>Email</Label>
+                <Label>{t('common.email')}</Label>
                 <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" />
               </div>
               <div className="space-y-1.5">
-                <Label>Téléphone</Label>
+                <Label>{t('organizations.fields.phone')}</Label>
                 <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+216 XX XXX XXX" />
               </div>
               <div className="space-y-1.5">
-                <Label>Source</Label>
+                <Label>{t('leads.source')}</Label>
                 <Select value={form.source} onValueChange={(v) => setForm({ ...form, source: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(SOURCE_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                      <SelectItem key={key} value={key}>{t(`leads.sources.${key.toLowerCase()}`, { defaultValue: label })}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Statut</Label>
+                <Label>{t('affaires.affaireStatus')}</Label>
                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(STATUS_LABELS).map(([key, { label }]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                      <SelectItem key={key} value={key}>{t(`leads.status.${key.toLowerCase()}`, { defaultValue: label })}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Score (0-100)</Label>
+                <Label>{t('leads.score')} (0-100)</Label>
                 <Input type="number" min="0" max="100" value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })} />
               </div>
               <div className="space-y-1.5">
-                <Label>Valeur estimée HT (DT)</Label>
+                <Label>{t('leads.estimatedValue')} (DT)</Label>
                 <Input type="number" value={form.estimatedValue} onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })} placeholder="0" />
               </div>
               <div className="space-y-1.5 col-span-2">
-                <Label>Notes</Label>
-                <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes sur le lead..." rows={3} />
+                <Label>{t('leads.notes')}</Label>
+                <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('leads.notesPlaceholder')} rows={3} />
               </div>
             </div>
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                {saveMutation.isPending ? t('organizations.saving') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>

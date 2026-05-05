@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Check, Zap, Shield, DollarSign, BarChart, Users, ArrowRight, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export function LandingSales() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
 
@@ -114,8 +116,8 @@ export function LandingSales() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="font-serif text-2xl font-bold text-leaf">CRM Tunisie</div>
           <div className="flex gap-4">
-            <Button variant="ghost" onClick={() => navigate('/login')}>Connexion</Button>
-            <Button onClick={() => navigate('/register')}>Essai gratuit</Button>
+            <Button variant="ghost" onClick={() => navigate('/login')}>{t('common.login')}</Button>
+            <Button onClick={() => navigate('/register')}>{t('landing.cta')}</Button>
           </div>
         </div>
       </header>
@@ -165,9 +167,9 @@ export function LandingSales() {
       <section className="py-20 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="font-serif text-4xl font-bold text-center mb-4">
-            Tarifs simples et transparents
+            {t('pricingPage.simplePricing', { defaultValue: 'Tarifs simples et transparents' })}
           </h2>
-          <p className="text-center text-gray-600 mb-12">Sans engagement, annulation à tout moment</p>
+          <p className="text-center text-gray-600 mb-12">{t('pricingPage.noCommitmentAnytime', { defaultValue: 'Sans engagement, annulation à tout moment' })}</p>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {plans.map((plan, idx) => (
               <Card key={idx} className={`border-2 ${plan.popular ? 'border-leaf shadow-lg' : ''}`}>

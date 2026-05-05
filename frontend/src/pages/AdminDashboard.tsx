@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ const TABS = [
 ];
 
 export function AdminDashboard() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('dashboard');
   const navigate = useNavigate();
   const logout = useAuth((s) => s.logout);
@@ -37,7 +39,7 @@ export function AdminDashboard() {
               <span className="text-xl font-bold">SuperAdmin</span>
             </div>
             <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg">
-              <LogOut size={16} /> Déconnexion
+              <LogOut size={16} /> {t('common.logout')}
             </button>
           </div>
         </div>
@@ -48,7 +50,7 @@ export function AdminDashboard() {
           {TABS.map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id ? 'bg-leaf text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
-              <tab.icon size={16} /> {tab.label}
+              <tab.icon size={16} /> {t(`admin.tabs.${tab.id}`, { defaultValue: tab.label })}
             </button>
           ))}
         </div>

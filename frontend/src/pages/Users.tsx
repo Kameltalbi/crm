@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Shield, User as UserIcon, Settings } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +28,7 @@ const PAGES = [
 type PermissionState = { page: string; canView: boolean; canCreate: boolean; canEdit: boolean; canDelete: boolean };
 
 export function Users() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [permissionsOpen, setPermissionsOpen] = useState(false);
@@ -118,12 +120,12 @@ export function Users() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl md:text-3xl">Utilisateurs</h1>
-          <p className="text-sm text-muted-foreground">Gestion des accès et rôles</p>
+          <h1 className="font-serif text-2xl md:text-3xl">{t('usersPage.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('usersPage.subtitle')}</p>
         </div>
         {isOwner && (
           <Button onClick={() => { setForm(EMPTY); setOpen(true); }} className="w-full sm:w-auto">
-            <Plus size={16} />Nouvel utilisateur
+            <Plus size={16} />{t('usersPage.newUser')}
           </Button>
         )}
       </div>
@@ -132,7 +134,7 @@ export function Users() {
         <Card className="border-amber-200 bg-amber-50">
           <CardContent className="p-4">
             <p className="text-sm text-amber-800">
-              ⚠️ Vous n'avez pas les permissions pour gérer les utilisateurs. Contactez un administrateur.
+              {t('usersPage.noPermission')}
             </p>
           </CardContent>
         </Card>
@@ -154,7 +156,7 @@ export function Users() {
                   u.role === 'COMMERCIAL' ? 'bg-green-100 text-green-700' :
                   'bg-blue-100 text-blue-700'
                 }`}>
-                  {u.role === 'OWNER' ? '👑 Owner' : u.role === 'COMMERCIAL' ? '💼 Commercial' : '🤝 Partner'}
+                  {u.role === 'OWNER' ? t('usersPage.roles.owner') : u.role === 'COMMERCIAL' ? t('usersPage.roles.commercial') : t('usersPage.roles.partner')}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mb-3">{u.email}</p>
@@ -162,7 +164,7 @@ export function Users() {
                 <div className="flex gap-1 justify-end">
                   <Button size="sm" variant="outline" onClick={() => openEdit(u)}><Pencil size={12} /></Button>
                   {(u.role === 'COMMERCIAL' || u.role === 'PARTNER') && (
-                    <Button size="sm" variant="outline" onClick={() => openPermissions(u)} title="Gérer les permissions">
+                    <Button size="sm" variant="outline" onClick={() => openPermissions(u)} title={t('usersPage.managePermissions')}>
                       <Settings size={12} />
                     </Button>
                   )}
@@ -170,7 +172,7 @@ export function Users() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => confirm('Supprimer cet utilisateur ?') && deleteMutation.mutate(u.id)}
+                      onClick={() => confirm(t('usersPage.confirmDelete')) && deleteMutation.mutate(u.id)}
                     >
                       <Trash2 size={12} />
                     </Button>
@@ -185,37 +187,37 @@ export function Users() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouvel'} utilisateur</DialogTitle>
+            <DialogTitle>{form.id ? t('usersPage.editUser') : t('usersPage.newUser')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Email *</Label>
+              <Label>{t('common.email')} *</Label>
               <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Nom *</Label>
+              <Label>{t('common.name')} *</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>{form.id ? 'Mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe *'}</Label>
+              <Label>{form.id ? t('usersPage.passwordOptional') : t('usersPage.passwordRequired')}</Label>
               <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Rôle *</Label>
+              <Label>{t('usersPage.role')} *</Label>
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="OWNER">👑 Owner (Accès complet)</SelectItem>
-                  <SelectItem value="PARTNER">🤝 Partner (Accès limité)</SelectItem>
-                  <SelectItem value="COMMERCIAL">💼 Commercial (Permissions personnalisées)</SelectItem>
+                  <SelectItem value="OWNER">{t('usersPage.roleOwner')}</SelectItem>
+                  <SelectItem value="PARTNER">{t('usersPage.rolePartner')}</SelectItem>
+                  <SelectItem value="COMMERCIAL">{t('usersPage.roleCommercial')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={() => saveMutation.mutate(form)} disabled={!form.email || !form.name || (!form.id && !form.password)}>
-              💾 Enregistrer
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -224,17 +226,17 @@ export function Users() {
       <Dialog open={permissionsOpen} onOpenChange={setPermissionsOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Gérer les permissions - {selectedUser?.name}</DialogTitle>
+            <DialogTitle>{t('usersPage.permissionsTitle')} - {selectedUser?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">Page</th>
-                  <th className="text-center p-2">Voir</th>
-                  <th className="text-center p-2">Créer</th>
-                  <th className="text-center p-2">Modifier</th>
-                  <th className="text-center p-2">Supprimer</th>
+                  <th className="text-left p-2">{t('usersPage.page')}</th>
+                  <th className="text-center p-2">{t('usersPage.view')}</th>
+                  <th className="text-center p-2">{t('usersPage.create')}</th>
+                  <th className="text-center p-2">{t('common.edit')}</th>
+                  <th className="text-center p-2">{t('common.delete')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -297,9 +299,9 @@ export function Users() {
             </table>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPermissionsOpen(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setPermissionsOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={savePermissions} disabled={savePermissionsMutation.isPending}>
-              {savePermissionsMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+              {savePermissionsMutation.isPending ? t('organizations.saving') : t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

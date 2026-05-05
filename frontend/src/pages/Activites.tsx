@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus, Phone, Mail, Calendar, FileText, Trash2, Pencil, Filter } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,6 +50,7 @@ const EMPTY: FormData = {
 };
 
 export function Activites() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -177,11 +179,11 @@ export function Activites() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Activités</h1>
-          <p className="text-sm text-muted-foreground mt-1">Timeline et calendrier des interactions</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('activites.title', { defaultValue: 'Activités' })}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('activites.subtitle', { defaultValue: 'Timeline et calendrier des interactions' })}</p>
         </div>
         <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
-          <Plus size={16} className="mr-2" /> Nouvelle activité
+          <Plus size={16} className="mr-2" /> {t('activites.new', { defaultValue: 'Nouvelle activité' })}
         </Button>
       </div>
 
@@ -318,7 +320,7 @@ export function Activites() {
           {filteredActivites.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <p className="text-sm text-muted-foreground">Aucune activité</p>
+              <p className="text-sm text-muted-foreground">{t('activites.none', { defaultValue: 'Aucune activité' })}</p>
               </CardContent>
             </Card>
           ) : (
@@ -390,21 +392,21 @@ export function Activites() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouvelle'} activité</DialogTitle>
+            <DialogTitle>{form.id ? t('common.edit') : t('activites.new', { defaultValue: 'Nouvelle activité' })}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label>Affaire *</Label>
+                <Label>{t('affaires.title').slice(0, -1)} *</Label>
                 <Select value={form.affaireId} onValueChange={(v) => setForm({ ...form, affaireId: v })}>
-                  <SelectTrigger><SelectValue placeholder="Choisir une affaire" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('activites.chooseAffaire', { defaultValue: 'Choisir une affaire' })} /></SelectTrigger>
                   <SelectContent>
                     {affaires.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Type *</Label>
+                <Label>{t('calendarPage.type')} *</Label>
                 <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as ActiviteType })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -418,27 +420,27 @@ export function Activites() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Titre *</Label>
+                <Label>{t('expenses.titleCol')} *</Label>
                 <Input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="ex: Appel avec le client"
+                  placeholder={t('activites.titlePlaceholder', { defaultValue: 'ex: Appel avec le client' })}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Description</Label>
+                <Label>{t('calendarPage.description')}</Label>
                 <Textarea
                   value={form.content}
                   onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  placeholder="Détails de l'activité..."
+                  placeholder={t('activites.detailsPlaceholder', { defaultValue: "Détails de l'activité..." })}
                   rows={3}
                 />
               </div>
             </div>
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
               <Button type="submit" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                {saveMutation.isPending ? t('organizations.saving') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>

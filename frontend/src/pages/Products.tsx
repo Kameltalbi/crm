@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Package, Check, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import type { Product, ProductType } from '@/types';
 const EMPTY = { id: '', name: '', description: '', price: 0, type: 'SERVICE' as ProductType, active: true };
 
 export function Products() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
@@ -33,7 +35,7 @@ export function Products() {
     },
     onError: (err) => {
       console.error('Error saving product:', err);
-      alert('Erreur lors de la sauvegarde');
+      alert(t('productsPage.saveError'));
     },
   });
 
@@ -60,16 +62,16 @@ export function Products() {
     <div className="space-y-6 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-2xl md:text-3xl">Produits</h1>
-          <p className="text-sm text-muted-foreground">Gestion des produits et services</p>
+          <h1 className="font-serif text-2xl md:text-3xl">{t('productsPage.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('productsPage.subtitle')}</p>
         </div>
         <Button onClick={() => { setForm(EMPTY); setOpen(true); }} className="w-full sm:w-auto">
-          <Plus size={16} />Nouveau produit
+          <Plus size={16} />{t('productsPage.newProduct')}
         </Button>
       </div>
 
-      {isLoading && <p className="text-muted-foreground">Chargement...</p>}
-      {error && <p className="text-destructive">Erreur: {String(error)}</p>}
+      {isLoading && <p className="text-muted-foreground">{t('common.loading')}</p>}
+      {error && <p className="text-destructive">{t('productsPage.error')}: {String(error)}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {products.map((p) => (
@@ -83,7 +85,7 @@ export function Products() {
                   <h3 className="font-semibold">{p.name}</h3>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                  {p.active ? '✓ Actif' : '✗ Inactif'}
+                  {p.active ? t('productsPage.active') : t('productsPage.inactive')}
                 </span>
               </div>
               {p.description && <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{p.description}</p>}
@@ -93,7 +95,7 @@ export function Products() {
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => confirm('Supprimer ce produit ?') && deleteMutation.mutate(p.id)}
+                  onClick={() => confirm(t('productsPage.confirmDelete')) && deleteMutation.mutate(p.id)}
                 >
                   <Trash2 size={12} />
                 </Button>
@@ -104,34 +106,34 @@ export function Products() {
       </div>
 
       {!isLoading && products.length === 0 && (
-        <p className="text-muted-foreground text-center py-8">Aucun produit créé</p>
+        <p className="text-muted-foreground text-center py-8">{t('productsPage.none')}</p>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Modifier' : 'Nouveau'} produit</DialogTitle>
+            <DialogTitle>{form.id ? t('productsPage.editProduct') : t('productsPage.newProduct')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Nom *</Label>
+              <Label>{t('common.name')} *</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Description</Label>
+              <Label>{t('calendarPage.description')}</Label>
               <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Prix (DT) *</Label>
+              <Label>{t('productsPage.price')} (DT) *</Label>
               <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Type *</Label>
+              <Label>{t('calendarPage.type')} *</Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as ProductType })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="SERVICE">📦 Service</SelectItem>
-                  <SelectItem value="PRODUCT">🛍️ Produit</SelectItem>
+                  <SelectItem value="SERVICE">{t('productsPage.service')}</SelectItem>
+                  <SelectItem value="PRODUCT">{t('productsPage.product')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -143,13 +145,13 @@ export function Products() {
                 onChange={(e) => setForm({ ...form, active: e.target.checked })}
                 className="w-4 h-4"
               />
-              <Label htmlFor="active">Actif</Label>
+              <Label htmlFor="active">{t('productsPage.active')}</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={() => saveMutation.mutate(form)} disabled={!form.name || form.price < 0}>
-              💾 Enregistrer
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

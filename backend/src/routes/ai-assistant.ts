@@ -50,6 +50,7 @@ async function callOpenAI(prompt: string, systemPrompt?: string): Promise<string
 
 const querySchema = z.object({
   message: z.string().min(1),
+  language: z.string().optional(),
 });
 
 // Predictive analytics
@@ -701,7 +702,7 @@ async function executeQuery(intent: string, organizationId: string) {
 // POST /api/ai-assistant/query
 aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest, res, next) => {
   try {
-    const { message } = querySchema.parse(req.body);
+    const { message, language = 'fr' } = querySchema.parse(req.body);
     const organizationId = req.organizationId!;
     const lowerMessage = message.toLowerCase();
     const normalizedMessage = lowerMessage
@@ -783,26 +784,32 @@ aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest
       })),
     };
 
-    const systemPrompt = `Tu es un assistant CRM professionnel et expert en vente. 
-Tu aides les équipes commerciales avec:
-- Analyse de pipeline
-- Conseils stratégiques pour améliorer les conversions
-- Rédaction d'emails personnalisés
-- Scoring de leads et recommandations
-- Analyse de performance
+    const languageInstructions = {
+      fr: 'Réponds de manière professionnelle, concise et actionnable. En français.',
+      en: 'Respond professionally, concisely, and in an actionable manner. In English.',
+      ar: 'أجب بطريقة احترافية ومختصرة وقابلة للتنفيذ. باللغة العربية.',
+    };
 
-Contexte CRM actuel:
-- Nombre d'affaires en cours: ${context.affairesCount}
-- Nombre de clients: ${context.clientsCount}
-- CA total du pipeline: ${context.totalCA} DT
+    const systemPrompt = `You are a professional CRM assistant and sales expert.
+You help sales teams with:
+- Pipeline analysis
+- Strategic advice to improve conversions
+- Personalized email drafting
+- Lead scoring and recommendations
+- Performance analysis
 
-Affaires récentes:
-${context.recentAffaires.map(a => `- ${a.titre}: ${a.montant} DT, statut: ${a.statut}, probabilité: ${a.probabilite}%`).join('\n')}
+Current CRM context:
+- Number of deals in progress: ${context.affairesCount}
+- Number of clients: ${context.clientsCount}
+- Total pipeline revenue: ${context.totalCA} DT
 
-Objectifs mensuels:
-${context.objectifs.map(o => `- ${o.mois}: ${o.cible} DT`).join('\n') || 'Aucun objectif défini'}
+Recent deals:
+${context.recentAffaires.map(a => `- ${a.titre}: ${a.montant} DT, status: ${a.statut}, probability: ${a.probabilite}%`).join('\n')}
 
-Réponds de manière professionnelle, concise et actionnable. En français.`;
+Monthly objectives:
+${context.objectifs.map(o => `- ${o.mois}: ${o.cible} DT`).join('\n') || 'No objectives defined'}
+
+${languageInstructions[language as keyof typeof languageInstructions] || languageInstructions.fr}`;
 
     const aiResponse = await callOpenAI(message, systemPrompt);
 
@@ -821,7 +828,7 @@ Réponds de manière professionnelle, concise et actionnable. En français.`;
 // POST /api/ai-assistant/draft-email - Draft personalized email with AI
 aiAssistantRoutes.post('/draft-email', checkPlanFeature('ai'), async (req: AuthRequest, res, next) => {
   try {
-    const { clientId, affaireId, type } = req.body;
+    const { clientId, affaireId, type, language = 'fr' } = req.body;
 
     let client, affaire;
     if (clientId) {
@@ -847,9 +854,15 @@ aiAssistantRoutes.post('/draft-email', checkPlanFeature('ai'), async (req: AuthR
          Objectif: Présenter la proposition et demander un rendez-vous. Ton professionnel et orienté action.`
       : `Rédige un email professionnel pour ${client?.name || 'le client'}.`;
 
-    const systemPrompt = `Tu es un expert en rédaction d'emails commerciaux. 
-Rédige des emails professionnels, concis et orientés action.
-En français. Inclus un objet d'email clair.`;
+    const languageInstructions = {
+      fr: 'Rédige des emails professionnels, concis et orientés action. En français. Inclus un objet d\'email clair.',
+      en: 'Write professional, concise, and action-oriented emails. In English. Include a clear email subject.',
+      ar: 'اكتب رسائل بريدية احترافية ومختصرة وموجهة نحو العمل. باللغة العربية. أضف موضوعاً واضحاً للبريد الإلكتروني.',
+    };
+
+    const systemPrompt = `You are an expert in commercial email writing.
+Write professional, concise, and action-oriented emails.
+${languageInstructions[language as keyof typeof languageInstructions] || languageInstructions.fr}`;
 
     const aiResponse = await callOpenAI(emailPrompt, systemPrompt);
 

@@ -14,7 +14,7 @@ interface Message {
 }
 
 export function AIAssistant() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const suggestions = [
     t('aiAssistant.suggestions.predictYearEnd'),
     t('aiAssistant.suggestions.recommendations'),
@@ -32,7 +32,7 @@ export function AIAssistant() {
 
   const queryMutation = useMutation({
     mutationFn: (message: string) =>
-      api.post('/ai-assistant/query', { message }).then((r) => r.data),
+      api.post('/ai-assistant/query', { message, language: i18n.language }).then((r) => r.data),
     onSuccess: (data) => {
       const response = formatResponse(data);
       setMessages((prev) => [

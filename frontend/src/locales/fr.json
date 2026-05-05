@@ -264,7 +264,10 @@
     "targetCol": "Objectif",
     "salesCol": "Ventes",
     "achievementCol": "Atteinte",
-    "commissionCol": "Prime"
+    "commissionCol": "Prime",
+    "period": "Période",
+    "quarter": "Trimestre",
+    "semester": "Semestre"
   },
   "leads": {
     "title": "Leads",

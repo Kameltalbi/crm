@@ -15,21 +15,46 @@ type FormData = {
   id?: string;
   userId: string;
   year: string;
+  period: 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
   month: string;
+  quarter: string;
+  semester: string;
   targetAmount: string;
 };
 
 const EMPTY: FormData = {
   userId: '',
   year: String(new Date().getFullYear()),
+  period: 'MONTHLY',
   month: String(new Date().getMonth() + 1),
+  quarter: '1',
+  semester: '1',
   targetAmount: '',
 };
 
 const monthKeys = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
+const periodLabels = {
+  MONTHLY: { fr: 'Mensuel', ar: 'شهري', en: 'Monthly' },
+  QUARTERLY: { fr: 'Trimestriel', ar: 'ربع سنوي', en: 'Quarterly' },
+  SEMI_ANNUAL: { fr: 'Semestriel', ar: 'نصف سنوي', en: 'Semi-annual' },
+  ANNUAL: { fr: 'Annuel', ar: 'سنوي', en: 'Annual' },
+};
+
+const quarterLabels = {
+  fr: ['T1 (Jan-Mars)', 'T2 (Avr-Juin)', 'T3 (Juil-Sept)', 'T4 (Oct-Déc)'],
+  ar: ['R1 (يناير-مارس)', 'R2 (أبريل-يونيو)', 'R3 (يوليو-سبتمبر)', 'R4 (أكتوبر-ديسمبر)'],
+  en: ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'],
+};
+
+const semesterLabels = {
+  fr: ['S1 (Jan-Juin)', 'S2 (Juil-Déc)'],
+  ar: ['ن1 (يناير-يونيو)', 'ن2 (يوليو-ديسمبر)'],
+  en: ['H1 (Jan-Jun)', 'H2 (Jul-Dec)'],
+};
+
 export function Objectifs() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -63,12 +88,20 @@ export function Objectifs() {
 
   const saveMutation = useMutation({
     mutationFn: (data: FormData) => {
-      const payload = {
+      const payload: any = {
         userId: data.userId,
         year: Number(data.year),
-        month: Number(data.month),
+        period: data.period,
         targetAmount: Number(data.targetAmount),
       };
+      
+      if (data.period === 'MONTHLY') {
+        payload.month = Number(data.month);
+      } else if (data.period === 'QUARTERLY') {
+        payload.quarter = Number(data.quarter);
+      } else if (data.period === 'SEMI_ANNUAL') {
+        payload.semester = Number(data.semester);
+      }
       delete (payload as any).id;
       return data.id ? api.put(`/sales-objectives/${data.id}`, payload) : api.post('/sales-objectives', payload);
     },
@@ -102,7 +135,10 @@ export function Objectifs() {
       id: item.id,
       userId: item.userId,
       year: String(item.year),
-      month: String(item.month),
+      period: item.period || 'MONTHLY',
+      month: String(item.month || new Date().getMonth() + 1),
+      quarter: String(item.quarter || 1),
+      semester: String(item.semester || 1),
       targetAmount: String(item.targetAmount),
     });
     setOpen(true);
@@ -174,7 +210,13 @@ export function Objectifs() {
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <Calendar size={16} className="text-muted-foreground" />
-                      <span>{t(`expenses.months.${monthKeys[obj.month - 1]}`)} {obj.year}</span>
+                      <span>
+                  {obj.period === 'MONTHLY' && t(`expenses.months.${monthKeys[obj.month - 1]}`)}
+                  {obj.period === 'QUARTERLY' && quarterLabels[i18n.language as keyof typeof quarterLabels]?.[obj.quarter - 1]}
+                  {obj.period === 'SEMI_ANNUAL' && semesterLabels[i18n.language as keyof typeof semesterLabels]?.[obj.semester - 1]}
+                  {obj.period === 'ANNUAL' && periodLabels.ANNUAL[i18n.language as keyof typeof periodLabels.ANNUAL]}
+                  {` ${obj.year}`}
+                </span>
                     </div>
                   </td>
                   <td className="p-4 text-right font-semibold">{fmtDT(Number(obj.targetAmount))} HT</td>
@@ -267,7 +309,7 @@ export function Objectifs() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-              <Label>{t('expenses.year')} *</Label>
+                <Label>{t('expenses.year')} *</Label>
                 <Select value={form.year} onValueChange={(v) => setForm({ ...form, year: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -277,6 +319,19 @@ export function Objectifs() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label>{t('objectifs.period')} *</Label>
+                <Select value={form.period} onValueChange={(v) => setForm({ ...form, period: v as any })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(periodLabels) as Array<keyof typeof periodLabels>).map((period) => (
+                      <SelectItem key={period} value={period}>{periodLabels[period][i18n.language as keyof typeof periodLabels.MONTHLY]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {form.period === 'MONTHLY' && (
               <div className="space-y-1.5">
                 <Label>{t('expenses.month')} *</Label>
                 <Select value={form.month} onValueChange={(v) => setForm({ ...form, month: v })}>
@@ -288,7 +343,33 @@ export function Objectifs() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            )}
+            {form.period === 'QUARTERLY' && (
+              <div className="space-y-1.5">
+                <Label>{t('objectifs.quarter')} *</Label>
+                <Select value={form.quarter} onValueChange={(v) => setForm({ ...form, quarter: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {quarterLabels[i18n.language as keyof typeof quarterLabels]?.map((label, idx) => (
+                      <SelectItem key={idx + 1} value={String(idx + 1)}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {form.period === 'SEMI_ANNUAL' && (
+              <div className="space-y-1.5">
+                <Label>{t('objectifs.semester')} *</Label>
+                <Select value={form.semester} onValueChange={(v) => setForm({ ...form, semester: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {semesterLabels[i18n.language as keyof typeof semesterLabels]?.map((label, idx) => (
+                      <SelectItem key={idx + 1} value={String(idx + 1)}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label>{t('objectifs.target')} (DT) *</Label>
               <Input type="number" min="0" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} placeholder={t('objectifs.targetPlaceholder')} />

@@ -699,17 +699,27 @@ model SalesObjective {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   year          Int
-  month         Int      // 1-12
+  period        ObjectivePeriod @default(MONTHLY)
+  month         Int?     // 1-12, null for quarterly/semi-annual/annual
+  quarter       Int?     // 1-4, null for monthly/semi-annual/annual
+  semester      Int?     // 1-2, null for monthly/quarterly/annual
   targetAmount  Decimal  @db.Decimal(12, 3) // Objectif en DT
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@unique([organizationId, userId, year, month])
+  @@unique([organizationId, userId, year, period, month, quarter, semester])
   @@index([organizationId])
   @@index([userId])
   @@map("sales_objectives")
+}
+
+enum ObjectivePeriod {
+  MONTHLY      // Mensuel
+  QUARTERLY    // Trimestriel
+  SEMI_ANNUAL  // Semestriel
+  ANNUAL       // Annuel
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -264,7 +264,10 @@
     "targetCol": "الهدف",
     "salesCol": "المبيعات",
     "achievementCol": "نسبة الإنجاز",
-    "commissionCol": "المكافأة"
+    "commissionCol": "المكافأة",
+    "period": "الفترة",
+    "quarter": "الربع",
+    "semester": "الفصل"
   },
   "leads": {
     "title": "العملاء المحتملون",

@@ -264,7 +264,10 @@
     "targetCol": "Target",
     "salesCol": "Sales",
     "achievementCol": "Achievement",
-    "commissionCol": "Commission"
+    "commissionCol": "Commission",
+    "period": "Period",
+    "quarter": "Quarter",
+    "semester": "Semester"
   },
   "leads": {
     "title": "Leads",

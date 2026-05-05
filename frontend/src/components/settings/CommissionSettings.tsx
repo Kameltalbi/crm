@@ -74,6 +74,10 @@ export function CommissionSettings() {
   };
 
   const handleEdit = (config: any) => {
+    let tiers: any[] = [];
+    let progressiveRules: any[] = [];
+    try { tiers = config.tierConfig ? JSON.parse(config.tierConfig) : []; } catch { tiers = []; }
+    try { progressiveRules = config.progressiveConfig ? JSON.parse(config.progressiveConfig) : []; } catch { progressiveRules = []; }
     setForm({
       name: config.name || '',
       calculationType: config.calculationType,
@@ -85,6 +89,8 @@ export function CommissionSettings() {
       includeRenewals: config.includeRenewals ?? true,
       includeRecurring: config.includeRecurring ?? true,
       paymentDelay: config.paymentDelay || 30,
+      tiers,
+      progressiveRules,
     });
     setEditId(config.id);
     setOpen(true);
@@ -101,7 +107,16 @@ export function CommissionSettings() {
       alert('Veuillez saisir un nom pour le mécanisme de prime');
       return;
     }
-    saveMutation.mutate(form);
+    const payload = { ...form };
+    if (form.calculationType === 'TIERS' && form.tiers) {
+      payload.tierConfig = JSON.stringify(form.tiers);
+    }
+    if (form.calculationType === 'PROGRESSIVE' && form.progressiveRules) {
+      payload.progressiveConfig = JSON.stringify(form.progressiveRules);
+    }
+    delete payload.tiers;
+    delete payload.progressiveRules;
+    saveMutation.mutate(payload);
   };
 
   return (
@@ -198,6 +213,107 @@ export function CommissionSettings() {
               <div className="space-y-1.5">
                 <Label>Taux de commission (%)</Label>
                 <Input type="number" value={form.simpleRate} onChange={(e) => setForm({ ...form, simpleRate: Number(e.target.value) })} placeholder="Ex: 5" />
+              </div>
+            )}
+            {form.calculationType === 'TIERS' && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label>Paliers d'atteinte</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={() => {
+                    const tiers = form.tiers || [];
+                    setForm({ ...form, tiers: [...tiers, { min: tiers.length > 0 ? tiers[tiers.length - 1].max : 0, max: 100, rate: 0 }] });
+                  }}>
+                    <Plus size={14} className="mr-1" /> Ajouter un palier
+                  </Button>
+                </div>
+                {(form.tiers || []).length === 0 && (
+                  <p className="text-sm text-muted-foreground">Aucun palier défini. Ajoutez des paliers pour configurer les taux par seuil d'atteinte.</p>
+                )}
+                {(form.tiers || []).map((tier: any, idx: number) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Input type="number" value={tier.min} placeholder="Min %" onChange={(e) => {
+                        const tiers = [...(form.tiers || [])];
+                        tiers[idx] = { ...tiers[idx], min: Number(e.target.value) };
+                        setForm({ ...form, tiers });
+                      }} />
+                    </div>
+                    <span className="text-sm text-muted-foreground">à</span>
+                    <div className="flex-1">
+                      <Input type="number" value={tier.max} placeholder="Max %" onChange={(e) => {
+                        const tiers = [...(form.tiers || [])];
+                        tiers[idx] = { ...tiers[idx], max: Number(e.target.value) };
+                        setForm({ ...form, tiers });
+                      }} />
+                    </div>
+                    <span className="text-sm text-muted-foreground">→</span>
+                    <div className="flex-1">
+                      <Input type="number" value={tier.rate} placeholder="Taux %" onChange={(e) => {
+                        const tiers = [...(form.tiers || [])];
+                        tiers[idx] = { ...tiers[idx], rate: Number(e.target.value) };
+                        setForm({ ...form, tiers });
+                      }} />
+                    </div>
+                    <span className="text-sm text-muted-foreground">%</span>
+                    <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => {
+                      const tiers = [...(form.tiers || [])];
+                      tiers.splice(idx, 1);
+                      setForm({ ...form, tiers });
+                    }}>
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {form.calculationType === 'PROGRESSIVE' && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label>Règles progressives</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={() => {
+                    const rules = form.progressiveRules || [];
+                    setForm({ ...form, progressiveRules: [...rules, { min: rules.length > 0 ? rules[rules.length - 1].max : 0, max: 100, multiplier: 1 }] });
+                  }}>
+                    <Plus size={14} className="mr-1" /> Ajouter une règle
+                  </Button>
+                </div>
+                {(form.progressiveRules || []).length === 0 && (
+                  <p className="text-sm text-muted-foreground">Aucune règle définie. Ajoutez des règles progressives.</p>
+                )}
+                {(form.progressiveRules || []).map((rule: any, idx: number) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Input type="number" value={rule.min} placeholder="Min %" onChange={(e) => {
+                        const rules = [...(form.progressiveRules || [])];
+                        rules[idx] = { ...rules[idx], min: Number(e.target.value) };
+                        setForm({ ...form, progressiveRules: rules });
+                      }} />
+                    </div>
+                    <span className="text-sm text-muted-foreground">à</span>
+                    <div className="flex-1">
+                      <Input type="number" value={rule.max} placeholder="Max %" onChange={(e) => {
+                        const rules = [...(form.progressiveRules || [])];
+                        rules[idx] = { ...rules[idx], max: Number(e.target.value) };
+                        setForm({ ...form, progressiveRules: rules });
+                      }} />
+                    </div>
+                    <span className="text-sm text-muted-foreground">×</span>
+                    <div className="flex-1">
+                      <Input type="number" step="0.01" value={rule.multiplier} placeholder="Multiplicateur" onChange={(e) => {
+                        const rules = [...(form.progressiveRules || [])];
+                        rules[idx] = { ...rules[idx], multiplier: Number(e.target.value) };
+                        setForm({ ...form, progressiveRules: rules });
+                      }} />
+                    </div>
+                    <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => {
+                      const rules = [...(form.progressiveRules || [])];
+                      rules.splice(idx, 1);
+                      setForm({ ...form, progressiveRules: rules });
+                    }}>
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Mail, Eye, Save, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Mail, Eye, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,14 @@ export function EmailTemplates() {
   const [form, setForm] = useState<FormData>(EMPTY);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewData, setPreviewData] = useState({ subject: '', body: '' });
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiForm, setAiForm] = useState({
+    type: 'Relance',
+    tone: 'Professionnel',
+    language: 'Français',
+    objective: '',
+    context: '',
+  });
 
   const { data: templates } = useQuery<EmailTemplate[]>({
     queryKey: ['email-templates'],
@@ -71,6 +79,22 @@ export function EmailTemplates() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/email-templates/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['email-templates'] }),
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: () =>
+      api.post('/email-templates/generate', aiForm).then((r) => r.data),
+    onSuccess: (generated) => {
+      setForm((prev) => ({
+        ...prev,
+        name: generated.name || prev.name,
+        subject: generated.subject || prev.subject,
+        body: generated.body || prev.body,
+        variables: generated.variables || prev.variables,
+      }));
+      setAiOpen(false);
+      setOpen(true);
+    },
   });
 
   const handleSave = (e: React.FormEvent) => {
@@ -123,6 +147,13 @@ export function EmailTemplates() {
         </div>
         <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
           <Plus size={16} className="mr-2" /> {t('emailTemplates.newTemplate')}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => setAiOpen(true)}
+          disabled={generateMutation.isPending}
+        >
+          <Sparkles size={16} className="mr-2" /> Générer avec IA
         </Button>
       </div>
 
@@ -228,6 +259,68 @@ export function EmailTemplates() {
           </div>
           <DialogFooter>
             <Button onClick={() => setPreviewOpen(false)}>{t('emailTemplates.close')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Generate Dialog */}
+      <Dialog open={aiOpen} onOpenChange={setAiOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Générer un template avec IA</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Type d'email</Label>
+              <Input
+                value={aiForm.type}
+                onChange={(e) => setAiForm({ ...aiForm, type: e.target.value })}
+                placeholder="Relance, proposition, remerciement..."
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Ton</Label>
+                <Input
+                  value={aiForm.tone}
+                  onChange={(e) => setAiForm({ ...aiForm, tone: e.target.value })}
+                  placeholder="Professionnel, cordial, direct..."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Langue</Label>
+                <Input
+                  value={aiForm.language}
+                  onChange={(e) => setAiForm({ ...aiForm, language: e.target.value })}
+                  placeholder="Français"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Objectif</Label>
+              <Input
+                value={aiForm.objective}
+                onChange={(e) => setAiForm({ ...aiForm, objective: e.target.value })}
+                placeholder="Obtenir un rendez-vous cette semaine..."
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Contexte (optionnel)</Label>
+              <Textarea
+                value={aiForm.context}
+                onChange={(e) => setAiForm({ ...aiForm, context: e.target.value })}
+                rows={4}
+                placeholder="Détails utiles sur l'offre ou la relation client..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAiOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
+              {generateMutation.isPending ? 'Génération...' : 'Générer'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

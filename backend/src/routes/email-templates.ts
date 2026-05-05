@@ -14,6 +14,51 @@ const emailTemplateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+const generateTemplateSchema = z.object({
+  type: z.string().min(1),
+  tone: z.string().min(1).default('professionnel'),
+  language: z.string().min(1).default('français'),
+  objective: z.string().optional(),
+  context: z.string().optional(),
+});
+
+async function callOpenAI(prompt: string): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Tu es un expert en copywriting commercial B2B. Tu dois produire un JSON strict avec les clés name, subject, body, variables (array).',
+        },
+        { role: 'user', content: prompt },
+      ],
+      response_format: { type: 'json_object' },
+      max_tokens: 900,
+      temperature: 0.6,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`OpenAI API error: ${error}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
 // GET /api/email-templates - List all templates
 emailTemplatesRoutes.get('/', async (req: AuthRequest, res, next) => {
   try {
@@ -189,5 +234,53 @@ emailTemplatesRoutes.post('/:id/send', async (req: AuthRequest, res, next) => {
     });
     
     res.json({ success: true, subject, body, to: toEmail || affaire.client?.email });
+  } catch (e) { next(e); }
+});
+
+// POST /api/email-templates/generate - Generate template with OpenAI
+emailTemplatesRoutes.post('/generate', async (req: AuthRequest, res, next) => {
+  try {
+    const payload = generateTemplateSchema.parse(req.body);
+    const prompt = `
+Crée un template d'email commercial pour un CRM.
+
+Contraintes:
+- Type: ${payload.type}
+- Ton: ${payload.tone}
+- Langue: ${payload.language}
+- Objectif: ${payload.objective || 'Non précisé'}
+- Contexte: ${payload.context || 'Non précisé'}
+
+Variables autorisées uniquement: {client}, {montant}, {date}, {statut}, {titre}, {probabilite}
+Format exigé (JSON strict):
+{
+  "name": "...",
+  "subject": "...",
+  "body": "...",
+  "variables": ["client","montant","date","statut","titre","probabilite"]
+}
+Règles:
+- Sujet court et clair
+- Corps structuré, professionnel, orienté action
+- Pas d'informations inventées
+- Utiliser les variables entre accolades quand utile
+`;
+
+    const raw = await callOpenAI(prompt);
+    const parsed = JSON.parse(raw);
+
+    const safeName = String(parsed.name || `Template ${payload.type}`);
+    const safeSubject = String(parsed.subject || 'Objet à compléter');
+    const safeBody = String(parsed.body || 'Bonjour {client},\n\n...');
+    const safeVariables = Array.isArray(parsed.variables)
+      ? parsed.variables
+      : ['client', 'montant', 'date', 'statut', 'titre', 'probabilite'];
+
+    res.json({
+      name: safeName,
+      subject: safeSubject,
+      body: safeBody,
+      variables: JSON.stringify(safeVariables),
+    });
   } catch (e) { next(e); }
 });

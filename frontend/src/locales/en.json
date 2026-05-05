@@ -1,0 +1,105 @@
+{
+  "common": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "loading": "Loading...",
+    "noData": "No data",
+    "actions": "Actions",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "prospects": "Prospects",
+    "affaires": "Deals",
+    "devis": "Quotes",
+    "factures": "Invoices",
+    "products": "Products",
+    "expenses": "Expenses",
+    "reports": "Reports",
+    "settings": "Settings",
+    "aiAssistant": "AI Assistant",
+    "commissions": "Commissions",
+    "objectives": "Objectives",
+    "notifications": "Notifications"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Overview of your activities",
+    "kpis": {
+      "totalClients": "Total Clients",
+      "totalAffaires": "Total Deals",
+      "totalCA": "Total Revenue",
+      "pipelineCA": "Pipeline Revenue",
+      "caWon": "Won Revenue",
+      "conversionRate": "Conversion Rate"
+    },
+    "recentAffaires": "Recent Deals",
+    "upcomingTasks": "Upcoming Tasks"
+  },
+  "clients": {
+    "title": "Clients",
+    "addClient": "Add Client",
+    "editClient": "Edit Client",
+    "deleteClient": "Delete Client",
+    "clientName": "Client Name",
+    "clientEmail": "Client Email",
+    "clientPhone": "Client Phone",
+    "clientAddress": "Client Address"
+  },
+  "affaires": {
+    "title": "Deals",
+    "addAffaire": "Add Deal",
+    "editAffaire": "Edit Deal",
+    "deleteAffaire": "Delete Deal",
+    "affaireTitle": "Deal Title",
+    "affaireAmount": "Amount",
+    "affaireStatus": "Status",
+    "affaireProbability": "Probability",
+    "status": {
+      "prospect": "Prospect",
+      "qualified": "Qualified",
+      "proposal": "Proposal",
+      "negotiation": "Negotiation",
+      "won": "Won",
+      "lost": "Lost"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "organization": "Organization",
+    "users": "Users",
+    "preferences": "Preferences",
+    "billing": "Billing",
+    "language": "Language"
+  },
+  "auth": {
+    "loginTitle": "Login",
+    "loginSubtitle": "Sign in to your account",
+    "registerTitle": "Sign Up",
+    "registerSubtitle": "Create your account",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUp": "Sign Up",
+    "signIn": "Sign In"
+  }
+}

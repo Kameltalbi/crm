@@ -137,12 +137,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-1.5 border-l border-border/60 pl-2 sm:pl-3">
             <button
               type="button"
-              onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'ar' : 'fr')}
+              onClick={() => {
+                const languages = ['fr', 'en', 'ar'];
+                const currentIndex = languages.indexOf(i18n.language);
+                const nextIndex = (currentIndex + 1) % languages.length;
+                i18n.changeLanguage(languages[nextIndex]);
+              }}
               className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted"
-              title={i18n.language === 'fr' ? 'Switch to Arabic' : 'Switch to French'}
+              title="Change language"
             >
               <Globe size={18} strokeWidth={2} />
-              <span className="ml-1 text-xs font-medium">{i18n.language === 'fr' ? 'AR' : 'FR'}</span>
+              <span className="ml-1 text-xs font-medium">{i18n.language.toUpperCase()}</span>
             </button>
           </div>
           <div className="flex items-center gap-2 border-l border-border/60 pl-2 sm:pl-3">

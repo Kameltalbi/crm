@@ -682,12 +682,25 @@ aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest
     const { message } = querySchema.parse(req.body);
     const organizationId = req.organizationId!;
     const lowerMessage = message.toLowerCase();
+    const normalizedMessage = lowerMessage
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
 
     // Use deterministic rule-based predictions for forecast-related queries
-    if (lowerMessage.includes('prévision') || lowerMessage.includes('prévoir') || 
-        lowerMessage.includes('prédiction') || lowerMessage.includes('chiffre d\'affaires') ||
-        lowerMessage.includes('ca') || lowerMessage.includes('fin d\'année') ||
-        lowerMessage.includes('année')) {
+    if (
+      normalizedMessage.includes('prevision') ||
+      normalizedMessage.includes('prevoir') ||
+      normalizedMessage.includes('prediction') ||
+      normalizedMessage.includes('predire') ||
+      normalizedMessage.includes('chiffre d\'affaires') ||
+      normalizedMessage.includes('chiffre d affaires') ||
+      normalizedMessage.includes('ca') ||
+      normalizedMessage.includes('fin d\'annee') ||
+      normalizedMessage.includes('fin d annee') ||
+      normalizedMessage.includes('annee') ||
+      normalizedMessage.includes('forecast') ||
+      normalizedMessage.includes('revenu')
+    ) {
       const prediction = await predictYearEndCA(organizationId);
       const recommendations = await generateRecommendations(organizationId, prediction);
       

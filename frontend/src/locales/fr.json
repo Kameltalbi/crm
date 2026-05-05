@@ -187,6 +187,23 @@
     "recurrenceQuarterly": "{{count}} dépenses de {{amount}} TND (une par trimestre)",
     "recurrenceSemester": "{{count}} dépenses de {{amount}} TND (une par semestre)",
     "recurrenceCustom": "{{count}} dépenses de {{amount}} TND",
+    "categories": {
+      "operational": "Opérationnel",
+      "travel": "Déplacement",
+      "meal": "Repas",
+      "accommodation": "Hébergement",
+      "equipment": "Matériel",
+      "software": "Logiciel",
+      "marketing": "Marketing",
+      "commission": "Commission",
+      "other": "Autre"
+    },
+    "statuses": {
+      "pending": "En attente",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "paid": "Payé"
+    },
     "months": {
       "january": "Janvier",
       "february": "Février",

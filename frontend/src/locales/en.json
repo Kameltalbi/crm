@@ -187,6 +187,23 @@
     "recurrenceQuarterly": "{{count}} expenses of {{amount}} TND (one per quarter)",
     "recurrenceSemester": "{{count}} expenses of {{amount}} TND (one per semester)",
     "recurrenceCustom": "{{count}} expenses of {{amount}} TND",
+    "categories": {
+      "operational": "Operational",
+      "travel": "Travel",
+      "meal": "Meal",
+      "accommodation": "Accommodation",
+      "equipment": "Equipment",
+      "software": "Software",
+      "marketing": "Marketing",
+      "commission": "Commission",
+      "other": "Other"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "paid": "Paid"
+    },
     "months": {
       "january": "January",
       "february": "February",

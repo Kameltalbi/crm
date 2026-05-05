@@ -187,6 +187,23 @@
     "recurrenceQuarterly": "{{count}} مصروفات بقيمة {{amount}} دينار (واحدة كل ربع سنة)",
     "recurrenceSemester": "{{count}} مصروفات بقيمة {{amount}} دينار (واحدة كل نصف سنة)",
     "recurrenceCustom": "{{count}} مصروفات بقيمة {{amount}} دينار",
+    "categories": {
+      "operational": "تشغيلي",
+      "travel": "سفر",
+      "meal": "وجبات",
+      "accommodation": "إقامة",
+      "equipment": "معدات",
+      "software": "برمجيات",
+      "marketing": "تسويق",
+      "commission": "عمولة",
+      "other": "أخرى"
+    },
+    "statuses": {
+      "pending": "قيد الانتظار",
+      "approved": "موافق عليه",
+      "rejected": "مرفوض",
+      "paid": "مدفوع"
+    },
     "months": {
       "january": "يناير",
       "february": "فبراير",

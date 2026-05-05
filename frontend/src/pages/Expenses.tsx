@@ -31,27 +31,27 @@ const EMPTY: FormData = {
   recurrenceType: 'mensuel',
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  OPERATIONAL: 'Opérationnel',
-  TRAVEL: 'Déplacement',
-  MEAL: 'Repas',
-  ACCOMMODATION: 'Hébergement',
-  EQUIPMENT: 'Matériel',
-  SOFTWARE: 'Logiciel',
-  MARKETING: 'Marketing',
-  COMMISSION: 'Commission',
-  OTHER: 'Autre',
+const CATEGORY_KEYS: Record<string, string> = {
+  OPERATIONAL: 'expenses.categories.operational',
+  TRAVEL: 'expenses.categories.travel',
+  MEAL: 'expenses.categories.meal',
+  ACCOMMODATION: 'expenses.categories.accommodation',
+  EQUIPMENT: 'expenses.categories.equipment',
+  SOFTWARE: 'expenses.categories.software',
+  MARKETING: 'expenses.categories.marketing',
+  COMMISSION: 'expenses.categories.commission',
+  OTHER: 'expenses.categories.other',
 };
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  PENDING: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700' },
-  APPROVED: { label: 'Approuvé', color: 'bg-green-100 text-green-700' },
-  REJECTED: { label: 'Rejeté', color: 'bg-red-100 text-red-700' },
-  PAID: { label: 'Payé', color: 'bg-blue-100 text-blue-700' },
+const STATUS_KEYS: Record<string, { key: string; color: string }> = {
+  PENDING: { key: 'expenses.statuses.pending', color: 'bg-yellow-100 text-yellow-700' },
+  APPROVED: { key: 'expenses.statuses.approved', color: 'bg-green-100 text-green-700' },
+  REJECTED: { key: 'expenses.statuses.rejected', color: 'bg-red-100 text-red-700' },
+  PAID: { key: 'expenses.statuses.paid', color: 'bg-blue-100 text-blue-700' },
 };
 
 export function Expenses() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -436,7 +436,7 @@ export function Expenses() {
                 </thead>
                 <tbody>
                   {filteredExpenses.map((expense: any) => {
-                    const statusInfo = STATUS_LABELS[expense.status] || STATUS_LABELS.PENDING;
+                    const statusInfo = STATUS_KEYS[expense.status] || STATUS_KEYS.PENDING;
                     // Compute recurrence position badge (e.g. 3/12)
                     let recurrenceBadge = '';
                     if (expense.isRecurrent && expense.recurrenceMonths) {
@@ -458,7 +458,7 @@ export function Expenses() {
                           />
                         </td>
                         <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
-                          {new Date(expense.date).toLocaleDateString('fr-FR')}
+                          {new Date(expense.date).toLocaleDateString(i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-FR')}
                         </td>
                         <td className="py-3 px-4 font-medium">
                           <div className="flex items-center gap-2">
@@ -472,7 +472,7 @@ export function Expenses() {
                           </div>
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">
-                          {expense.category}
+                          {CATEGORY_KEYS[expense.category] ? t(CATEGORY_KEYS[expense.category]) : expense.category}
                         </td>
                         <td className="py-3 px-4 text-right font-semibold whitespace-nowrap">
                           {fmtDT(Number(expense.amount))} TND

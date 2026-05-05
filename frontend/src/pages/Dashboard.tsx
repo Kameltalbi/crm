@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Plus, DollarSign, Target, Wallet, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS_S } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +44,7 @@ function KpiCard({ title, subtitle, value, icon, color, ttcValue }: {
 }
 
 export function Dashboard() {
+  const { t } = useTranslation();
   const [selectedYear, setSelectedYear] = useState<string>('2026');
 
   const { data: kpis } = useQuery<KPIs>({
@@ -209,8 +211,8 @@ export function Dashboard() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Tableau de bord</h1>
-          <p className="text-sm text-muted-foreground mt-1">Vue d'ensemble de vos activités</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('dashboard.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('dashboard.overview')}</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -225,7 +227,7 @@ export function Dashboard() {
             </SelectContent>
           </Select>
           <Link to="/affaires" className="w-full sm:w-auto">
-            <Button className="w-full sm:w-auto shadow-lg"><Plus size={16} className="mr-2" />Nouvelle opportunité</Button>
+            <Button className="w-full sm:w-auto shadow-lg"><Plus size={16} className="mr-2" />{t('common.add')} {t('affaires.addAffaire')}</Button>
           </Link>
         </div>
       </div>
@@ -233,24 +235,24 @@ export function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <KpiCard
-          title="CA Total"
-          subtitle={`${affaires.length} opportunités`}
+          title={t('dashboard.kpis.totalCA')}
+          subtitle={`${affaires.length} ${t('affaires.title')}`}
           value={fmtDT(kpis.caTotalAll)}
           ttcValue={fmtDT(kpis.caTotalAll * 1.19)}
           icon={<DollarSign className="w-6 h-6" />}
           color="emerald"
         />
         <KpiCard
-          title="CA Pipeline"
-          subtitle={`${kpis.counts.enCours + kpis.counts.prospect} opportunités`}
+          title={t('dashboard.kpis.pipelineCA')}
+          subtitle={`${kpis.counts.enCours + kpis.counts.prospect} ${t('affaires.title')}`}
           value={fmtDT(kpis.caPipeline + kpis.caProspection)}
           ttcValue={fmtDT((kpis.caPipeline + kpis.caProspection) * 1.19)}
           icon={<Target className="w-6 h-6" />}
           color="blue"
         />
         <KpiCard
-          title="CA Gagné"
-          subtitle={`${kpis.counts.gagne} opportunités`}
+          title={t('dashboard.kpis.caWon')}
+          subtitle={`${kpis.counts.gagne} ${t('affaires.title')}`}
           value={fmtDT(kpis.caRealise)}
           ttcValue={fmtDT(kpis.caRealise * 1.19)}
           icon={<Wallet className="w-6 h-6" />}

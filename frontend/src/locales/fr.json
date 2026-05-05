@@ -43,10 +43,13 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
+    "overview": "Vue d'ensemble de vos activités",
     "kpis": {
       "totalClients": "Total Clients",
       "totalAffaires": "Total Affaires",
       "totalCA": "CA Total",
+      "pipelineCA": "CA Pipeline",
+      "caWon": "CA Gagné",
       "conversionRate": "Taux de conversion"
     },
     "recentAffaires": "Affaires récentes",

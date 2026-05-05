@@ -43,10 +43,13 @@
   },
   "dashboard": {
     "title": "لوحة التحكم",
+    "overview": "نظرة عامة على أنشطتك",
     "kpis": {
       "totalClients": "إجمالي العملاء",
       "totalAffaires": "إجمالي الصفقات",
       "totalCA": "إجمالي المبيعات",
+      "pipelineCA": "مبيعات القناة",
+      "caWon": "المبيعات المكتسبة",
       "conversionRate": "معدل التحويل"
     },
     "recentAffaires": "الصفقات الأخيرة",

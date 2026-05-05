@@ -224,7 +224,7 @@ export function Affaires() {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, statut }: { id: string; statut: StatutAffaire }) =>
-      api.patch(`/affaires/${id}/status`, { statut }),
+      api.put(`/affaires/${id}`, { statut }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['affaires'] });
       qc.invalidateQueries({ queryKey: ['kpis'] });

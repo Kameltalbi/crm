@@ -75,6 +75,9 @@
   },
   "affaires": {
     "title": "Affaires",
+    "subtitle": "Pipeline complet : prospect, qualifié, proposition, négociation, gagné",
+    "tableView": "Tableau",
+    "kanbanView": "Kanban",
     "addAffaire": "Ajouter une affaire",
     "editAffaire": "Modifier l'affaire",
     "deleteAffaire": "Supprimer l'affaire",

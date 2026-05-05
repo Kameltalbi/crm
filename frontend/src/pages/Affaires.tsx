@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertical, Search, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { fmtDT, MOIS } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +39,7 @@ const EMPTY: FormData = {
 };
 
 export function Affaires() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [filters, setFilters] = useState({ statut: '', type: '', annee: '2026', mois: String(new Date().getMonth() + 1), viaPartenaire: '', sortBy: 'score' });
@@ -269,8 +271,8 @@ export function Affaires() {
     <div className="space-y-5 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Opportunités</h1>
-          <p className="text-sm text-muted-foreground mt-1">Pipeline complet : prospect, qualifié, proposition, négociation, gagné</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('affaires.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('affaires.subtitle')}</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <div className="flex gap-1">
@@ -279,18 +281,22 @@ export function Affaires() {
               size="sm"
               onClick={() => setView('table')}
             >
-              Tableau
+              {t('affaires.tableView')}
             </Button>
             <Button
               variant={view === 'kanban' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setView('kanban')}
             >
-              Kanban
+              {t('affaires.kanbanView')}
             </Button>
           </div>
-          <Button onClick={() => setImportOpen(true)} variant="outline" className="w-full sm:w-auto"><Upload size={16} />Importer Excel</Button>
-          <Button onClick={openNew} className="w-full sm:w-auto"><Plus size={16} />Nouvelle opportunité</Button>
+          <Button onClick={() => setImportOpen(true)} variant="outline" size="sm">
+            <Upload size={16} className="mr-2" />{t('common.import')}
+          </Button>
+          <Button onClick={openNew} size="sm">
+            <Plus size={16} className="mr-2" />{t('affaires.addAffaire')}
+          </Button>
         </div>
       </div>
 

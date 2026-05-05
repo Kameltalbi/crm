@@ -75,6 +75,9 @@
   },
   "affaires": {
     "title": "الصفقات",
+    "subtitle": "القناة الكاملة: عميل محتمل، مؤهل، اقتراح، تفاوض، مكتسبة",
+    "tableView": "جدول",
+    "kanbanView": "كانبان",
     "addAffaire": "إضافة صفقة",
     "editAffaire": "تعديل الصفقة",
     "deleteAffaire": "حذف الصفقة",

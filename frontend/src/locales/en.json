@@ -75,6 +75,9 @@
   },
   "affaires": {
     "title": "Deals",
+    "subtitle": "Complete pipeline: prospect, qualified, proposal, negotiation, won",
+    "tableView": "Table",
+    "kanbanView": "Kanban",
     "addAffaire": "Add Deal",
     "editAffaire": "Edit Deal",
     "deleteAffaire": "Delete Deal",

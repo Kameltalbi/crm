@@ -42,7 +42,7 @@ salesObjectivesRoutes.get('/', checkPlanFeature('objectives'), async (req: AuthR
       },
       orderBy: [
         { year: 'desc' },
-        { month: 'desc' },
+        { createdAt: 'desc' },
       ],
     });
 
@@ -96,8 +96,14 @@ salesObjectivesRoutes.post('/', checkPlanFeature('objectives'), async (req: Auth
 
     const objective = await prisma.salesObjective.create({
       data: {
-        ...data,
         organizationId: req.organizationId!,
+        userId: data.userId,
+        year: data.year,
+        period: data.period,
+        targetAmount: data.targetAmount,
+        ...(data.period === 'MONTHLY' && { month: data.month }),
+        ...(data.period === 'QUARTERLY' && { quarter: data.quarter }),
+        ...(data.period === 'SEMI_ANNUAL' && { semester: data.semester }),
       },
       include: {
         user: {
@@ -113,7 +119,15 @@ salesObjectivesRoutes.post('/', checkPlanFeature('objectives'), async (req: Auth
 // PUT update objective
 salesObjectivesRoutes.put('/:id', checkPlanFeature('objectives'), async (req: AuthRequest, res, next) => {
   try {
-    const data = objectiveSchema.partial().parse(req.body);
+    const data = z.object({
+  userId: z.string().min(1).optional(),
+  year: z.number().min(2020).max(2035).optional(),
+  period: z.enum(['MONTHLY', 'QUARTERLY', 'SEMI_ANNUAL', 'ANNUAL']).optional(),
+  month: z.number().min(1).max(12).optional(),
+  quarter: z.number().min(1).max(4).optional(),
+  semester: z.number().min(1).max(2).optional(),
+  targetAmount: z.number().positive().optional(),
+}).parse(req.body);
 
     // Check if objective exists and belongs to organization
     const existing = await prisma.salesObjective.findFirst({

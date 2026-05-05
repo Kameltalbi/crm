@@ -70,6 +70,7 @@ export function AIAssistant() {
     if (result.type === 'prediction') {
       const growth = Number(result.growth || 0);
       const hasPipeline = Number(result.pipelineCA || 0) > 0;
+      const predictedCA = Number(result.predictedCA || 0);
 
       let diagnostic = 'Votre dynamique commerciale est stable.';
       if (growth > 8) {
@@ -85,6 +86,7 @@ export function AIAssistant() {
 
       return (
         `📈 Prévision CA fin d'année\n\n` +
+        `CA prévisionnel de fin d'année : ${fmtDT(predictedCA)} HT\n\n` +
         `Prévision construite à partir des opportunités réalisées, du pipeline en cours et de la prospection, en tenant compte de la saisonnalité, de la tendance et de la croissance mensuelle.\n\n` +
         `${diagnostic}\n` +
         `${focus}\n\n` +

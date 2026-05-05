@@ -683,7 +683,7 @@ aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest
     const organizationId = req.organizationId!;
     const lowerMessage = message.toLowerCase();
 
-    // Use rule-based predictions for forecast-related queries
+    // Use deterministic rule-based predictions for forecast-related queries
     if (lowerMessage.includes('prévision') || lowerMessage.includes('prévoir') || 
         lowerMessage.includes('prédiction') || lowerMessage.includes('chiffre d\'affaires') ||
         lowerMessage.includes('ca') || lowerMessage.includes('fin d\'année') ||
@@ -694,14 +694,17 @@ aiAssistantRoutes.post('/query', checkPlanFeature('ai'), async (req: AuthRequest
       res.json({
         intent: 'prediction',
         result: {
-          message: `Voici votre prévision de chiffre d'affaires pour l'année ${new Date().getFullYear()}:\n\n` +
-                   `• CA réalisé: ${prediction.caRealise} DT\n` +
-                   `• CA du pipeline: ${prediction.pipelineCA} DT\n` +
-                   `• Pipeline pondéré: ${prediction.pipelinePondere} DT\n` +
-                   `• Prédiction CA fin d'année: ${prediction.predictedCA} DT\n` +
-                   `• Croissance vs année précédente: ${prediction.avgGrowth}%\n\n` +
-                   `Recommandations:\n${recommendations.join('\n')}`,
-          prediction,
+          type: 'prediction',
+          title: 'Prédiction CA fin d\'année',
+          caTotalAll: prediction.caTotalAll,
+          caRealise: prediction.caRealise,
+          predictedCA: prediction.predictedCA,
+          pipelineCA: prediction.pipelineCA,
+          pipelinePondere: prediction.pipelinePondere,
+          avgMonthlyCA: prediction.avgMonthlyCA,
+          growth: prediction.avgGrowth,
+          monthsData: prediction.monthsData,
+          projectionMeta: prediction.projectionMeta,
           recommendations,
         },
       });

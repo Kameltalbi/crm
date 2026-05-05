@@ -68,49 +68,32 @@ export function AIAssistant() {
     }
 
     if (result.type === 'prediction') {
-      const months = result.monthsData || {};
-      const sortedKeys = Object.keys(months).sort();
-      const monthNames = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-      const monthLines = sortedKeys.map((k: string) => {
-        const m = parseInt(k.split('-')[1]);
-        return `  • ${monthNames[m]} : ${fmtDT(months[k])} HT`;
-      }).join('\n');
+      const growth = Number(result.growth || 0);
+      const hasPipeline = Number(result.pipelineCA || 0) > 0;
 
-      const caTotalAll = result.caTotalAll || 0;
-      const caRealise = result.caRealise || 0;
-      const pipelineCA = result.pipelineCA || 0;
-      const pipelinePondere = result.pipelinePondere || 0;
-      const predictedCA = result.predictedCA || 0;
-      const avgMonthlyCA = result.avgMonthlyCA || 0;
-
-      let analysis = '';
-      if (predictedCA > caTotalAll * 1.5) {
-        analysis = `\n\n✅ Excellente dynamique ! Votre rythme de croissance est soutenu. Continuez à convertir les opportunités en pipeline pour dépasser vos objectifs.`;
-      } else if (pipelineCA > 0) {
-        analysis = `\n\n⚡ Vous avez ${fmtDT(pipelineCA)} HT d'opportunités en pipeline. Si vous convertissez les affaires les plus probables (${fmtDT(pipelinePondere)} HT pondéré), vous pouvez significativement booster votre CA annuel.`;
-      } else {
-        analysis = `\n\n⚠️ Attention : votre pipeline est vide pour les mois restants. Il est urgent d'intensifier la prospection et de relancer les contacts dormants.`;
+      let diagnostic = 'Votre dynamique commerciale est stable.';
+      if (growth > 8) {
+        diagnostic = 'Votre dynamique commerciale est positive et orientée croissance.';
+      } else if (growth < 0) {
+        diagnostic = 'Votre dynamique commerciale est sous pression et nécessite un pilotage rapproché.';
       }
 
-      let actions = '\n\n💡 Actions recommandées :';
-      let n = 1;
-      if (pipelineCA > 0) {
-        actions += `\n  ${n++}. Relancer les opportunités en négociation pour accélérer la clôture`;
-        actions += `\n  ${n++}. Prioriser les affaires avec probabilité > 50% pour maximiser le taux de conversion`;
+      let focus = 'Maintenez une cadence régulière de prospection et de qualification pour sécuriser le CA.';
+      if (hasPipeline) {
+        focus = 'Concentrez vos efforts sur la conversion des opportunités qualifiées tout en gardant un flux constant de prospection.';
       }
-      actions += `\n  ${n++}. Prospecter activement pour alimenter le pipeline des mois à venir`;
-      actions += `\n  ${n++}. Fidéliser les clients existants avec des prestations complémentaires`;
 
-      return `📈 Prédiction CA fin d'année ${new Date().getFullYear()}\n\n` +
-        `💼 CA Total (comme dashboard) : ${fmtDT(caTotalAll)} HT (${fmtDT(caTotalAll * 1.19)} TTC)\n` +
-        `✅ CA Gagné (réalisé) : ${fmtDT(caRealise)} HT (${fmtDT(caRealise * 1.19)} TTC)\n` +
-        `📂 Pipeline en cours : ${fmtDT(pipelineCA)} HT (${fmtDT(pipelineCA * 1.19)} TTC)\n` +
-        `🎲 Pipeline pondéré (par probabilité) : ${fmtDT(pipelinePondere)} HT (${fmtDT(pipelinePondere * 1.19)} TTC)\n` +
-        `📊 Moyenne mensuelle réalisée : ${fmtDT(avgMonthlyCA)} HT\n\n` +
-        `🎯 CA prévu fin d'année : ${fmtDT(predictedCA)} HT (${fmtDT(predictedCA * 1.19)} TTC)\n` +
-        (result.growth ? `� Croissance vs année précédente : ${result.growth > 0 ? '+' : ''}${result.growth}%\n` : '') +
-        `\n📅 Détail par mois (CA gagné) :\n${monthLines}` +
-        analysis + actions;
+      return (
+        `📈 Prévision CA fin d'année\n\n` +
+        `Prévision construite à partir des opportunités réalisées, du pipeline en cours et de la prospection, en tenant compte de la saisonnalité, de la tendance et de la croissance mensuelle.\n\n` +
+        `${diagnostic}\n` +
+        `${focus}\n\n` +
+        `💡 Recommandations professionnelles :\n` +
+        `1. Continuer à prospecter de manière structurée pour alimenter le haut de pipeline.\n` +
+        `2. Qualifier en continu les prospects pour accélérer les décisions commerciales.\n` +
+        `3. Suivre les opportunités clés sans perte de vue, jusqu'à la clôture.\n` +
+        `4. Piloter chaque mois les priorités commerciales pour sécuriser et dépasser les objectifs.`
+      );
     }
 
     if (result.type === 'recommendations') {

@@ -147,7 +147,7 @@ export function Landing() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-lg font-medium mb-6">
               <TrendingUp size={24} />
-              Le CRM simple pour gérer vos ventes et vos clients
+              CRM de vente pour PME et indépendants
             </div>
             <h1 className="text-6xl md:text-8xl font-serif font-bold text-foreground mb-6">
               Ne laissez plus passer vos opportunités de vente

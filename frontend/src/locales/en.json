@@ -104,7 +104,8 @@
   },
   "landing": {
     "badge": "Sales CRM for SMBs and freelancers",
-    "heroTitle": "Never miss a sales opportunity again",
+    "heroTitle1": "Never miss a",
+    "heroTitle2": "sales opportunity again",
     "heroSubtitle": "Track your prospects, manage your pipeline, and follow up at the right time to close more deals.",
     "cta": "Start for free",
     "demo": "Free demo",

@@ -104,7 +104,8 @@
   },
   "landing": {
     "badge": "CRM de vente pour PME et indépendants",
-    "heroTitle": "Ne laissez plus passer vos opportunités de vente",
+    "heroTitle1": "Ne laissez plus passer vos",
+    "heroTitle2": "opportunités de vente",
     "heroSubtitle": "Suivez vos prospects, gérez votre pipeline et relancez au bon moment pour conclure plus d'affaires.",
     "cta": "Commencer gratuitement",
     "demo": "Démo gratuite",

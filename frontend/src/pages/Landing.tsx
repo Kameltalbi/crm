@@ -150,7 +150,8 @@ export function Landing() {
               {t('landing.badge')}
             </div>
             <h1 className="text-6xl md:text-8xl font-serif font-bold text-foreground mb-6">
-              {t('landing.heroTitle')}
+              {t('landing.heroTitle1')}{' '}
+              <span className="text-leaf">{t('landing.heroTitle2')}</span>
             </h1>
             <p className="text-2xl md:text-3xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               {t('landing.heroSubtitle')}

@@ -11,22 +11,22 @@ import { Notifications } from './Notifications';
 import { useTranslation } from 'react-i18next';
 
 const nav = [
-  { to: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, page: 'dashboard' },
-  { to: '/affaires',     label: 'Opportunités',  icon: Briefcase,       page: 'affaires' },
-  { to: '/clients',      label: 'Clients',       icon: Users,           page: 'clients' },
-  { to: '/leads',        label: 'Leads',         icon: UserCheck,       page: 'leads' },
-  { to: '/calendar',     label: 'Calendrier',    icon: CalendarIcon,    page: 'calendar' },
-  { to: '/expenses',     label: 'Dépenses',      icon: Receipt,         page: 'expenses' },
-  { to: '/activites',    label: 'Activités',     icon: FileText,        page: 'activites' },
-  { to: '/email-templates', label: 'Templates Emails', icon: Mail, page: 'email-templates' },
-  { to: '/ai-assistant', label: 'Assistant IA', icon: Sparkles, page: 'ai-assistant' },
-  { to: '/objectifs',    label: 'Objectifs',     icon: Target,          page: 'objectifs' },
+  { to: '/dashboard',     label: 'nav.dashboard',     icon: LayoutDashboard, page: 'dashboard' },
+  { to: '/affaires',     label: 'nav.affaires',      icon: Briefcase,       page: 'affaires' },
+  { to: '/clients',      label: 'nav.clients',       icon: Users,           page: 'clients' },
+  { to: '/leads',        label: 'nav.prospects',     icon: UserCheck,       page: 'leads' },
+  { to: '/calendar',     label: 'nav.calendar',      icon: CalendarIcon,    page: 'calendar' },
+  { to: '/expenses',     label: 'nav.expenses',      icon: Receipt,         page: 'expenses' },
+  { to: '/activites',    label: 'nav.activities',    icon: FileText,        page: 'activites' },
+  { to: '/email-templates', label: 'nav.emailTemplates', icon: Mail, page: 'email-templates' },
+  { to: '/ai-assistant', label: 'nav.aiAssistant',  icon: Sparkles, page: 'ai-assistant' },
+  { to: '/objectifs',    label: 'nav.objectives',    icon: Target,          page: 'objectifs' },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const isRTL = i18n.language === 'ar';
@@ -213,7 +213,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {({ isActive }) => (
                     <>
                       <Icon size={18} className={cn('shrink-0', isDisabled && 'opacity-50')} />
-                      <span className="flex-1">{label}</span>
+                      <span className="flex-1">{t(label)}</span>
                       {isDisabled && (
                         <span className="ml-2 rounded-full bg-amber-400/90 px-2 py-0.5 text-xs font-semibold text-amber-900">
                           Upgrade

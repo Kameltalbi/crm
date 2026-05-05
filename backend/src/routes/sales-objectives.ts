@@ -46,7 +46,13 @@ salesObjectivesRoutes.get('/', checkPlanFeature('objectives'), async (req: AuthR
       ],
     });
 
-    res.json(objectives);
+    // Set default period to MONTHLY for existing records without it
+    const objectivesWithPeriod = objectives.map(obj => ({
+      ...obj,
+      period: obj.period || 'MONTHLY',
+    }));
+
+    res.json(objectivesWithPeriod);
   } catch (e) { next(e); }
 });
 

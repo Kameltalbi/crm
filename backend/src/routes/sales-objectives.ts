@@ -47,7 +47,7 @@ salesObjectivesRoutes.get('/', checkPlanFeature('objectives'), async (req: AuthR
     });
 
     // Set default period to MONTHLY for existing records without it
-    const objectivesWithPeriod = objectives.map(obj => ({
+    const objectivesWithPeriod = objectives.map((obj: any) => ({
       ...obj,
       period: obj.period || 'MONTHLY',
     }));
@@ -100,7 +100,7 @@ salesObjectivesRoutes.post('/', checkPlanFeature('objectives'), async (req: Auth
     const existing = await prisma.salesObjective.findFirst({ where });
     if (existing) return res.status(400).json({ error: 'Un objectif existe déjà pour ce commercial, année et période' });
 
-    const objective = await prisma.salesObjective.create({
+    const objective = await (prisma.salesObjective as any).create({
       data: {
         organizationId: req.organizationId!,
         userId: data.userId,
@@ -136,7 +136,7 @@ salesObjectivesRoutes.put('/:id', checkPlanFeature('objectives'), async (req: Au
 }).parse(req.body);
 
     // Check if objective exists and belongs to organization
-    const existing = await prisma.salesObjective.findFirst({
+    const existing: any = await prisma.salesObjective.findFirst({
       where: { id: req.params.id as string, organizationId: req.organizationId },
     });
     if (!existing) return res.status(404).json({ error: 'Objectif introuvable' });

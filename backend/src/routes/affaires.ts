@@ -24,7 +24,25 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const allowedImportMimeTypes = new Set([
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+  'application/octet-stream',
+]);
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const extAllowed = ext === '.xlsx' || ext === '.xls';
+    const mimeAllowed = allowedImportMimeTypes.has(file.mimetype);
+    if (!extAllowed || !mimeAllowed) {
+      return cb(new Error('Format de fichier non autorisé. Utilisez .xlsx ou .xls'));
+    }
+    cb(null, true);
+  },
+});
 
 // Lead Scoring Calculation
 function calculateLeadScore(affaire: any, clientHistory?: number): number {
@@ -319,16 +337,24 @@ affairesRoutes.post('/:id/activites', async (req: AuthRequest, res, next) => {
 
 // ─── IMPORT FROM EXCEL ───────────────────────────────────────────
 affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, res, next) => {
+  let uploadedPath: string | null = null;
   try {
     console.log('Import request received');
     if (!req.file) {
       return res.status(400).json({ error: 'Aucun fichier fourni' });
     }
+    uploadedPath = req.file.path;
 
     console.log('File uploaded:', req.file.path);
 
     // Read Excel file
-    const workbook = xlsx.readFile(req.file.path);
+    const workbook = xlsx.readFile(req.file.path, {
+      dense: true,
+      cellFormula: false,
+      cellHTML: false,
+      cellText: false,
+      sheetStubs: false,
+    });
     console.log('Sheet names:', workbook.SheetNames);
     
     // Try to find a sheet with data
@@ -376,6 +402,11 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
     if (data.length === 0) {
       console.log('No data found in Excel file');
       return res.json({ created: 0, updated: 0, errors: ['Aucune donnée trouvée dans le fichier Excel'] });
+    }
+    if (data.length > 5000) {
+      return res.status(400).json({
+        error: 'Le fichier contient trop de lignes. Limite: 5000 lignes.',
+      });
     }
 
     const results = {
@@ -487,10 +518,16 @@ affairesRoutes.post('/import', upload.single('file'), async (req: AuthRequest, r
       }
     }
 
-    // Delete uploaded file
-    fs.unlinkSync(req.file.path);
-
     console.log('Import completed:', results);
     res.json(results);
   } catch (e) { next(e); }
+  finally {
+    if (uploadedPath && fs.existsSync(uploadedPath)) {
+      try {
+        fs.unlinkSync(uploadedPath);
+      } catch (cleanupError) {
+        console.error('Erreur suppression fichier import:', cleanupError);
+      }
+    }
+  }
 });

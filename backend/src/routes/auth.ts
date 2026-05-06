@@ -375,8 +375,24 @@ authRoutes.post('/logout', async (req, res, next) => {
       const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as { userId: string };
       const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
 
-      // Delete refresh token from database
-      await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+      // Refresh tokens are stored hashed; find matching token by bcrypt comparison.
+      const allTokens = await prisma.refreshToken.findMany({
+        where: { userId: decoded.userId },
+      });
+      let deleted = false;
+      for (const tokenRow of allTokens) {
+        if (await bcrypt.compare(refreshToken, tokenRow.token)) {
+          await prisma.refreshToken.delete({ where: { id: tokenRow.id } });
+          deleted = true;
+          break;
+        }
+      }
+      if (!deleted) {
+        // Cleanup expired tokens if no direct match found.
+        await prisma.refreshToken.deleteMany({
+          where: { userId: decoded.userId, expiresAt: { lt: new Date() } },
+        });
+      }
 
       // Log audit
       if (user) {

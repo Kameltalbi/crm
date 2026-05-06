@@ -187,6 +187,56 @@ export function Landing() {
         </div>
       </section>
 
+      {/* Hero Section 2 */}
+      <section className="bg-white py-16 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+            <div className="rounded-3xl border bg-gradient-to-br from-sage/10 to-emerald-50/20 p-8 md:p-10 min-h-[420px] h-full flex flex-col justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium mb-4">
+                  <BarChart3 size={16} />
+                  {t('landing.heroSection2Badge', { defaultValue: 'Pilotage visuel' })}
+                </div>
+                <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">
+                  {t('landing.heroSection2Title', { defaultValue: 'Suivez vos indicateurs en un coup d’œil' })}
+                </h2>
+                <p className="text-lg text-muted-foreground mb-6">
+                  {t('landing.heroSection2Subtitle', {
+                    defaultValue:
+                      'Une vue claire du CA, du pipeline et de la conversion pour décider vite et garder le contrôle.',
+                  })}
+                </p>
+              </div>
+              <div className="space-y-3 text-sm md:text-base text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-emerald-500" />
+                  {t('landing.heroSection2Point1', { defaultValue: 'KPIs mis à jour en temps réel' })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-emerald-500" />
+                  {t('landing.heroSection2Point2', { defaultValue: 'Graphiques mensuels simples à lire' })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-emerald-500" />
+                  {t('landing.heroSection2Point3', { defaultValue: 'Répartition CA réalisée, pipeline, prospection' })}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border bg-card p-4 md:p-6 min-h-[420px] h-full flex flex-col">
+              <div className="relative flex-1 rounded-2xl overflow-hidden border bg-white">
+                <img
+                  src="/image.png"
+                  alt="Aperçu du dashboard CRM"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

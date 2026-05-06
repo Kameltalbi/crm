@@ -24,6 +24,71 @@ const commissionConfigSchema = z.object({
   paymentDelay: z.number().min(0).optional(),
 });
 
+type TierRule = {
+  min: number;
+  max: number;
+  rate?: number;
+  formulaType?: 'PERCENT_OF_SALES' | 'BASE_X_ACHIEVEMENT' | 'BASE_X_MULTIPLIER' | 'FIXED_AMOUNT';
+  value?: number;
+};
+
+function getBaseBonus(customFormula?: string | null): number {
+  if (!customFormula) return 0;
+  try {
+    const parsed = JSON.parse(customFormula);
+    if (parsed && typeof parsed === 'object' && typeof parsed.baseBonus === 'number') {
+      return Math.max(0, parsed.baseBonus);
+    }
+  } catch {
+    // Keep backward compatibility with non-JSON customFormula values
+  }
+  return 0;
+}
+
+function calculateTierCommission(
+  tiers: TierRule[],
+  achievementRate: number,
+  salesAmount: number,
+  baseBonus: number
+) {
+  let commission = 0;
+  let details = '';
+  const matched = tiers.find((tier) => achievementRate >= Number(tier.min) && achievementRate <= Number(tier.max));
+
+  if (!matched) return { commission, details };
+
+  const formulaType = matched.formulaType || 'PERCENT_OF_SALES';
+  const value = Number(matched.value ?? matched.rate ?? 0);
+
+  switch (formulaType) {
+    case 'BASE_X_ACHIEVEMENT': {
+      const achievementFactor = achievementRate / 100;
+      commission = baseBonus * achievementFactor * (value > 0 ? value : 1);
+      details = `Palier ${matched.min}-${matched.max}% : base ${baseBonus.toFixed(2)} × taux ${achievementRate.toFixed(2)}%` +
+        `${value > 0 && value !== 1 ? ` × facteur ${value.toFixed(2)}` : ''} = ${commission.toFixed(2)} DT`;
+      break;
+    }
+    case 'BASE_X_MULTIPLIER': {
+      commission = baseBonus * (value > 0 ? value : 1);
+      details = `Palier ${matched.min}-${matched.max}% : base ${baseBonus.toFixed(2)} × ${value.toFixed(2)} = ${commission.toFixed(2)} DT`;
+      break;
+    }
+    case 'FIXED_AMOUNT': {
+      commission = value;
+      details = `Palier ${matched.min}-${matched.max}% : montant fixe ${commission.toFixed(2)} DT`;
+      break;
+    }
+    case 'PERCENT_OF_SALES':
+    default: {
+      commission = salesAmount * (value / 100);
+      details = `Palier ${matched.min}-${matched.max}% : ${value.toFixed(2)}% de ${salesAmount.toFixed(2)} DT = ${commission.toFixed(2)} DT`;
+      break;
+    }
+  }
+
+  return { commission, details };
+}
+
 // GET /api/commissions/config - Get all commission configs for organization
 commissionsRoutes.get('/config', async (req: AuthRequest, res, next) => {
   try {
@@ -159,6 +224,7 @@ commissionsRoutes.post('/calculate', async (req: AuthRequest, res, next) => {
       let commission = 0;
       let calculationDetails = '';
 
+      const baseBonus = getBaseBonus(config.customFormula);
       switch (config.calculationType) {
         case 'SIMPLE':
           commission = salesAmount * (Number(config.simpleRate) / 100);
@@ -167,14 +233,10 @@ commissionsRoutes.post('/calculate', async (req: AuthRequest, res, next) => {
 
         case 'TIERS':
           if (config.tierConfig) {
-            const tiers = JSON.parse(config.tierConfig);
-            for (const tier of tiers) {
-              if (achievementRate >= tier.min && achievementRate <= tier.max) {
-                commission = salesAmount * (tier.rate / 100);
-                calculationDetails = `Palier ${tier.min}-${tier.max}% : ${tier.rate}% de ${salesAmount.toFixed(2)} DT = ${commission.toFixed(2)} DT`;
-                break;
-              }
-            }
+            const tiers: TierRule[] = JSON.parse(config.tierConfig);
+            const result = calculateTierCommission(tiers, achievementRate, salesAmount, baseBonus);
+            commission = result.commission;
+            calculationDetails = result.details;
           }
           break;
 
@@ -255,6 +317,7 @@ commissionsRoutes.post('/preview', async (req: AuthRequest, res, next) => {
     let commission = 0;
     let calculationDetails = '';
 
+    const baseBonus = getBaseBonus(config.customFormula);
     switch (config.calculationType) {
       case 'SIMPLE':
         commission = salesAmount * (Number(config.simpleRate) / 100);
@@ -263,14 +326,10 @@ commissionsRoutes.post('/preview', async (req: AuthRequest, res, next) => {
 
       case 'TIERS':
         if (config.tierConfig) {
-          const tiers = JSON.parse(config.tierConfig);
-          for (const tier of tiers) {
-            if (achievementRate >= tier.min && achievementRate <= tier.max) {
-              commission = salesAmount * (tier.rate / 100);
-              calculationDetails = `Palier ${tier.min}-${tier.max}% : ${tier.rate}% de ${salesAmount} DT = ${commission} DT`;
-              break;
-            }
-          }
+          const tiers: TierRule[] = JSON.parse(config.tierConfig);
+          const result = calculateTierCommission(tiers, achievementRate, salesAmount, baseBonus);
+          commission = result.commission;
+          calculationDetails = result.details;
         }
         break;
 

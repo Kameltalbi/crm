@@ -12,6 +12,7 @@ const EMPTY_CONFIG = {
   calculationType: 'SIMPLE',
   periodicity: 'MONTHLY',
   simpleRate: 0,
+  baseBonus: 0,
   minThreshold: 0,
   maxCap: '',
   includeNewClients: true,
@@ -78,11 +79,14 @@ export function CommissionSettings() {
     let progressiveRules: any[] = [];
     try { tiers = config.tierConfig ? JSON.parse(config.tierConfig) : []; } catch { tiers = []; }
     try { progressiveRules = config.progressiveConfig ? JSON.parse(config.progressiveConfig) : []; } catch { progressiveRules = []; }
+    let customMeta: any = {};
+    try { customMeta = config.customFormula ? JSON.parse(config.customFormula) : {}; } catch { customMeta = {}; }
     setForm({
       name: config.name || '',
       calculationType: config.calculationType,
       periodicity: config.periodicity,
       simpleRate: Number(config.simpleRate) || 0,
+      baseBonus: Number(customMeta.baseBonus) || 0,
       minThreshold: Number(config.minThreshold) || 0,
       maxCap: config.maxCap ? String(config.maxCap) : '',
       includeNewClients: config.includeNewClients ?? true,
@@ -114,8 +118,10 @@ export function CommissionSettings() {
     if (form.calculationType === 'PROGRESSIVE' && form.progressiveRules) {
       payload.progressiveConfig = JSON.stringify(form.progressiveRules);
     }
+    payload.customFormula = JSON.stringify({ baseBonus: Number(form.baseBonus || 0) });
     delete payload.tiers;
     delete payload.progressiveRules;
+    delete payload.baseBonus;
     saveMutation.mutate(payload);
   };
 
@@ -143,6 +149,10 @@ export function CommissionSettings() {
           {configs.map((config: any) => (
             <Card key={config.id}>
               <CardContent className="py-4">
+                {(() => {
+                  let meta: any = {};
+                  try { meta = config.customFormula ? JSON.parse(config.customFormula) : {}; } catch { meta = {}; }
+                  return (
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <h3 className="font-semibold text-base">{config.name || 'Sans nom'}</h3>
@@ -151,6 +161,9 @@ export function CommissionSettings() {
                       <span>Périodicité: <strong>{PERIOD_LABELS[config.periodicity] || config.periodicity}</strong></span>
                       {config.calculationType === 'SIMPLE' && (
                         <span>Taux: <strong>{Number(config.simpleRate)}%</strong></span>
+                      )}
+                      {config.calculationType === 'TIERS' && Number(meta.baseBonus) > 0 && (
+                        <span>Base: <strong>{Number(meta.baseBonus)} DT</strong></span>
                       )}
                       {config.maxCap && (
                         <span>Plafond: <strong>{Number(config.maxCap)} DT</strong></span>
@@ -166,6 +179,8 @@ export function CommissionSettings() {
                     </Button>
                   </div>
                 </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           ))}
@@ -217,11 +232,34 @@ export function CommissionSettings() {
             )}
             {form.calculationType === 'TIERS' && (
               <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>Montant prime de base (DT)</Label>
+                  <Input
+                    type="number"
+                    value={form.baseBonus}
+                    onChange={(e) => setForm({ ...form, baseBonus: Number(e.target.value) })}
+                    placeholder="Ex: 500"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    La base est optionnelle et sert aux formules de type "Base × ...". Les paliers restent entièrement définis par l'admin.
+                  </p>
+                </div>
                 <div className="flex justify-between items-center">
                   <Label>Paliers d'atteinte</Label>
                   <Button type="button" size="sm" variant="outline" onClick={() => {
                     const tiers = form.tiers || [];
-                    setForm({ ...form, tiers: [...tiers, { min: tiers.length > 0 ? tiers[tiers.length - 1].max : 0, max: 100, rate: 0 }] });
+                    setForm({
+                      ...form,
+                      tiers: [
+                        ...tiers,
+                        {
+                          min: tiers.length > 0 ? tiers[tiers.length - 1].max : 0,
+                          max: tiers.length > 0 ? tiers[tiers.length - 1].max + 10 : 10,
+                          formulaType: 'PERCENT_OF_SALES',
+                          value: 0,
+                        },
+                      ],
+                    });
                   }}>
                     <Plus size={14} className="mr-1" /> Ajouter un palier
                   </Button>
@@ -248,13 +286,27 @@ export function CommissionSettings() {
                     </div>
                     <span className="text-sm text-muted-foreground">→</span>
                     <div className="flex-1">
-                      <Input type="number" value={tier.rate} placeholder="Taux %" onChange={(e) => {
+                      <Select value={tier.formulaType || 'PERCENT_OF_SALES'} onValueChange={(v) => {
                         const tiers = [...(form.tiers || [])];
-                        tiers[idx] = { ...tiers[idx], rate: Number(e.target.value) };
+                        tiers[idx] = { ...tiers[idx], formulaType: v };
+                        setForm({ ...form, tiers });
+                      }}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="PERCENT_OF_SALES">% du CA réalisé</SelectItem>
+                          <SelectItem value="BASE_X_ACHIEVEMENT">Base × taux réalisation</SelectItem>
+                          <SelectItem value="BASE_X_MULTIPLIER">Base × multiplicateur</SelectItem>
+                          <SelectItem value="FIXED_AMOUNT">Montant fixe</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1">
+                      <Input type="number" value={tier.value ?? tier.rate ?? 0} placeholder="Valeur" onChange={(e) => {
+                        const tiers = [...(form.tiers || [])];
+                        tiers[idx] = { ...tiers[idx], value: Number(e.target.value) };
                         setForm({ ...form, tiers });
                       }} />
                     </div>
-                    <span className="text-sm text-muted-foreground">%</span>
                     <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => {
                       const tiers = [...(form.tiers || [])];
                       tiers.splice(idx, 1);

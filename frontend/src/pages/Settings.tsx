@@ -9,15 +9,17 @@ import { ProductsSettings } from '@/components/settings/ProductsSettings';
 import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 import { CategoriesSettings } from '@/components/settings/CategoriesSettings';
 import { CommissionSettings } from '@/components/settings/CommissionSettings';
+import { SecuritySettings } from '@/components/settings/SecuritySettings';
 import { api } from '@/lib/api';
 
-type Tab = 'organization' | 'gmail' | 'softfacture' | 'users' | 'products' | 'categories' | 'commissions';
+type Tab = 'organization' | 'gmail' | 'softfacture' | 'users' | 'products' | 'categories' | 'commissions' | 'security';
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'organization', label: 'Organisation', icon: Building2 },
   { id: 'gmail', label: 'Gmail', icon: Mail },
   { id: 'softfacture', label: 'Softfacture', icon: FileText },
   { id: 'users', label: 'Utilisateurs', icon: Users },
+  { id: 'security', label: 'Sécurité', icon: FileText },
   { id: 'products', label: 'Produits', icon: Package },
   { id: 'categories', label: 'Catégories', icon: Tag },
   { id: 'commissions', label: 'Primes', icon: DollarSign },
@@ -76,6 +78,7 @@ export function Settings() {
         {activeTab === 'gmail' && <GmailSettings />}
         {activeTab === 'softfacture' && <SoftfactureSettings />}
         {activeTab === 'users' && <UsersSettings />}
+        {activeTab === 'security' && <SecuritySettings />}
         {activeTab === 'products' && <ProductsSettings />}
         {activeTab === 'categories' && <CategoriesSettings />}
         {activeTab === 'commissions' && <CommissionSettings />}

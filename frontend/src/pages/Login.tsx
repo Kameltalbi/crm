@@ -77,6 +77,11 @@ export function Login() {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              <div className="text-right">
+                <Link to="/forgot-password" className="text-xs text-leaf hover:underline">
+                  {t('auth.forgotPassword')}
+                </Link>
+              </div>
             </div>
             {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>

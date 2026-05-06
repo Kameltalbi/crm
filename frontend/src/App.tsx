@@ -4,6 +4,8 @@ import { useAuth } from './lib/auth';
 import './i18n';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Affaires } from './pages/Affaires';
@@ -47,6 +49,8 @@ export default function App() {
       <Route path="/sales" element={<LandingSales />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/legal/:type" element={<Legal />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/pricing" element={<Pricing />} />

@@ -6,6 +6,7 @@ import { prisma } from '../db/prisma.js';
 import { UserRole, AuditAction } from '@prisma/client';
 import { logAudit } from '../lib/audit.js';
 import { checkUserLimit, AuthRequest } from '../middleware/planRestrictions.js';
+import auth from '../middleware/auth.js';
 
 export const authRoutes = Router();
 
@@ -22,6 +23,20 @@ const registerSchema = z.object({
   name: z.string().min(1),
   organizationName: z.string().min(1),
   phone: z.string().optional(),
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(8).regex(passwordRegex, 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).regex(passwordRegex, 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'),
 });
 
 authRoutes.post('/register', async (req, res, next) => {
@@ -376,6 +391,106 @@ authRoutes.post('/logout', async (req, res, next) => {
       }
     }
     res.json({ success: true });
+  } catch (e) {
+    next(e);
+  }
+});
+
+authRoutes.post('/forgot-password', async (req, res, next) => {
+  try {
+    const { email } = forgotPasswordSchema.parse(req.body);
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always return generic message to avoid user enumeration.
+    const genericResponse = {
+      message: 'Si un compte existe avec cet email, un lien de réinitialisation a été généré.',
+    };
+
+    if (!user) {
+      return res.json(genericResponse);
+    }
+
+    const passwordFingerprint = user.passwordHash.slice(0, 16);
+    const token = jwt.sign(
+      { userId: user.id, purpose: 'password_reset', fingerprint: passwordFingerprint },
+      process.env.JWT_SECRET!,
+      { expiresIn: '30m' }
+    );
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
+
+    // No email service configured yet; log for operational visibility.
+    console.log(`[auth] Password reset link generated for ${email}: ${resetUrl}`);
+
+    if ((process.env.NODE_ENV || 'development') !== 'production') {
+      return res.json({ ...genericResponse, resetUrl });
+    }
+    return res.json(genericResponse);
+  } catch (e) {
+    next(e);
+  }
+});
+
+authRoutes.post('/reset-password', async (req, res, next) => {
+  try {
+    const { token, newPassword } = resetPasswordSchema.parse(req.body);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      userId: string;
+      purpose: string;
+      fingerprint?: string;
+    };
+
+    if (decoded.purpose !== 'password_reset') {
+      return res.status(400).json({ error: 'Token invalide' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!user) {
+      return res.status(404).json({ error: 'Utilisateur introuvable' });
+    }
+
+    if (decoded.fingerprint && user.passwordHash.slice(0, 16) !== decoded.fingerprint) {
+      return res.status(400).json({ error: 'Le lien de réinitialisation n\'est plus valide' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, failedLoginAttempts: 0, lockedUntil: null },
+    });
+
+    // Revoke existing sessions after password reset.
+    await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+
+    res.json({ success: true });
+  } catch (e) {
+    next(e);
+  }
+});
+
+authRoutes.post('/change-password', auth, async (req: AuthRequest, res, next) => {
+  try {
+    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+    const userId = req.userId!;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      return res.status(400).json({ error: 'Mot de passe actuel incorrect' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash, failedLoginAttempts: 0, lockedUntil: null },
+    });
+
+    // Revoke all sessions except the current one by deleting all refresh tokens.
+    await prisma.refreshToken.deleteMany({ where: { userId } });
+
+    res.json({ success: true, message: 'Mot de passe mis à jour avec succès' });
   } catch (e) {
     next(e);
   }

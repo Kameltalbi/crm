@@ -32,6 +32,13 @@ type TierRule = {
   value?: number;
 };
 
+type ProgressiveRule = {
+  min: number;
+  max: number;
+  multiplier: number;
+  continueAboveMax?: boolean;
+};
+
 function getBaseBonus(customFormula?: string | null): number {
   if (!customFormula) return 0;
   try {
@@ -83,6 +90,33 @@ function calculateTierCommission(
       commission = salesAmount * (value / 100);
       details = `Palier ${matched.min}-${matched.max}% : ${value.toFixed(2)}% de ${salesAmount.toFixed(2)} DT = ${commission.toFixed(2)} DT`;
       break;
+    }
+  }
+
+  return { commission, details };
+}
+
+function calculateProgressiveCommission(rules: ProgressiveRule[], achievementRate: number) {
+  let commission = 0;
+  let details = '';
+
+  const sortedRules = [...rules].sort((a, b) => Number(a.min) - Number(b.min));
+  let matched = sortedRules.find(
+    (rule) => achievementRate >= Number(rule.min) && achievementRate <= Number(rule.max)
+  );
+
+  if (!matched && sortedRules.length > 0) {
+    const lastRule = sortedRules[sortedRules.length - 1];
+    if (achievementRate > Number(lastRule.max) && lastRule.continueAboveMax) {
+      matched = lastRule;
+    }
+  }
+
+  if (matched) {
+    commission = achievementRate * Number(matched.multiplier);
+    details = `Progressif (${achievementRate.toFixed(2)}% × ${Number(matched.multiplier).toFixed(2)}) = ${commission.toFixed(2)} DT`;
+    if (achievementRate > Number(matched.max) && matched.continueAboveMax) {
+      details += ' (dernier palier appliqué au-delà du maximum)';
     }
   }
 
@@ -242,14 +276,10 @@ commissionsRoutes.post('/calculate', async (req: AuthRequest, res, next) => {
 
         case 'PROGRESSIVE':
           if (config.progressiveConfig) {
-            const rules = JSON.parse(config.progressiveConfig);
-            for (const rule of rules) {
-              if (achievementRate >= rule.min && achievementRate <= rule.max) {
-                commission = achievementRate * rule.multiplier;
-                calculationDetails = `Progressif (${achievementRate.toFixed(2)}% × ${rule.multiplier}) = ${commission.toFixed(2)} DT`;
-                break;
-              }
-            }
+            const rules: ProgressiveRule[] = JSON.parse(config.progressiveConfig);
+            const result = calculateProgressiveCommission(rules, achievementRate);
+            commission = result.commission;
+            calculationDetails = result.details;
           }
           break;
 
@@ -335,14 +365,10 @@ commissionsRoutes.post('/preview', async (req: AuthRequest, res, next) => {
 
       case 'PROGRESSIVE':
         if (config.progressiveConfig) {
-          const rules = JSON.parse(config.progressiveConfig);
-          for (const rule of rules) {
-            if (achievementRate >= rule.min && achievementRate <= rule.max) {
-              commission = achievementRate * rule.multiplier;
-              calculationDetails = `Progressif (${achievementRate}% × ${rule.multiplier}) = ${commission} DT`;
-              break;
-            }
-          }
+          const rules: ProgressiveRule[] = JSON.parse(config.progressiveConfig);
+          const result = calculateProgressiveCommission(rules, achievementRate);
+          commission = result.commission;
+          calculationDetails = result.details;
         }
         break;
 

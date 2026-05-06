@@ -396,11 +396,13 @@
     "confirmDelete": "Delete this template?"
   },
   "commissionSettings": {
+    "simpleRate": "Bonus percentage (%)",
+    "simpleRateHint": "Example: 5 means 5% of achieved revenue.",
     "baseBonus": "Base bonus amount (DT)",
     "baseBonusHint": "Base amount is optional and used by formulas like \"Base × ...\". Tiers remain fully defined by the admin.",
-    "minimumPayout": "Minimum payout bonus (DT)",
-    "minimumPayoutHint": "If the calculated bonus is below this amount, it is not paid.",
-    "maximumPayout": "Maximum payout bonus (DT)",
+    "minimumPayout": "Bonus paid from (DT)",
+    "minimumPayoutHint": "If the calculated bonus is lower than this amount, it is not paid.",
+    "maximumPayout": "Bonus capped at (DT)",
     "maximumPayoutPlaceholder": "Unlimited",
     "maximumPayoutHint": "The final bonus cannot exceed this amount.",
     "paymentDelay": "Payout delay (days)",

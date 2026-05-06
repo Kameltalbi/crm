@@ -396,11 +396,13 @@
     "confirmDelete": "Supprimer ce template ?"
   },
   "commissionSettings": {
+    "simpleRate": "Pourcentage de prime (%)",
+    "simpleRateHint": "Exemple: 5 signifie 5% du CA réalisé.",
     "baseBonus": "Montant prime de base (DT)",
     "baseBonusHint": "La base est optionnelle et sert aux formules de type \"Base × ...\". Les paliers restent entièrement définis par l'admin.",
-    "minimumPayout": "Prime minimale versée (DT)",
-    "minimumPayoutHint": "Si la prime calculée est en dessous de ce montant, elle n'est pas versée.",
-    "maximumPayout": "Prime maximale (DT)",
+    "minimumPayout": "Prime versée à partir de (DT)",
+    "minimumPayoutHint": "Si la prime calculée est inférieure à ce montant, elle n'est pas versée.",
+    "maximumPayout": "Prime plafonnée à (DT)",
     "maximumPayoutPlaceholder": "Illimité",
     "maximumPayoutHint": "La prime finale ne peut pas dépasser ce montant.",
     "paymentDelay": "Délai avant versement (jours)",

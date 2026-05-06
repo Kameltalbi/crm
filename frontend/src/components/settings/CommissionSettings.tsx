@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,10 +23,10 @@ const EMPTY_CONFIG = {
 };
 
 const CALC_LABELS: Record<string, string> = {
-  SIMPLE: 'Simple (% fixe)',
-  TIERS: 'Par paliers',
+  SIMPLE: 'Taux fixe',
+  TIERS: 'Paliers (recommandé)',
   PROGRESSIVE: 'Progressif',
-  CUSTOM: 'Personnalisé',
+  CUSTOM: 'Avancé',
 };
 
 const PERIOD_LABELS: Record<string, string> = {
@@ -36,6 +37,7 @@ const PERIOD_LABELS: Record<string, string> = {
 };
 
 export function CommissionSettings() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({ ...EMPTY_CONFIG });
@@ -125,6 +127,66 @@ export function CommissionSettings() {
     saveMutation.mutate(payload);
   };
 
+  const getTierValueLabel = (formulaType?: string) => {
+    switch (formulaType) {
+      case 'PERCENT_OF_SALES':
+        return t('commissionSettings.tier.valueLabels.percentOfSales');
+      case 'BASE_X_ACHIEVEMENT':
+        return t('commissionSettings.tier.valueLabels.baseAchievementCoefficient');
+      case 'BASE_X_MULTIPLIER':
+        return t('commissionSettings.tier.valueLabels.baseMultiplier');
+      case 'FIXED_AMOUNT':
+        return t('commissionSettings.tier.valueLabels.fixedAmount');
+      default:
+        return t('commissionSettings.tier.valueLabels.value');
+    }
+  };
+
+  const getTierValuePlaceholder = (formulaType?: string) => {
+    switch (formulaType) {
+      case 'PERCENT_OF_SALES':
+        return t('commissionSettings.examples.percent');
+      case 'BASE_X_ACHIEVEMENT':
+        return t('commissionSettings.examples.achievementFactor');
+      case 'BASE_X_MULTIPLIER':
+        return t('commissionSettings.examples.multiplier');
+      case 'FIXED_AMOUNT':
+        return t('commissionSettings.examples.fixedAmount');
+      default:
+        return t('commissionSettings.tier.valueLabels.value');
+    }
+  };
+
+  const getTierExplanation = (formulaType?: string) => {
+    switch (formulaType) {
+      case 'PERCENT_OF_SALES':
+        return t('commissionSettings.tier.explanations.percentOfSales');
+      case 'BASE_X_ACHIEVEMENT':
+        return t('commissionSettings.tier.explanations.baseAchievement');
+      case 'BASE_X_MULTIPLIER':
+        return t('commissionSettings.tier.explanations.baseMultiplier');
+      case 'FIXED_AMOUNT':
+        return t('commissionSettings.tier.explanations.fixedAmount');
+      default:
+        return '';
+    }
+  };
+
+  const getCalculationTypeHelp = (calculationType: string) => {
+    switch (calculationType) {
+      case 'SIMPLE':
+        return t('commissionSettings.typeHelp.simple');
+      case 'TIERS':
+        return t('commissionSettings.typeHelp.tiers');
+      case 'PROGRESSIVE':
+        return t('commissionSettings.typeHelp.progressive');
+      case 'CUSTOM':
+        return t('commissionSettings.typeHelp.custom');
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -204,12 +266,15 @@ export function CommissionSettings() {
                 <Select value={form.calculationType} onValueChange={(v) => setForm({ ...form, calculationType: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="SIMPLE">Simple (% fixe)</SelectItem>
-                    <SelectItem value="TIERS">Par paliers</SelectItem>
+                    <SelectItem value="TIERS">Paliers (recommandé)</SelectItem>
+                    <SelectItem value="SIMPLE">Taux fixe</SelectItem>
                     <SelectItem value="PROGRESSIVE">Progressif</SelectItem>
-                    <SelectItem value="CUSTOM">Personnalisé</SelectItem>
+                    <SelectItem value="CUSTOM">Avancé</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">
+                  {getCalculationTypeHelp(form.calculationType)}
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label>Périodicité</Label>
@@ -233,19 +298,19 @@ export function CommissionSettings() {
             {form.calculationType === 'TIERS' && (
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label>Montant prime de base (DT)</Label>
+                  <Label>{t('commissionSettings.baseBonus')}</Label>
                   <Input
                     type="number"
                     value={form.baseBonus}
                     onChange={(e) => setForm({ ...form, baseBonus: Number(e.target.value) })}
-                    placeholder="Ex: 500"
+                    placeholder={t('commissionSettings.examples.baseBonus')}
                   />
                   <p className="text-xs text-muted-foreground">
-                    La base est optionnelle et sert aux formules de type "Base × ...". Les paliers restent entièrement définis par l'admin.
+                    {t('commissionSettings.baseBonusHint')}
                   </p>
                 </div>
                 <div className="flex justify-between items-center">
-                  <Label>Paliers d'atteinte</Label>
+                  <Label>{t('commissionSettings.tier.title')}</Label>
                   <Button type="button" size="sm" variant="outline" onClick={() => {
                     const tiers = form.tiers || [];
                     setForm({
@@ -261,31 +326,37 @@ export function CommissionSettings() {
                       ],
                     });
                   }}>
-                    <Plus size={14} className="mr-1" /> Ajouter un palier
+                    <Plus size={14} className="mr-1" /> {t('commissionSettings.tier.add')}
                   </Button>
                 </div>
                 {(form.tiers || []).length === 0 && (
-                  <p className="text-sm text-muted-foreground">Aucun palier défini. Ajoutez des paliers pour configurer les taux par seuil d'atteinte.</p>
+                  <p className="text-sm text-muted-foreground">{t('commissionSettings.tier.empty')}</p>
                 )}
                 {(form.tiers || []).map((tier: any, idx: number) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <Input type="number" value={tier.min} placeholder="Min %" onChange={(e) => {
+                  <div key={idx} className="border rounded-md p-3 space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">{t('commissionSettings.tier.item', { index: idx + 1 })}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Label className="text-xs">{t('commissionSettings.tier.min')}</Label>
+                      <Input type="number" value={tier.min} placeholder={t('commissionSettings.tier.minPlaceholder')} onChange={(e) => {
                         const tiers = [...(form.tiers || [])];
                         tiers[idx] = { ...tiers[idx], min: Number(e.target.value) };
                         setForm({ ...form, tiers });
                       }} />
-                    </div>
-                    <span className="text-sm text-muted-foreground">à</span>
-                    <div className="flex-1">
-                      <Input type="number" value={tier.max} placeholder="Max %" onChange={(e) => {
+                      </div>
+                      <span className="text-sm text-muted-foreground mt-5">à</span>
+                      <div className="flex-1">
+                        <Label className="text-xs">{t('commissionSettings.tier.max')}</Label>
+                      <Input type="number" value={tier.max} placeholder={t('commissionSettings.tier.maxPlaceholder')} onChange={(e) => {
                         const tiers = [...(form.tiers || [])];
                         tiers[idx] = { ...tiers[idx], max: Number(e.target.value) };
                         setForm({ ...form, tiers });
                       }} />
+                      </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">→</span>
-                    <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Label className="text-xs">{t('commissionSettings.tier.mechanism')}</Label>
                       <Select value={tier.formulaType || 'PERCENT_OF_SALES'} onValueChange={(v) => {
                         const tiers = [...(form.tiers || [])];
                         tiers[idx] = { ...tiers[idx], formulaType: v };
@@ -293,27 +364,30 @@ export function CommissionSettings() {
                       }}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="PERCENT_OF_SALES">% du CA réalisé</SelectItem>
-                          <SelectItem value="BASE_X_ACHIEVEMENT">Base × taux réalisation</SelectItem>
-                          <SelectItem value="BASE_X_MULTIPLIER">Base × multiplicateur</SelectItem>
-                          <SelectItem value="FIXED_AMOUNT">Montant fixe</SelectItem>
+                          <SelectItem value="PERCENT_OF_SALES">{t('commissionSettings.tier.formula.percentOfSales')}</SelectItem>
+                          <SelectItem value="BASE_X_ACHIEVEMENT">{t('commissionSettings.tier.formula.baseAchievement')}</SelectItem>
+                          <SelectItem value="BASE_X_MULTIPLIER">{t('commissionSettings.tier.formula.baseMultiplier')}</SelectItem>
+                          <SelectItem value="FIXED_AMOUNT">{t('commissionSettings.tier.formula.fixedAmount')}</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                    <div className="flex-1">
-                      <Input type="number" value={tier.value ?? tier.rate ?? 0} placeholder="Valeur" onChange={(e) => {
+                      </div>
+                      <div className="flex-1">
+                        <Label className="text-xs">{getTierValueLabel(tier.formulaType || 'PERCENT_OF_SALES')}</Label>
+                        <Input type="number" step="0.01" value={tier.value ?? tier.rate ?? 0} placeholder={getTierValuePlaceholder(tier.formulaType || 'PERCENT_OF_SALES')} onChange={(e) => {
                         const tiers = [...(form.tiers || [])];
                         tiers[idx] = { ...tiers[idx], value: Number(e.target.value) };
                         setForm({ ...form, tiers });
                       }} />
-                    </div>
-                    <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => {
+                      </div>
+                      <Button type="button" size="sm" variant="ghost" className="text-destructive mt-5" onClick={() => {
                       const tiers = [...(form.tiers || [])];
                       tiers.splice(idx, 1);
                       setForm({ ...form, tiers });
                     }}>
                       <Trash2 size={14} />
                     </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{getTierExplanation(tier.formulaType || 'PERCENT_OF_SALES')}</p>
                   </div>
                 ))}
               </div>
@@ -370,17 +444,26 @@ export function CommissionSettings() {
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Seuil minimum (DT)</Label>
+                <Label>{t('commissionSettings.minimumPayout')}</Label>
                 <Input type="number" value={form.minThreshold} onChange={(e) => setForm({ ...form, minThreshold: Number(e.target.value) })} placeholder="0" />
+                <p className="text-xs text-muted-foreground">
+                  {t('commissionSettings.minimumPayoutHint')}
+                </p>
               </div>
               <div className="space-y-1.5">
-                <Label>Plafond maximum (DT)</Label>
-                <Input type="number" value={form.maxCap} onChange={(e) => setForm({ ...form, maxCap: e.target.value })} placeholder="Illimité" />
+                <Label>{t('commissionSettings.maximumPayout')}</Label>
+                <Input type="number" value={form.maxCap} onChange={(e) => setForm({ ...form, maxCap: e.target.value })} placeholder={t('commissionSettings.maximumPayoutPlaceholder')} />
+                <p className="text-xs text-muted-foreground">
+                  {t('commissionSettings.maximumPayoutHint')}
+                </p>
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Délai de paiement client (jours)</Label>
+              <Label>{t('commissionSettings.paymentDelay')}</Label>
               <Input type="number" value={form.paymentDelay} onChange={(e) => setForm({ ...form, paymentDelay: Number(e.target.value) })} placeholder="30" />
+              <p className="text-xs text-muted-foreground">
+                {t('commissionSettings.paymentDelayHint')}
+              </p>
             </div>
             <div className="space-y-2">
               <Label>Types de ventes inclus</Label>

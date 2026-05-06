@@ -395,6 +395,60 @@
     "close": "Fermer",
     "confirmDelete": "Supprimer ce template ?"
   },
+  "commissionSettings": {
+    "baseBonus": "Montant prime de base (DT)",
+    "baseBonusHint": "La base est optionnelle et sert aux formules de type \"Base × ...\". Les paliers restent entièrement définis par l'admin.",
+    "minimumPayout": "Prime minimale versée (DT)",
+    "minimumPayoutHint": "Si la prime calculée est en dessous de ce montant, elle n'est pas versée.",
+    "maximumPayout": "Prime maximale (DT)",
+    "maximumPayoutPlaceholder": "Illimité",
+    "maximumPayoutHint": "La prime finale ne peut pas dépasser ce montant.",
+    "paymentDelay": "Délai avant versement (jours)",
+    "paymentDelayHint": "Nombre de jours à attendre avant de verser la prime.",
+    "examples": {
+      "baseBonus": "Ex: 500",
+      "percent": "Ex: 5",
+      "achievementFactor": "Ex: 1 (laisser 1 si non utilisé)",
+      "multiplier": "Ex: 1.10",
+      "fixedAmount": "Ex: 500"
+    },
+    "typeHelp": {
+      "simple": "Le plus simple: vous appliquez un même pourcentage à tout le CA réalisé.",
+      "tiers": "Le plus utilisé: vous définissez des paliers d'atteinte d'objectif avec des règles différentes.",
+      "progressive": "Pour des plans plus dynamiques: la prime évolue progressivement selon la performance.",
+      "custom": "Mode avancé: réservé aux mécanismes spécifiques définis par votre organisation."
+    },
+    "tier": {
+      "title": "Paliers d'atteinte",
+      "add": "Ajouter un palier",
+      "empty": "Aucun palier défini. Ajoutez des paliers pour configurer les taux par seuil d'atteinte.",
+      "item": "Palier #{{index}}",
+      "min": "Réalisé min (%)",
+      "max": "Réalisé max (%)",
+      "minPlaceholder": "Min %",
+      "maxPlaceholder": "Max %",
+      "mechanism": "Mécanisme de calcul",
+      "formula": {
+        "percentOfSales": "% du CA réalisé",
+        "baseAchievement": "Base × taux réalisation",
+        "baseMultiplier": "Base × multiplicateur",
+        "fixedAmount": "Montant fixe"
+      },
+      "valueLabels": {
+        "percentOfSales": "Taux (%)",
+        "baseAchievementCoefficient": "Coefficient",
+        "baseMultiplier": "Multiplicateur",
+        "fixedAmount": "Montant fixe (DT)",
+        "value": "Valeur"
+      },
+      "explanations": {
+        "percentOfSales": "Prime = CA réalisé × taux (%)",
+        "baseAchievement": "Prime = base × (taux de réalisation / 100) × facteur",
+        "baseMultiplier": "Prime = base × multiplicateur",
+        "fixedAmount": "Prime = montant fixe du palier"
+      }
+    }
+  },
   "landing": {
     "badge": "CRM de vente pour PME et indépendants",
     "heroTitle1": "Ne laissez plus passer vos",

@@ -395,6 +395,60 @@
     "close": "Close",
     "confirmDelete": "Delete this template?"
   },
+  "commissionSettings": {
+    "baseBonus": "Base bonus amount (DT)",
+    "baseBonusHint": "Base amount is optional and used by formulas like \"Base × ...\". Tiers remain fully defined by the admin.",
+    "minimumPayout": "Minimum payout bonus (DT)",
+    "minimumPayoutHint": "If the calculated bonus is below this amount, it is not paid.",
+    "maximumPayout": "Maximum payout bonus (DT)",
+    "maximumPayoutPlaceholder": "Unlimited",
+    "maximumPayoutHint": "The final bonus cannot exceed this amount.",
+    "paymentDelay": "Payout delay (days)",
+    "paymentDelayHint": "Number of days to wait before paying the bonus.",
+    "examples": {
+      "baseBonus": "Ex: 500",
+      "percent": "Ex: 5",
+      "achievementFactor": "Ex: 1 (keep 1 if unused)",
+      "multiplier": "Ex: 1.10",
+      "fixedAmount": "Ex: 500"
+    },
+    "typeHelp": {
+      "simple": "Simplest mode: apply one fixed percentage to all achieved revenue.",
+      "tiers": "Most used mode: define objective-achievement tiers with different rules.",
+      "progressive": "For dynamic plans: bonus evolves progressively with performance.",
+      "custom": "Advanced mode: reserved for organization-specific mechanisms."
+    },
+    "tier": {
+      "title": "Achievement tiers",
+      "add": "Add tier",
+      "empty": "No tier defined yet. Add tiers to configure rules by achievement level.",
+      "item": "Tier #{{index}}",
+      "min": "Minimum achievement (%)",
+      "max": "Maximum achievement (%)",
+      "minPlaceholder": "Min %",
+      "maxPlaceholder": "Max %",
+      "mechanism": "Calculation mechanism",
+      "formula": {
+        "percentOfSales": "% of achieved revenue",
+        "baseAchievement": "Base × achievement rate",
+        "baseMultiplier": "Base × multiplier",
+        "fixedAmount": "Fixed amount"
+      },
+      "valueLabels": {
+        "percentOfSales": "Rate (%)",
+        "baseAchievementCoefficient": "Coefficient",
+        "baseMultiplier": "Multiplier",
+        "fixedAmount": "Fixed amount (DT)",
+        "value": "Value"
+      },
+      "explanations": {
+        "percentOfSales": "Bonus = achieved revenue × rate (%)",
+        "baseAchievement": "Bonus = base × (achievement rate / 100) × factor",
+        "baseMultiplier": "Bonus = base × multiplier",
+        "fixedAmount": "Bonus = fixed tier amount"
+      }
+    }
+  },
   "landing": {
     "badge": "Sales CRM for SMBs and freelancers",
     "heroTitle1": "Never miss a",

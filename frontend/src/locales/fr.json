@@ -342,6 +342,8 @@
     "subtitle": "Gestion des événements",
     "today": "Aujourd'hui",
     "newEvent": "Nouvel événement",
+    "viewMonth": "Mois",
+    "viewList": "Liste",
     "upcoming": "Événements à venir",
     "none": "Aucun événement",
     "others": "autres",

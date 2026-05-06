@@ -30,6 +30,7 @@ import { Objectifs } from './pages/Objectifs';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { PaymentPending } from './pages/PaymentPending';
 import { PaymentGuard } from './components/PaymentGuard';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const accessToken = useAuth((s) => s.accessToken);
@@ -44,62 +45,65 @@ export default function App() {
   }, [fetchMe]);
 
   return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/sales" element={<LandingSales />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/legal/:type" element={<Legal />} />
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/pricing" element={<Pricing />} />
-      <Route
-        path="/payment-pending"
-        element={
-          <ProtectedRoute>
-            <PaymentPending />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/*"
-        element={
-          <ProtectedRoute>
-            <PaymentGuard>
-              <Layout>
-                <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/affaires" element={<Affaires />} />
-                <Route path="/affaires/:id" element={<AffaireDetail />} />
-                <Route path="/clients" element={<Clients />} />
-                <Route path="/leads" element={<Leads />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/expenses" element={<Expenses />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/settings/organizations" element={<Organizations />} />
-                <Route path="/users" element={<Users />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/activites" element={<Activites />} />
-                <Route path="/email-templates" element={<EmailTemplates />} />
-                <Route path="/ai-assistant" element={<AIAssistant />} />
-                <Route path="/objectifs" element={<Objectifs />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Layout>
-            </PaymentGuard>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/sales" element={<LandingSales />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/legal/:type" element={<Legal />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route
+          path="/payment-pending"
+          element={
+            <ProtectedRoute>
+              <PaymentPending />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <PaymentGuard>
+                <Layout>
+                  <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/affaires" element={<Affaires />} />
+                  <Route path="/affaires/:id" element={<AffaireDetail />} />
+                  <Route path="/clients" element={<Clients />} />
+                  <Route path="/leads" element={<Leads />} />
+                  <Route path="/calendar" element={<Calendar />} />
+                  <Route path="/expenses" element={<Expenses />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings/organizations" element={<Organizations />} />
+                  <Route path="/users" element={<Users />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/activites" element={<Activites />} />
+                  <Route path="/email-templates" element={<EmailTemplates />} />
+                  <Route path="/ai-assistant" element={<AIAssistant />} />
+                  <Route path="/objectifs" element={<Objectifs />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Layout>
+              </PaymentGuard>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+      <PwaInstallPrompt />
+    </>
   );
 }

@@ -540,5 +540,12 @@
     "hasAccount": "Already have an account?",
     "signUp": "Sign Up",
     "signIn": "Sign In"
+  },
+  "pwa": {
+    "title": "Install ktOptima",
+    "installDescription": "Install the app for quicker access from your home screen.",
+    "iosDescription": "On iPhone: open the Share menu, then choose Add to Home Screen.",
+    "install": "Install",
+    "later": "Later"
   }
 }

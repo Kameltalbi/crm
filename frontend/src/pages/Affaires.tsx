@@ -325,12 +325,13 @@ export function Affaires() {
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('affaires.title')}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t('affaires.subtitle')}</p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <div className="flex gap-1">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <div className="grid grid-cols-2 gap-1 w-full sm:w-auto">
             <Button
               variant={view === 'table' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setView('table')}
+              className="w-full"
             >
               {t('affaires.tableView')}
             </Button>
@@ -338,14 +339,15 @@ export function Affaires() {
               variant={view === 'kanban' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setView('kanban')}
+              className="w-full"
             >
               {t('affaires.kanbanView')}
             </Button>
           </div>
-          <Button onClick={() => setImportOpen(true)} variant="outline" size="sm">
+          <Button onClick={() => setImportOpen(true)} variant="outline" size="sm" className="flex-1 sm:flex-none min-w-[140px]">
             <Upload size={16} className="mr-2" />{t('common.import')}
           </Button>
-          <Button onClick={openNew} size="sm">
+          <Button onClick={openNew} size="sm" className="flex-1 sm:flex-none min-w-[170px]">
             <Plus size={16} className="mr-2" />{t('affaires.addAffaire')}
           </Button>
         </div>
@@ -386,18 +388,18 @@ export function Affaires() {
       {/* Shared Filters */}
       <Card>
         <CardContent className="pt-4">
-          <div className="flex flex-wrap gap-2 items-center">
-            <div className="relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2 items-center">
+            <div className="relative sm:col-span-2 lg:col-span-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 h-8 w-40 text-xs"
+                className="pl-9 h-8 w-full text-xs"
               />
             </div>
             <Select value={filters.statut || 'all'} onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous statuts</SelectItem>
                 <SelectItem value="PROSPECT">🟡 Prospect</SelectItem>
@@ -409,7 +411,7 @@ export function Affaires() {
               </SelectContent>
             </Select>
             <Select value={filters.type || 'all'} onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Catégorie" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes catégories</SelectItem>
                 {revenueCategories.map((cat: any) => (
@@ -418,7 +420,7 @@ export function Affaires() {
               </SelectContent>
             </Select>
             <Select value={filters.viaPartenaire || 'all'} onValueChange={(v) => setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous apports</SelectItem>
                 <SelectItem value="true">🤝 Partenaire</SelectItem>
@@ -426,7 +428,7 @@ export function Affaires() {
               </SelectContent>
             </Select>
             <Select value={filters.mois || 'all'} onValueChange={(v) => setFilters({ ...filters, mois: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-24 text-xs"><SelectValue placeholder="Mois" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Mois" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous mois</SelectItem>
                 {MOIS.map((label, idx) => (
@@ -435,7 +437,7 @@ export function Affaires() {
               </SelectContent>
             </Select>
             <Select value={filters.sortBy || 'score'} onValueChange={(v) => setFilters({ ...filters, sortBy: v })}>
-              <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Trier par" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Trier par" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="score">📊 Score ↓</SelectItem>
                 <SelectItem value="montant">💰 Montant ↓</SelectItem>
@@ -443,7 +445,7 @@ export function Affaires() {
               </SelectContent>
             </Select>
             <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
-              <SelectTrigger className="h-8 w-20 text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-8 w-full text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="2026">2026</SelectItem>
                 <SelectItem value="2027">2027</SelectItem>
@@ -461,7 +463,109 @@ export function Affaires() {
             <CardTitle className="text-base">{sortedAffaires.length} affaires</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div className="md:hidden space-y-3 p-3">
+              {sortedAffaires.map((a) => {
+                const ht = Number(a.montantHT);
+                const c = a.viaPartenaire ? Math.round(ht * Number(a.tauxCommission) / 100) : 0;
+                return (
+                  <Card
+                    key={a.id}
+                    className={`border ${a.viaPartenaire ? 'bg-purple-light/20' : ''}`}
+                  >
+                    <CardContent className="p-3 space-y-2">
+                      <div
+                        className="flex items-start justify-between gap-2 cursor-pointer"
+                        onClick={() => navigate(`/affaires/${a.id}`)}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold truncate">{a.client?.name || 'N/A'}</p>
+                            {affaires.filter(aff => aff.clientId === a.clientId).length > 1 && (
+                              <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                                {affaires.filter(aff => aff.clientId === a.clientId).length}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">{a.title}</p>
+                        </div>
+                        <StatutBadge statut={a.statut} />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-muted-foreground">HT</p>
+                          <p className="font-mono font-semibold">{fmtDT(ht)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">TTC</p>
+                          <p className="font-mono font-semibold">{fmtDT(Math.round(ht * 1.19))}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Probabilité</p>
+                          <p className="font-semibold">{a.probabilite}%</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Mon net</p>
+                          <p className="font-mono font-semibold text-leaf">{fmtDT(ht - c)}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{a.type || 'N/A'} • {MOIS[a.moisPrevu]}</span>
+                        <div className="flex gap-1">
+                          {a.devisNumero && <Badge variant="outline">D {a.devisNumero}</Badge>}
+                          {a.factureNumero && <Badge className="bg-leaf text-white">F {a.factureNumero}</Badge>}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTriggerButton asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100" title="Actions">
+                              <MoreVertical size={16} />
+                            </Button>
+                          </DropdownMenuTriggerButton>
+                          <DropdownMenuContentWrapper align="end" className="w-48">
+                            <DropdownMenuItemStyled onClick={() => navigate(`/affaires/${a.id}`)}>
+                              <Eye size={16} className="mr-2 text-muted-foreground" /> Voir détails
+                            </DropdownMenuItemStyled>
+                            {!a.devisId && (
+                              <DropdownMenuItemStyled onClick={() => createDevisMutation.mutate(a.id)}>
+                                <FileText size={16} className="mr-2 text-muted-foreground" /> Créer devis
+                              </DropdownMenuItemStyled>
+                            )}
+                            {!a.factureId && (
+                              <DropdownMenuItemStyled onClick={() => createFactureMutation.mutate(a.id)}>
+                                <Receipt size={16} className="mr-2 text-muted-foreground" /> Créer facture
+                              </DropdownMenuItemStyled>
+                            )}
+                            {(a.devisPdfUrl || a.facturePdfUrl) && (
+                              <DropdownMenuItemStyled onClick={() => {
+                                const url = a.devisPdfUrl || a.facturePdfUrl;
+                                if (url) window.open(url, '_blank');
+                              }}>
+                                <Mail size={16} className="mr-2 text-muted-foreground" /> Voir PDF
+                              </DropdownMenuItemStyled>
+                            )}
+                            <DropdownMenuItemStyled onClick={() => handleEdit(a)}>
+                              <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
+                            </DropdownMenuItemStyled>
+                            <DropdownMenuItemStyled onClick={() => handleDuplicate(a.id)}>
+                              <Copy size={16} className="mr-2 text-muted-foreground" /> Dupliquer
+                            </DropdownMenuItemStyled>
+                            <DropdownMenuItemStyled onClick={() => handleDelete(a.id, a.clientId)} className="text-destructive">
+                              <Trash2 size={16} className="mr-2" /> Supprimer
+                            </DropdownMenuItemStyled>
+                          </DropdownMenuContentWrapper>
+                        </DropdownMenu>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-xs min-w-[800px]">
                 <thead>
                   <tr className="border-b bg-sage">
@@ -569,7 +673,7 @@ export function Affaires() {
                   })}
                 </tbody>
               </table>
-              </div>
+            </div>
           </CardContent>
           {pagination && pagination.totalPages > 1 && (
             <CardContent className="border-t pt-4">
@@ -577,13 +681,13 @@ export function Affaires() {
                 <p className="text-sm text-muted-foreground">
                   {fmtDT(allAffaires.reduce((sum, a) => sum + Number(a.montantHT), 0))} HT total ({allAffaires.length} affaires)
                 </p>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap justify-end">
                   <Button
                     size="sm"
                     variant={page === 1 ? 'ghost' : 'default'}
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="px-3"
+                    className="px-2 sm:px-3"
                   >
                     ← Précédent
                   </Button>
@@ -593,7 +697,7 @@ export function Affaires() {
                       size="sm"
                       variant={p === page ? 'default' : 'outline'}
                       onClick={() => setPage(p)}
-                      className={`w-8 h-8 p-0 ${p === page ? 'font-bold' : ''}`}
+                      className={`w-7 h-7 sm:w-8 sm:h-8 p-0 ${p === page ? 'font-bold' : ''}`}
                     >
                       {p}
                     </Button>
@@ -603,7 +707,7 @@ export function Affaires() {
                     variant={page === pagination.totalPages ? 'ghost' : 'default'}
                     onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                     disabled={page === pagination.totalPages}
-                    className="px-3"
+                    className="px-2 sm:px-3"
                   >
                     Suivant →
                   </Button>

@@ -491,6 +491,8 @@
     "featureCoverageDesc": "Analyze the expense-to-revenue coverage ratio for better financial management.",
     "featureBonuses": "Bonus management",
     "featureBonusesDesc": "Calculate and manage your sales team bonuses based on their performance and achieved targets.",
+    "featureBonusCustomization": "Custom bonus rules",
+    "featureBonusCustomizationDesc": "Customize your bonus mechanisms and automate calculations for each salesperson.",
     "whyTitle": "Why choose ktOptima?",
     "whySubtitle": "Designed specifically for Tunisian businesses, ktOptima adapts to your local needs with an intuitive interface and powerful features.",
     "whyLocal": "100% Tunisian",

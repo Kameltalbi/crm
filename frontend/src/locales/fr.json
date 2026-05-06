@@ -491,6 +491,8 @@
     "featureCoverageDesc": "Analysez le taux de couverture des dépenses par rapport à vos revenus pour une meilleure gestion financière.",
     "featureBonuses": "Gestion des primes",
     "featureBonusesDesc": "Calculez et gérez les primes de vos commerciaux en fonction de leurs performances et objectifs atteints.",
+    "featureBonusCustomization": "Primes personnalisables",
+    "featureBonusCustomizationDesc": "Personnalisez vos mécanismes de prime et automatisez le calcul pour chaque commercial.",
     "whyTitle": "Pourquoi choisir ktOptima ?",
     "whySubtitle": "Conçu spécifiquement pour les entreprises tunisiennes, ktOptima s'adapte à vos besoins locaux avec une interface intuitive et des fonctionnalités puissantes.",
     "whyLocal": "100% Tunisien",

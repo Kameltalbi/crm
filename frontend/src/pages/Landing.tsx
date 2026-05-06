@@ -348,6 +348,15 @@ export function Landing() {
                 {t('landing.featureBonusesDesc')}
               </p>
             </div>
+            <div className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center mb-4">
+                <Target size={24} className="text-violet-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{t('landing.featureBonusCustomization')}</h3>
+              <p className="text-base text-muted-foreground">
+                {t('landing.featureBonusCustomizationDesc')}
+              </p>
+            </div>
           </div>
         </div>
       </section>

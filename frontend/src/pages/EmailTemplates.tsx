@@ -139,51 +139,82 @@ export function EmailTemplates() {
   };
 
   return (
-    <div className="space-y-6 px-2 md:px-0">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('emailTemplates.title')}</h1>
+    <div className="space-y-5 md:space-y-6 px-2 md:px-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight break-words">
+            {t('emailTemplates.title')}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">{t('emailTemplates.subtitle')}</p>
         </div>
-        <Button onClick={() => { setForm(EMPTY); setOpen(true); }}>
-          <Plus size={16} className="mr-2" /> {t('emailTemplates.newTemplate')}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => setAiOpen(true)}
-          disabled={generateMutation.isPending}
-        >
-          <Sparkles size={16} className="mr-2" /> Générer avec IA
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:shrink-0">
+          <Button
+            className="w-full sm:w-auto justify-center"
+            onClick={() => {
+              setForm(EMPTY);
+              setOpen(true);
+            }}
+          >
+            <Plus size={16} className="mr-2 shrink-0" /> {t('emailTemplates.newTemplate')}
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto justify-center"
+            onClick={() => setAiOpen(true)}
+            disabled={generateMutation.isPending}
+          >
+            <Sparkles size={16} className="mr-2 shrink-0" /> Générer avec IA
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         {templates?.map((template) => (
-          <Card key={template.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Mail size={18} className="text-muted-foreground" />
-                {template.name}
+          <Card key={template.id} className="hover:shadow-md transition-shadow overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-start gap-2 min-w-0">
+                <Mail size={18} className="text-muted-foreground shrink-0 mt-0.5" />
+                <span className="break-words leading-snug">{template.name}</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
+            <CardContent className="space-y-3 pt-0">
+              <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">{t('emailTemplates.subject')}</p>
-                <p className="text-sm font-medium truncate">{template.subject}</p>
+                <p className="text-sm font-medium break-words">{template.subject}</p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">{t('emailTemplates.variables')}</p>
-                <p className="text-xs">{JSON.parse(template.variables).join(', ')}</p>
+                <p className="text-xs break-words">
+                  {(() => {
+                    try {
+                      return (JSON.parse(template.variables) as string[]).join(', ');
+                    } catch {
+                      return template.variables;
+                    }
+                  })()}
+                </p>
               </div>
-              <div className="flex gap-2 pt-2">
-                <Button size="sm" variant="outline" onClick={() => handlePreview(template)}>
-                  <Eye size={14} className="mr-1" /> {t('emailTemplates.preview')}
+              <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 pt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full sm:flex-1 sm:min-w-0"
+                  onClick={() => handlePreview(template)}
+                >
+                  <Eye size={14} className="mr-1 shrink-0" /> {t('emailTemplates.preview')}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleEdit(template)}>
-                  <Pencil size={14} className="mr-1" />
+                <Button size="sm" variant="outline" className="w-full sm:flex-1" onClick={() => handleEdit(template)}>
+                  <Pencil size={14} className="mr-1 shrink-0" /> {t('common.edit')}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleDelete(template.id)} className="text-destructive">
-                  <Trash2 size={14} />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full sm:w-auto sm:ml-auto text-destructive border-destructive/30 hover:bg-destructive/10 justify-center"
+                  onClick={() => handleDelete(template.id)}
+                  aria-label={t('common.delete')}
+                >
+                  <Trash2 size={14} className="shrink-0" />
+                  <span className="ml-2 sm:hidden">{t('common.delete')}</span>
                 </Button>
               </div>
             </CardContent>
@@ -193,9 +224,11 @@ export function EmailTemplates() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{form.id ? t('common.edit') : t('common.add')} {t('emailTemplates.template')}</DialogTitle>
+            <DialogTitle className="text-left pr-8 break-words">
+              {form.id ? t('common.edit') : t('common.add')} {t('emailTemplates.template')}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave}>
             <div className="space-y-4">
@@ -222,6 +255,7 @@ export function EmailTemplates() {
                   onChange={(e) => setForm({ ...form, body: e.target.value })}
                   placeholder={t('emailTemplates.bodyPlaceholder')}
                   rows={8}
+                  className="min-h-[180px] text-base sm:text-sm"
                 />
               </div>
               <div className="space-y-1.5">
@@ -231,9 +265,11 @@ export function EmailTemplates() {
                 </p>
               </div>
             </div>
-            <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+            <DialogFooter className="mt-6 flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" className="w-full sm:w-auto" disabled={createMutation.isPending || updateMutation.isPending}>
                 {createMutation.isPending || updateMutation.isPending ? t('organizations.saving') : t('common.save')}
               </Button>
             </DialogFooter>
@@ -243,31 +279,35 @@ export function EmailTemplates() {
 
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t('emailTemplates.previewTitle')}</DialogTitle>
+            <DialogTitle className="text-left pr-8">{t('emailTemplates.previewTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">{t('emailTemplates.subject')}</p>
-              <p className="font-medium">{previewData.subject}</p>
+              <p className="font-medium break-words">{previewData.subject}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">{t('emailTemplates.body')}</p>
-              <div className="p-4 bg-gray-50 rounded text-sm whitespace-pre-wrap">{previewData.body}</div>
+              <div className="p-3 sm:p-4 max-h-[50vh] overflow-y-auto bg-gray-50 rounded-lg text-sm whitespace-pre-wrap break-words">
+                {previewData.body}
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setPreviewOpen(false)}>{t('emailTemplates.close')}</Button>
+            <Button className="w-full sm:w-auto" onClick={() => setPreviewOpen(false)}>
+              {t('emailTemplates.close')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* AI Generate Dialog */}
       <Dialog open={aiOpen} onOpenChange={setAiOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Générer un template avec IA</DialogTitle>
+            <DialogTitle className="text-left pr-8">Générer un template avec IA</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -314,11 +354,11 @@ export function EmailTemplates() {
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAiOpen(false)}>
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setAiOpen(false)}>
               {t('common.cancel')}
             </Button>
-            <Button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
+            <Button className="w-full sm:w-auto" onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
               {generateMutation.isPending ? 'Génération...' : 'Générer'}
             </Button>
           </DialogFooter>

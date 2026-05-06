@@ -122,7 +122,7 @@ export function Clients() {
           <h1 className="font-serif text-2xl md:text-3xl">{t('clients.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('clients.manageClients')}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button onClick={() => setImportOpen(true)} variant="outline" className="w-full sm:w-auto">
             <Upload size={16} />{t('common.import')} Excel
           </Button>
@@ -193,7 +193,64 @@ export function Clients() {
       {/* List View */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="md:hidden space-y-3 p-3">
+            {filteredClients.map((c) => (
+              <Card key={c.id} className="border">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{c.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{c.contactName || '—'}</p>
+                    </div>
+                    <span className="bg-sage text-leaf px-2 py-0.5 rounded-full text-xs font-medium">
+                      {c._count?.affaires || 0}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-1 text-xs">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Mail size={12} /> <span className="truncate">{c.email || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Phone size={12} /> <span>{c.phone || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <FileBadge size={12} />
+                      <span>{c.qualificatif === 'PROSPECT' ? '🔍 Prospect' : c.qualificatif === 'CLIENT' ? '🤝 Client' : '—'}</span>
+                    </div>
+                    <div className="text-muted-foreground">Matricule: {c.matricule || '—'}</div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <DropdownMenu>
+                      <DropdownMenuTriggerButton asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100" title="Actions">
+                          <MoreVertical size={16} />
+                        </Button>
+                      </DropdownMenuTriggerButton>
+                      <DropdownMenuContentWrapper align="end">
+                        <DropdownMenuItem onClick={() => openEdit(c)}>
+                          <Pencil size={16} className="mr-2 text-muted-foreground" /> Modifier
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => confirm('Supprimer ce client ?') && deleteMutation.mutate(c.id)} className="text-destructive">
+                          <Trash2 size={16} className="mr-2" /> Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContentWrapper>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {filteredClients.length === 0 && (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground text-sm">
+                  Aucun client trouvé
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-sage">
@@ -264,13 +321,13 @@ export function Clients() {
               <p className="text-sm text-muted-foreground">
                 {pagination.total} clients
               </p>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap justify-end">
                 <Button
                   size="sm"
                   variant={page === 1 ? 'ghost' : 'default'}
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3"
+                  className="px-2 sm:px-3"
                 >
                   ← Précédent
                 </Button>
@@ -280,7 +337,7 @@ export function Clients() {
                     size="sm"
                     variant={p === page ? 'default' : 'outline'}
                     onClick={() => setPage(p)}
-                    className={`w-8 h-8 p-0 ${p === page ? 'font-bold' : ''}`}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 p-0 ${p === page ? 'font-bold' : ''}`}
                   >
                     {p}
                   </Button>
@@ -290,7 +347,7 @@ export function Clients() {
                   variant={page === pagination.totalPages ? 'ghost' : 'default'}
                   onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                   disabled={page === pagination.totalPages}
-                  className="px-3"
+                  className="px-2 sm:px-3"
                 >
                   Suivant →
                 </Button>

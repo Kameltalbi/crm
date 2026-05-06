@@ -328,18 +328,18 @@ export function Expenses() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-center">
+        <div className="relative sm:col-span-2 lg:col-span-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder={t('common.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 h-9 w-40 text-xs"
+            className="pl-9 h-9 w-full text-xs"
           />
         </div>
         <Select value={filterCategory} onValueChange={(v) => handleFilterChange(setFilterCategory, v)}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder={t('expenses.category')} />
           </SelectTrigger>
           <SelectContent>
@@ -350,7 +350,7 @@ export function Expenses() {
           </SelectContent>
         </Select>
         <Select value={filterSemester} onValueChange={(v) => { handleFilterChange(setFilterSemester, v); setFilterMonth('all'); }}>
-          <SelectTrigger className="w-28">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder={t('expenses.period')} />
           </SelectTrigger>
           <SelectContent>
@@ -360,7 +360,7 @@ export function Expenses() {
           </SelectContent>
         </Select>
         <Select value={filterMonth} onValueChange={(v) => { handleFilterChange(setFilterMonth, v); setFilterSemester('all'); }}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder={t('expenses.month')} />
           </SelectTrigger>
           <SelectContent>
@@ -384,7 +384,7 @@ export function Expenses() {
           </SelectContent>
         </Select>
         <Select value={filterYear} onValueChange={(v) => handleFilterChange(setFilterYear, v)}>
-          <SelectTrigger className="w-24">
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -403,7 +403,7 @@ export function Expenses() {
               <p className="text-sm text-muted-foreground">{t('expenses.none')}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div>
               {selectedIds.size > 0 && (
                 <div className="flex items-center gap-3 px-4 py-2 bg-red-50 border-b">
                   <span className="text-sm font-medium text-red-700">{selectedIds.size} {t('expenses.selected')}</span>
@@ -416,6 +416,63 @@ export function Expenses() {
                   </Button>
                 </div>
               )}
+
+              <div className="md:hidden space-y-3 p-3">
+                {filteredExpenses.map((expense: any) => {
+                  const sameGroup = allExpenses
+                    .filter((e: any) => e.isRecurrent && e.title === expense.title && e.category === expense.category)
+                    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                  const idx = sameGroup.findIndex((e: any) => e.id === expense.id);
+                  const recurrenceBadge = expense.isRecurrent && expense.recurrenceMonths && idx >= 0
+                    ? `${idx + 1}/${parseInt(expense.recurrenceMonths)}`
+                    : '';
+
+                  return (
+                    <Card key={expense.id} className={`border ${selectedIds.has(expense.id) ? 'ring-1 ring-primary/30' : ''}`}>
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold truncate">{expense.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(expense.date).toLocaleDateString(i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-FR')}
+                            </p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(expense.id)}
+                            onChange={() => toggleSelect(expense.id)}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                        </div>
+
+                        <div className="text-xs text-muted-foreground">
+                          {CATEGORY_KEYS[expense.category] ? t(CATEGORY_KEYS[expense.category]) : expense.category}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-semibold">{fmtDT(Number(expense.amount))} TND</div>
+                          {expense.isRecurrent && (
+                            <span className="inline-flex items-center gap-1 text-xs text-purple-600">
+                              <Repeat size={13} />
+                              {recurrenceBadge}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex gap-1 justify-end">
+                          <Button size="sm" variant="ghost" onClick={() => openEdit(expense)}>
+                            <Pencil size={14} />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(expense.id)}>
+                            <Trash2 size={14} className="text-red-500" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
@@ -492,19 +549,20 @@ export function Expenses() {
                   })}
                 </tbody>
               </table>
+              </div>
               {/* Pagination */}
               {expensesData?.pagination && expensesData.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between py-4 px-4 border-t">
                   <p className="text-sm text-muted-foreground">
                     {expensesData.pagination.total} {t('expenses.expensesCount')}
                   </p>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap justify-end">
                     <Button
                       size="sm"
                       variant={page === 1 ? 'ghost' : 'default'}
                       onClick={() => setPage(p => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="px-3"
+                      className="px-2 sm:px-3"
                     >
                       {t('common.previous')}
                     </Button>
@@ -514,7 +572,7 @@ export function Expenses() {
                         size="sm"
                         variant={p === page ? 'default' : 'outline'}
                         onClick={() => setPage(p)}
-                        className={`w-8 h-8 p-0 ${p === page ? 'font-bold' : ''}`}
+                        className={`w-7 h-7 sm:w-8 sm:h-8 p-0 ${p === page ? 'font-bold' : ''}`}
                       >
                         {p}
                       </Button>
@@ -524,7 +582,7 @@ export function Expenses() {
                       variant={page === expensesData.pagination.totalPages ? 'ghost' : 'default'}
                       onClick={() => setPage(p => p + 1)}
                       disabled={page === expensesData.pagination.totalPages}
-                      className="px-3"
+                      className="px-2 sm:px-3"
                     >
                       {t('common.next')}
                     </Button>

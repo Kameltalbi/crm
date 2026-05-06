@@ -162,9 +162,9 @@ export function Objectifs() {
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{t('objectifs.title')}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t('objectifs.subtitle')}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full sm:w-auto">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -174,7 +174,7 @@ export function Objectifs() {
             </SelectContent>
           </Select>
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -183,12 +183,51 @@ export function Objectifs() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={openNew}><Plus size={16} className="mr-2" />{t('objectifs.new')}</Button>
+          <Button onClick={openNew} className="w-full sm:w-auto"><Plus size={16} className="mr-2" />{t('objectifs.new')}</Button>
         </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
+          <div className="md:hidden space-y-3 p-3">
+            {objectives.map((obj) => (
+              <Card key={obj.id}>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <User size={16} className="text-muted-foreground" />
+                      <span className="font-medium truncate">{obj.user?.name || 'N/A'}</span>
+                    </div>
+                    <span className="font-semibold text-sm">{fmtDT(Number(obj.targetAmount))} HT</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {obj.period === 'MONTHLY' && t(`expenses.months.${monthKeys[obj.month - 1]}`)}
+                    {obj.period === 'QUARTERLY' && quarterLabels[i18n.language as keyof typeof quarterLabels]?.[obj.quarter - 1]}
+                    {obj.period === 'SEMI_ANNUAL' && semesterLabels[i18n.language as keyof typeof semesterLabels]?.[obj.semester - 1]}
+                    {obj.period === 'ANNUAL' && periodLabels.ANNUAL[i18n.language as keyof typeof periodLabels.ANNUAL]}
+                    {` ${obj.year}`}
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => handleEdit(obj)}>
+                      <Pencil size={16} />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(obj.id)} className="text-destructive">
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {objectives.length === 0 && (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground text-sm">
+                  {t('objectifs.noneForYear')}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
@@ -241,6 +280,7 @@ export function Objectifs() {
               )}
             </tbody>
           </table>
+          </div>
         </CardContent>
       </Card>
 
@@ -253,6 +293,33 @@ export function Objectifs() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
+            <div className="md:hidden space-y-3 p-3">
+              {filteredCommissions.map((comm: any) => (
+                <Card key={comm.userId}>
+                  <CardContent className="p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <User size={16} className="text-muted-foreground" />
+                        <span className="font-medium truncate">{comm.userName}</span>
+                      </div>
+                      <span className="font-bold text-leaf">{fmtDT(parseFloat(comm.commission))}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div><span className="text-muted-foreground">{t('objectifs.targetCol')}: </span>{fmtDT(comm.targetAmount)}</div>
+                      <div><span className="text-muted-foreground">{t('objectifs.salesCol')}: </span>{fmtDT(comm.salesAmount)}</div>
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground">{t('objectifs.achievementCol')}: </span>
+                        <span className={`font-semibold ${parseFloat(comm.achievementRate) >= 100 ? 'text-green-600' : 'text-orange-600'}`}>
+                          {comm.achievementRate}%
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
@@ -286,6 +353,7 @@ export function Objectifs() {
                 ))}
               </tbody>
             </table>
+            </div>
           </CardContent>
         </Card>
       )}

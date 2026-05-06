@@ -253,7 +253,79 @@ function OrganizationsTab() {
       <h2 className="text-2xl font-bold mb-6">Entreprises</h2>
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="md:hidden space-y-3 p-3">
+            {orgs?.map((org: any) => (
+              <Card key={org.id}>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{org.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{org.email || '-'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      {planBadge(org.plan || 'FREE')}
+                      {paymentStatusBadge(org.paymentStatus)}
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <p>Tél: {org.phone || '-'}</p>
+                    <p>Utilisateurs: {org._count.users} • Clients: {org._count.clients} • Affaires: {org._count.affaires}</p>
+                    <p>Activité: {new Date(org.createdAt).toLocaleDateString('fr-FR')}</p>
+                    {org.suspended ? <span className="text-red-600 font-medium">Suspendu</span> : null}
+                  </div>
+                  <div className="flex justify-end">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        <Button variant="ghost" size="sm">
+                          <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
+                            <circle cx="2" cy="2" r="2" />
+                            <circle cx="2" cy="8" r="2" />
+                            <circle cx="2" cy="14" r="2" />
+                          </svg>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {org._count.users > 0 && (
+                          <DropdownMenuItem onClick={() => impersonateMutation.mutate(org.id)}>
+                            <UserCheck size={14} className="mr-2" /> Se connecter
+                          </DropdownMenuItem>
+                        )}
+                        {org.plan !== 'FREE' && (
+                          <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'FREE' })} disabled={updatePlanMutation.isPending}>
+                            <Building2 size={14} className="mr-2" /> Passer Gratuit
+                          </DropdownMenuItem>
+                        )}
+                        {org.plan !== 'BUSINESS' && (
+                          <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'BUSINESS' })} disabled={updatePlanMutation.isPending}>
+                            <Building2 size={14} className="mr-2" /> Passer Business
+                          </DropdownMenuItem>
+                        )}
+                        {org.plan !== 'ENTERPRISE' && (
+                          <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'ENTERPRISE' })} disabled={updatePlanMutation.isPending}>
+                            <Building2 size={14} className="mr-2" /> Passer Entreprise
+                          </DropdownMenuItem>
+                        )}
+                        {org.paymentStatus !== 'APPROVED' && (
+                          <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'APPROVED' })} disabled={updateStatusMutation.isPending}>
+                            <CheckCircle size={14} className="mr-2" /> Approuver
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => toggleSuspendMutation.mutate({ id: org.id, suspended: org.suspended })} disabled={toggleSuspendMutation.isPending}>
+                          {org.suspended ? <UserCheck size={14} className="mr-2" /> : <UserX size={14} className="mr-2" />}
+                          {org.suspended ? 'Réactiver' : 'Suspendre'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => deleteMutation.mutate(org.id)} disabled={deleteMutation.isPending} className="text-red-600">
+                          <Trash2 size={14} className="mr-2" /> Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
@@ -428,7 +500,40 @@ function SubscriptionsTab() {
       </div>
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="md:hidden space-y-3 p-3">
+            {subs?.map((s: any) => (
+              <Card key={s.id}>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{s.organizationName}</p>
+                      <p className="text-xs text-muted-foreground">{s.plan} • {s.price} DT</p>
+                    </div>
+                    {statusBadge(s.status)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <p>Début: {new Date(s.startDate).toLocaleDateString('fr-FR')}</p>
+                    <p>Fin: {new Date(s.endDate).toLocaleDateString('fr-FR')}</p>
+                    <p>Paiement: {s.paymentMethod}</p>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button size="sm" variant="outline" onClick={() => openDialog(s)}>
+                      <Edit size={14} />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => {
+                      if (confirm('Supprimer cet abonnement ?')) {
+                        deleteSubscriptionMutation.mutate(s.id);
+                      }
+                    }} disabled={deleteSubscriptionMutation.isPending}>
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
@@ -557,7 +662,37 @@ function PaymentsTab({ queryClient }: { queryClient: any }) {
       <h2 className="text-2xl font-bold mb-6">Paiements</h2>
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="md:hidden space-y-3 p-3">
+            {payments?.map((p: any) => (
+              <Card key={p.id}>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{p.organizationName}</p>
+                      <p className="text-xs text-muted-foreground">{p.plan} • {p.price} DT</p>
+                    </div>
+                    {statusBadge(p.paymentStatus)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <p>Mode: {p.paymentMethod}</p>
+                    <p>Demande: {new Date(p.createdAt).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  {p.paymentStatus === 'PENDING' && (
+                    <div className="flex gap-2 justify-end">
+                      <Button size="sm" onClick={() => validateMutation.mutate(p.id)} disabled={validateMutation.isPending}>
+                        <CheckCircle size={14} className="mr-1" /> Valider
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => rejectMutation.mutate(p.id)} disabled={rejectMutation.isPending}>
+                        <AlertTriangle size={14} className="mr-1" /> Refuser
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
@@ -625,7 +760,45 @@ function UsersTab() {
       <h2 className="text-2xl font-bold mb-6">Utilisateurs Globaux</h2>
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="md:hidden space-y-3 p-3">
+            {users?.map((u: any) => (
+              <Card key={u.id}>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{u.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${u.role === 'OWNER' ? 'bg-purple-100 text-purple-700' : u.role === 'SUPERADMIN' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}>{u.role}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <p>Entreprise: {u.organizationName}</p>
+                    <p>Dernière connexion: {u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('fr-FR') : 'Jamais'}</p>
+                    <p>
+                      {u.blocked ? (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Bloqué</span>
+                      ) : (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Actif</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex justify-end">
+                    {u.blocked ? (
+                      <Button size="sm" variant="outline" onClick={() => unblockMutation.mutate(u.id)}>
+                        <UserCheck size={14} className="mr-1" /> Débloquer
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="destructive" onClick={() => blockMutation.mutate(u.id)}>
+                        <UserX size={14} className="mr-1" /> Bloquer
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>

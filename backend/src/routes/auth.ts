@@ -7,6 +7,7 @@ import { UserRole, AuditAction } from '@prisma/client';
 import { logAudit } from '../lib/audit.js';
 import { checkUserLimit, AuthRequest } from '../middleware/planRestrictions.js';
 import auth from '../middleware/auth.js';
+import { sendPasswordResetEmail } from '../services/passwordResetMailer.js';
 
 export const authRoutes = Router();
 
@@ -420,11 +421,18 @@ authRoutes.post('/forgot-password', async (req, res, next) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
 
-    // No email service configured yet; log for operational visibility.
-    console.log(`[auth] Password reset link generated for ${email}: ${resetUrl}`);
+    const sent = await sendPasswordResetEmail({
+      toEmail: email,
+      userName: user.name,
+      resetUrl,
+    });
+    if (!sent) {
+      // Fallback for environments without SMTP config.
+      console.log(`[auth] Password reset link generated for ${email}: ${resetUrl}`);
+    }
 
     if ((process.env.NODE_ENV || 'development') !== 'production') {
-      return res.json({ ...genericResponse, resetUrl });
+      return res.json({ ...genericResponse, resetUrl, emailSent: sent });
     }
     return res.json(genericResponse);
   } catch (e) {

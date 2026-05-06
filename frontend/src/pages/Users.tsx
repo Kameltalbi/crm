@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Shield, User as UserIcon, Settings } from 'lucide-react';
+import { Plus, Pencil, Trash2, Shield, User as UserIcon, Settings, Eye, EyeOff } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectV
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import type { User, UserRole } from '@/types';
 
-const EMPTY = { id: '', email: '', name: '', password: '', role: 'PARTNER' as UserRole };
+const EMPTY = { id: '', email: '', name: '', password: '', confirmPassword: '', role: 'PARTNER' as UserRole };
 
 const PAGES = [
   { key: 'dashboard', label: 'Dashboard' },
@@ -34,6 +34,9 @@ export function Users() {
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [form, setForm] = useState(EMPTY);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formError, setFormError] = useState('');
   const [permissions, setPermissions] = useState<PermissionState[]>(
     PAGES.map(p => ({ page: p.key, canView: true, canCreate: false, canEdit: false, canDelete: false }))
   );
@@ -109,8 +112,12 @@ export function Users() {
       email: u.email,
       name: u.name,
       password: '',
+      confirmPassword: '',
       role: u.role,
     });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setFormError('');
     setOpen(true);
   };
 
@@ -124,7 +131,7 @@ export function Users() {
           <p className="text-sm text-muted-foreground">{t('usersPage.subtitle')}</p>
         </div>
         {isOwner && (
-          <Button onClick={() => { setForm(EMPTY); setOpen(true); }} className="w-full sm:w-auto">
+          <Button onClick={() => { setForm(EMPTY); setShowPassword(false); setShowConfirmPassword(false); setFormError(''); setOpen(true); }} className="w-full sm:w-auto">
             <Plus size={16} />{t('usersPage.newUser')}
           </Button>
         )}
@@ -200,7 +207,39 @@ export function Users() {
             </div>
             <div className="space-y-1.5">
               <Label>{form.id ? t('usersPage.passwordOptional') : t('usersPage.passwordRequired')}</Label>
-              <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('auth.confirmPassword')}</Label>
+              <div className="relative">
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={form.confirmPassword}
+                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>{t('usersPage.role')} *</Label>
@@ -213,10 +252,27 @@ export function Users() {
                 </SelectContent>
               </Select>
             </div>
+            {formError && (
+              <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+                {formError}
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
-            <Button onClick={() => saveMutation.mutate(form)} disabled={!form.email || !form.name || (!form.id && !form.password)}>
+            <Button
+              onClick={() => {
+                setFormError('');
+                if (form.password || form.confirmPassword) {
+                  if (form.password !== form.confirmPassword) {
+                    setFormError(t('auth.passwordsDoNotMatch'));
+                    return;
+                  }
+                }
+                saveMutation.mutate(form);
+              }}
+              disabled={!form.email || !form.name || (!form.id && !form.password)}
+            >
               {t('common.save')}
             </Button>
           </DialogFooter>

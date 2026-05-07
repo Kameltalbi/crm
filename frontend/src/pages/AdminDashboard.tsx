@@ -184,12 +184,16 @@ function OrganizationsTab() {
   const { data: orgs } = useQuery({ queryKey: ['admin-organizations'], queryFn: () => api.get('/superadmin/organizations').then(r => r.data) });
   const queryClient = useQueryClient();
 
+  const refreshOrganizations = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-organizations'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['superadmin-stats'], refetchType: 'all' });
+  };
+
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, paymentStatus }: { id: string; paymentStatus: 'PENDING' | 'APPROVED' | 'REJECTED' }) =>
       api.put(`/superadmin/organizations/${id}/payment-status`, { paymentStatus }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      refreshOrganizations();
     },
   });
 
@@ -197,19 +201,22 @@ function OrganizationsTab() {
     mutationFn: ({ id, plan }: { id: string; plan: 'FREE' | 'BUSINESS' | 'ENTERPRISE' }) =>
       api.put(`/superadmin/organizations/${id}/plan`, { plan }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      refreshOrganizations();
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/superadmin/organizations/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
-      queryClient.invalidateQueries({ queryKey: ['superadmin-stats'] });
+      refreshOrganizations();
     },
     onError: (error: any) => {
-      alert(error.response?.data?.error || error.message || 'Impossible de supprimer cette organisation');
+      refreshOrganizations();
+      alert(
+        error.response?.data?.error ||
+        error.message ||
+        'Impossible de supprimer cette organisation. La liste a été rafraîchie.'
+      );
     },
   });
 
@@ -217,11 +224,15 @@ function OrganizationsTab() {
     mutationFn: ({ id, suspended }: { id: string; suspended: boolean }) =>
       api.put(`/superadmin/organizations/${id}/suspend`, { suspended: !suspended }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
-      queryClient.invalidateQueries({ queryKey: ['superadmin-stats'] });
+      refreshOrganizations();
     },
     onError: (error: any) => {
-      alert(error.response?.data?.error || error.message || 'Impossible de suspendre cette organisation');
+      refreshOrganizations();
+      alert(
+        error.response?.data?.error ||
+        error.message ||
+        'Impossible de suspendre cette organisation. La liste a été rafraîchie.'
+      );
     },
   });
 

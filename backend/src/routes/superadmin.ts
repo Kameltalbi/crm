@@ -148,13 +148,40 @@ superadminRoutes.delete('/organizations/:id', async (req: AuthRequest, res, next
 // PUT update payment status
 superadminRoutes.put('/organizations/:id/payment-status', async (req: AuthRequest, res, next) => {
   try {
+    const organizationId = req.params.id as string;
     const { paymentStatus } = updatePaymentStatusSchema.parse(req.body);
-    
-    const organization = await prisma.organization.update({
-      where: { id: req.params.id as string },
-      data: { paymentStatus },
+
+    const existing = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true, plan: true },
     });
-    
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Organisation introuvable ou déjà supprimée. Rafraîchis la page.' });
+    }
+
+    const organization = await prisma.$transaction(async (tx) => {
+      const updated = await tx.organization.update({
+        where: { id: organizationId },
+        data: { paymentStatus },
+      });
+
+      const subscriptionStatus =
+        paymentStatus === 'APPROVED' ? 'PAID' :
+        paymentStatus === 'REJECTED' ? 'REFUSED' :
+        'PENDING';
+
+      await tx.subscription.updateMany({
+        where: { organizationId },
+        data: {
+          paymentStatus: subscriptionStatus,
+          plan: updated.plan,
+        },
+      });
+
+      return updated;
+    });
+
     res.json(organization);
   } catch (e) { next(e); }
 });
@@ -185,19 +212,32 @@ superadminRoutes.put('/organizations/:id/suspend', async (req: AuthRequest, res,
 // PUT update organization plan
 superadminRoutes.put('/organizations/:id/plan', async (req: AuthRequest, res, next) => {
   try {
+    const organizationId = req.params.id as string;
     const { plan } = updatePlanSchema.parse(req.body);
-    
-    const organization = await prisma.organization.update({
-      where: { id: req.params.id as string },
-      data: { plan },
+
+    const existing = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true },
     });
 
-    // Update all subscriptions for this organization
-    await prisma.subscription.updateMany({
-      where: { organizationId: req.params.id as string },
-      data: { plan },
+    if (!existing) {
+      return res.status(404).json({ error: 'Organisation introuvable ou déjà supprimée. Rafraîchis la page.' });
+    }
+
+    const organization = await prisma.$transaction(async (tx) => {
+      const updated = await tx.organization.update({
+        where: { id: organizationId },
+        data: { plan },
+      });
+
+      await tx.subscription.updateMany({
+        where: { organizationId },
+        data: { plan },
+      });
+
+      return updated;
     });
-    
+
     res.json(organization);
   } catch (e) { next(e); }
 });

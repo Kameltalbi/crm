@@ -188,15 +188,34 @@ function OrganizationsTab() {
   });
   const queryClient = useQueryClient();
 
+  const updateOrganizationCache = (organization: any) => {
+    queryClient.setQueryData(['admin-organizations'], (current: any) => {
+      if (!Array.isArray(current)) return current;
+      return current.map((org) =>
+        org.id === organization.id
+          ? {
+              ...org,
+              plan: organization.plan ?? org.plan,
+              paymentStatus: organization.paymentStatus ?? org.paymentStatus,
+              suspended: organization.suspended ?? org.suspended,
+            }
+          : org
+      );
+    });
+  };
+
   const refreshOrganizations = () => {
-    queryClient.invalidateQueries({ queryKey: ['admin-organizations'], refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: ['superadmin-stats'], refetchType: 'all' });
+    queryClient.refetchQueries({ queryKey: ['admin-organizations'], type: 'all' });
+    queryClient.refetchQueries({ queryKey: ['superadmin-payments'], type: 'all' });
+    queryClient.refetchQueries({ queryKey: ['superadmin-subscriptions'], type: 'all' });
+    queryClient.refetchQueries({ queryKey: ['superadmin-stats'], type: 'all' });
   };
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, paymentStatus }: { id: string; paymentStatus: 'PENDING' | 'APPROVED' | 'REJECTED' }) =>
       api.put(`/superadmin/organizations/${id}/payment-status`, { paymentStatus }),
-    onSuccess: () => {
+    onSuccess: ({ data }) => {
+      updateOrganizationCache(data);
       refreshOrganizations();
     },
     onError: (error: any) => {
@@ -208,7 +227,8 @@ function OrganizationsTab() {
   const updatePlanMutation = useMutation({
     mutationFn: ({ id, plan }: { id: string; plan: 'FREE' | 'BUSINESS' | 'ENTERPRISE' }) =>
       api.put(`/superadmin/organizations/${id}/plan`, { plan }),
-    onSuccess: () => {
+    onSuccess: ({ data }) => {
+      updateOrganizationCache(data);
       refreshOrganizations();
     },
     onError: (error: any) => {
@@ -235,7 +255,8 @@ function OrganizationsTab() {
   const toggleSuspendMutation = useMutation({
     mutationFn: ({ id, suspended }: { id: string; suspended: boolean }) =>
       api.put(`/superadmin/organizations/${id}/suspend`, { suspended: !suspended }),
-    onSuccess: () => {
+    onSuccess: ({ data }) => {
+      updateOrganizationCache(data);
       refreshOrganizations();
     },
     onError: (error: any) => {

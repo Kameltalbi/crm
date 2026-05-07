@@ -30,6 +30,8 @@ type FormData = {
   dateProchaineAction: string;
 };
 
+const NO_ASSIGNEE_VALUE = '__none__';
+
 const EMPTY: FormData = {
   clientId: '', productId: '', type: '', montantHT: '',
   statut: 'PROSPECT', probabilite: '50',
@@ -938,10 +940,13 @@ export function Affaires() {
 
           <div className="space-y-1.5">
             <Label>Commercial assigné</Label>
-            <Select value={form.assignedToId} onValueChange={(v) => setForm({ ...form, assignedToId: v })}>
+            <Select
+              value={form.assignedToId || NO_ASSIGNEE_VALUE}
+              onValueChange={(v) => setForm({ ...form, assignedToId: v === NO_ASSIGNEE_VALUE ? '' : v })}
+            >
               <SelectTrigger><SelectValue placeholder="Aucun" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun</SelectItem>
+                <SelectItem value={NO_ASSIGNEE_VALUE}>Aucun</SelectItem>
                 {users.map((user) => (
                   <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
                 ))}

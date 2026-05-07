@@ -161,9 +161,19 @@ superadminRoutes.put('/organizations/:id/payment-status', async (req: AuthReques
     }
 
     const organization = await prisma.$transaction(async (tx) => {
+      const latestSubscription = await tx.subscription.findFirst({
+        where: { organizationId },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const nextPlan =
+        paymentStatus === 'APPROVED' && latestSubscription
+          ? toOrganizationPlan(latestSubscription.plan)
+          : existing.plan;
+
       const updated = await tx.organization.update({
         where: { id: organizationId },
-        data: { paymentStatus },
+        data: { paymentStatus, plan: nextPlan },
       });
 
       const subscriptionStatus =

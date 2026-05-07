@@ -139,9 +139,6 @@ export function Dashboard() {
     'FORMATION': 'Formation',
   };
   
-  console.log('Backend parType data:', kpis.parType);
-  console.log('Custom categories:', revenueCategories);
-  
   // Initialize with all custom categories
   revenueCategories.forEach((cat: any) => {
     revenueByCategory.push({ name: cat.name, value: 0 });
@@ -157,8 +154,6 @@ export function Dashboard() {
       revenueByCategory.push({ name: catName, value: Number(value) });
     }
   });
-  
-  console.log('Final revenueByCategory:', revenueByCategory);
   
   // Filter out categories with 0 revenue
   const filteredRevenueByCategory = revenueByCategory.filter(cat => cat.value > 0);

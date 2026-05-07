@@ -39,6 +39,11 @@ superadminRoutes.get('/organizations', async (req: AuthRequest, res, next) => {
         plan: true,
         suspended: true,
         createdAt: true,
+        users: {
+          where: { role: 'OWNER' },
+          select: { id: true, name: true, email: true },
+          take: 1,
+        },
         _count: {
           select: {
             users: true,

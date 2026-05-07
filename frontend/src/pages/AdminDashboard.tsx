@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/form-controls';
+import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItemStyled } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Users, Building2, CreditCard, Activity, CheckCircle, Clock, AlertTriangle, LogOut, LayoutDashboard, Receipt, Shield, DollarSign, TrendingUp, TrendingDown, Eye, EyeOff, Settings as SettingsIcon, Key, UserCheck, UserX, Plus, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -199,6 +199,10 @@ function OrganizationsTab() {
     onSuccess: () => {
       refreshOrganizations();
     },
+    onError: (error: any) => {
+      refreshOrganizations();
+      alert(error.response?.data?.error || error.message || 'Impossible de mettre à jour le statut paiement');
+    },
   });
 
   const updatePlanMutation = useMutation({
@@ -206,6 +210,10 @@ function OrganizationsTab() {
       api.put(`/superadmin/organizations/${id}/plan`, { plan }),
     onSuccess: () => {
       refreshOrganizations();
+    },
+    onError: (error: any) => {
+      refreshOrganizations();
+      alert(error.response?.data?.error || error.message || 'Impossible de mettre à jour le plan');
     },
   });
 
@@ -248,6 +256,9 @@ function OrganizationsTab() {
       localStorage.setItem('originalToken', localStorage.getItem('originalToken') || data.data.originalToken);
       window.location.href = '/';
     },
+    onError: (error: any) => {
+      alert(error.response?.data?.error || error.message || 'Impossible de se connecter à cette organisation');
+    },
   });
 
   const paymentStatusBadge = (status: string) => {
@@ -267,6 +278,94 @@ function OrganizationsTab() {
       return <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Suspendu</span>;
     }
     return null;
+  };
+
+  const renderOrganizationActions = (org: any) => {
+    const ownerId = org.users?.[0]?.id;
+    const itemClassName = 'flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-sm';
+    const iconClassName = 'h-4 w-4 shrink-0 text-muted-foreground';
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTriggerButton aria-label={`Actions ${org.name}`} />
+        <DropdownMenuContentWrapper align="end" sideOffset={6} className="w-56">
+          {ownerId && (
+            <DropdownMenuItemStyled
+              onClick={() => impersonateMutation.mutate(ownerId)}
+              disabled={impersonateMutation.isPending}
+              className={itemClassName}
+            >
+              <UserCheck className={iconClassName} />
+              <span>Se connecter</span>
+            </DropdownMenuItemStyled>
+          )}
+          {org.plan !== 'FREE' && (
+            <DropdownMenuItemStyled
+              onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'FREE' })}
+              disabled={updatePlanMutation.isPending}
+              className={itemClassName}
+            >
+              <Building2 className={iconClassName} />
+              <span>Passer Gratuit</span>
+            </DropdownMenuItemStyled>
+          )}
+          {org.plan !== 'BUSINESS' && (
+            <DropdownMenuItemStyled
+              onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'BUSINESS' })}
+              disabled={updatePlanMutation.isPending}
+              className={itemClassName}
+            >
+              <Building2 className={iconClassName} />
+              <span>Passer Business</span>
+            </DropdownMenuItemStyled>
+          )}
+          {org.plan !== 'ENTERPRISE' && (
+            <DropdownMenuItemStyled
+              onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'ENTERPRISE' })}
+              disabled={updatePlanMutation.isPending}
+              className={itemClassName}
+            >
+              <Building2 className={iconClassName} />
+              <span>Passer Entreprise</span>
+            </DropdownMenuItemStyled>
+          )}
+          {org.paymentStatus !== 'APPROVED' && (
+            <DropdownMenuItemStyled
+              onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'APPROVED' })}
+              disabled={updateStatusMutation.isPending}
+              className={itemClassName}
+            >
+              <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />
+              <span>Approuver</span>
+            </DropdownMenuItemStyled>
+          )}
+          <DropdownMenuItemStyled
+            onClick={() => toggleSuspendMutation.mutate({ id: org.id, suspended: org.suspended })}
+            disabled={toggleSuspendMutation.isPending}
+            className={itemClassName}
+          >
+            {org.suspended ? (
+              <UserCheck className="h-4 w-4 shrink-0 text-green-600" />
+            ) : (
+              <UserX className="h-4 w-4 shrink-0 text-amber-600" />
+            )}
+            <span>{org.suspended ? 'Réactiver' : 'Suspendre'}</span>
+          </DropdownMenuItemStyled>
+          <DropdownMenuItemStyled
+            onClick={() => {
+              if (confirm(`Supprimer définitivement l'organisation "${org.name}" et toutes ses données ?`)) {
+                deleteMutation.mutate(org.id);
+              }
+            }}
+            disabled={deleteMutation.isPending}
+            className={`${itemClassName} text-red-600 focus:text-red-600`}
+          >
+            <Trash2 className="h-4 w-4 shrink-0 text-red-600" />
+            <span>Supprimer</span>
+          </DropdownMenuItemStyled>
+        </DropdownMenuContentWrapper>
+      </DropdownMenu>
+    );
   };
 
   return (
@@ -295,59 +394,7 @@ function OrganizationsTab() {
                     {org.suspended ? <span className="text-red-600 font-medium">Suspendu</span> : null}
                   </div>
                   <div className="flex justify-end">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <Button variant="ghost" size="sm">
-                          <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
-                            <circle cx="2" cy="2" r="2" />
-                            <circle cx="2" cy="8" r="2" />
-                            <circle cx="2" cy="14" r="2" />
-                          </svg>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {org._count.users > 0 && (
-                          <DropdownMenuItem onClick={() => impersonateMutation.mutate(org.id)}>
-                            <UserCheck size={14} className="mr-2" /> Se connecter
-                          </DropdownMenuItem>
-                        )}
-                        {org.plan !== 'FREE' && (
-                          <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'FREE' })} disabled={updatePlanMutation.isPending}>
-                            <Building2 size={14} className="mr-2" /> Passer Gratuit
-                          </DropdownMenuItem>
-                        )}
-                        {org.plan !== 'BUSINESS' && (
-                          <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'BUSINESS' })} disabled={updatePlanMutation.isPending}>
-                            <Building2 size={14} className="mr-2" /> Passer Business
-                          </DropdownMenuItem>
-                        )}
-                        {org.plan !== 'ENTERPRISE' && (
-                          <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'ENTERPRISE' })} disabled={updatePlanMutation.isPending}>
-                            <Building2 size={14} className="mr-2" /> Passer Entreprise
-                          </DropdownMenuItem>
-                        )}
-                        {org.paymentStatus !== 'APPROVED' && (
-                          <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'APPROVED' })} disabled={updateStatusMutation.isPending}>
-                            <CheckCircle size={14} className="mr-2" /> Approuver
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => toggleSuspendMutation.mutate({ id: org.id, suspended: org.suspended })} disabled={toggleSuspendMutation.isPending}>
-                          {org.suspended ? <UserCheck size={14} className="mr-2" /> : <UserX size={14} className="mr-2" />}
-                          {org.suspended ? 'Réactiver' : 'Suspendre'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            if (confirm(`Supprimer définitivement l'organisation "${org.name}" et toutes ses données ?`)) {
-                              deleteMutation.mutate(org.id);
-                            }
-                          }}
-                          disabled={deleteMutation.isPending}
-                          className="text-red-600"
-                        >
-                          <Trash2 size={14} className="mr-2" /> Supprimer
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {renderOrganizationActions(org)}
                   </div>
                 </CardContent>
               </Card>
@@ -385,59 +432,7 @@ function OrganizationsTab() {
                     <td className="p-4 text-center">{org._count.affaires}</td>
                     <td className="p-4 text-muted-foreground">{new Date(org.createdAt).toLocaleDateString('fr-FR')}</td>
                     <td className="p-4 flex justify-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <Button variant="ghost" size="sm">
-                            <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor">
-                              <circle cx="2" cy="2" r="2" />
-                              <circle cx="2" cy="8" r="2" />
-                              <circle cx="2" cy="14" r="2" />
-                            </svg>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {org._count.users > 0 && (
-                            <DropdownMenuItem onClick={() => impersonateMutation.mutate(org.id)}>
-                              <UserCheck size={14} className="mr-2" /> Se connecter
-                            </DropdownMenuItem>
-                          )}
-                          {org.plan !== 'FREE' && (
-                            <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'FREE' })} disabled={updatePlanMutation.isPending}>
-                              <Building2 size={14} className="mr-2" /> Passer Gratuit
-                            </DropdownMenuItem>
-                          )}
-                          {org.plan !== 'BUSINESS' && (
-                            <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'BUSINESS' })} disabled={updatePlanMutation.isPending}>
-                              <Building2 size={14} className="mr-2" /> Passer Business
-                            </DropdownMenuItem>
-                          )}
-                          {org.plan !== 'ENTERPRISE' && (
-                            <DropdownMenuItem onClick={() => updatePlanMutation.mutate({ id: org.id, plan: 'ENTERPRISE' })} disabled={updatePlanMutation.isPending}>
-                              <Building2 size={14} className="mr-2" /> Passer Entreprise
-                            </DropdownMenuItem>
-                          )}
-                          {org.paymentStatus !== 'APPROVED' && (
-                            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: org.id, paymentStatus: 'APPROVED' })} disabled={updateStatusMutation.isPending}>
-                              <CheckCircle size={14} className="mr-2" /> Approuver
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => toggleSuspendMutation.mutate({ id: org.id, suspended: org.suspended })} disabled={toggleSuspendMutation.isPending}>
-                            {org.suspended ? <UserCheck size={14} className="mr-2" /> : <UserX size={14} className="mr-2" />}
-                            {org.suspended ? 'Réactiver' : 'Suspendre'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              if (confirm(`Supprimer définitivement l'organisation "${org.name}" et toutes ses données ?`)) {
-                                deleteMutation.mutate(org.id);
-                              }
-                            }}
-                            disabled={deleteMutation.isPending}
-                            className="text-red-600"
-                          >
-                            <Trash2 size={14} className="mr-2" /> Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {renderOrganizationActions(org)}
                     </td>
                   </tr>
                 ))}

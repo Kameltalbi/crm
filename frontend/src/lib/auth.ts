@@ -47,6 +47,8 @@ export const useAuth = create<AuthState>((set, get) => ({
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     localStorage.removeItem('paymentStatus');
+    localStorage.removeItem('impersonating');
+    localStorage.removeItem('originalToken');
     set({ user: null, accessToken: null, refreshToken: null, paymentStatus: null });
   },
 
@@ -63,13 +65,17 @@ export const useAuth = create<AuthState>((set, get) => ({
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       localStorage.removeItem('paymentStatus');
+      localStorage.removeItem('impersonating');
+      localStorage.removeItem('originalToken');
       set({ user: null, accessToken: null, refreshToken: null, paymentStatus: null });
     }
   },
 
   refreshAccessToken: async () => {
     const refreshToken = get().refreshToken;
-    if (!refreshToken) return;
+    if (!refreshToken) {
+      throw new Error('Refresh token manquant');
+    }
 
     try {
       const { data } = await api.post('/auth/refresh', { refreshToken });
@@ -77,7 +83,8 @@ export const useAuth = create<AuthState>((set, get) => ({
       set({ accessToken: data.accessToken });
     } catch {
       // Refresh failed, logout
-      get().logout();
+      await get().logout();
+      throw new Error('Refresh token invalide ou expiré');
     }
   },
 }));

@@ -1,15 +1,24 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, Pencil, Trash2, Package, Check, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import type { Product, ProductType } from '@/types';
+import type { Product } from '@/types';
 
-const EMPTY = { id: '', name: '', description: '', price: 0, type: 'SERVICE' as ProductType, active: true };
+type RevenueCategory = { id: string; name: string; type: string };
+
+const EMPTY = {
+  id: '',
+  name: '',
+  description: '',
+  price: 0,
+  categoryId: '',
+  active: true,
+};
 
 export function Products() {
   const { t } = useTranslation();
@@ -17,16 +26,26 @@ export function Products() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
-  const { data: productsData, error, isLoading } = useQuery<{ data: Product[], pagination: any }>({
+  const { data: productsData, error, isLoading } = useQuery<{ data: Product[]; pagination: any }>({
     queryKey: ['products'],
     queryFn: () => api.get('/products').then((r) => r.data),
   });
   const products = productsData?.data || [];
 
+  const { data: categories = [] } = useQuery<RevenueCategory[]>({
+    queryKey: ['categories', 'REVENUE'],
+    queryFn: () => api.get('/categories?type=REVENUE').then((r) => r.data),
+  });
+
   const saveMutation = useMutation({
     mutationFn: (data: typeof EMPTY) => {
-      const payload: any = { name: data.name, description: data.description, price: data.price, type: data.type, active: data.active };
-      delete (payload as any).id;
+      const payload: any = {
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        categoryId: data.categoryId || null,
+        active: data.active,
+      };
       return data.id ? api.put(`/products/${data.id}`, payload) : api.post('/products', payload);
     },
     onSuccess: () => {
@@ -52,7 +71,7 @@ export function Products() {
       name: p.name,
       description: p.description || '',
       price: Number(p.price),
-      type: p.type,
+      categoryId: p.categoryId || '',
       active: p.active,
     });
     setOpen(true);
@@ -79,8 +98,8 @@ export function Products() {
             <CardContent className="p-4">
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center gap-2">
-                  <div className={`p-2 rounded-lg ${p.type === 'SERVICE' ? 'bg-blue-100' : 'bg-green-100'}`}>
-                    <Package size={16} className={p.type === 'SERVICE' ? 'text-blue-600' : 'text-green-600'} />
+                  <div className="p-2 rounded-lg bg-emerald-100">
+                    <Package size={16} className="text-emerald-600" />
                   </div>
                   <h3 className="font-semibold">{p.name}</h3>
                 </div>
@@ -88,6 +107,11 @@ export function Products() {
                   {p.active ? t('productsPage.active') : t('productsPage.inactive')}
                 </span>
               </div>
+              {p.category?.name && (
+                <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
+                  {p.category.name}
+                </span>
+              )}
               {p.description && <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{p.description}</p>}
               <p className="text-lg font-bold text-emerald-600 mb-3">{Number(p.price).toLocaleString('fr-TN')} DT</p>
               <div className="flex gap-1 justify-end">
@@ -128,14 +152,26 @@ export function Products() {
               <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
             </div>
             <div className="space-y-1.5">
-              <Label>{t('calendarPage.type')} *</Label>
-              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as ProductType })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="SERVICE">{t('productsPage.service')}</SelectItem>
-                  <SelectItem value="PRODUCT">{t('productsPage.product')}</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Catégorie *</Label>
+              {categories.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Aucune catégorie de revenu. Crée-en d'abord dans Paramètres → Catégories.
+                </p>
+              ) : (
+                <Select
+                  value={form.categoryId}
+                  onValueChange={(v) => setForm({ ...form, categoryId: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir une catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -150,7 +186,10 @@ export function Products() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
-            <Button onClick={() => saveMutation.mutate(form)} disabled={!form.name || form.price < 0}>
+            <Button
+              onClick={() => saveMutation.mutate(form)}
+              disabled={!form.name || form.price < 0 || !form.categoryId}
+            >
               {t('common.save')}
             </Button>
           </DialogFooter>

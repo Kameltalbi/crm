@@ -9,13 +9,32 @@ export const productsRoutes = Router();
 productsRoutes.use(auth);
 productsRoutes.use(requirePaymentApproved);
 
+const toOptionalString = z.preprocess(
+  (v) => (v === '' || v === null ? undefined : v),
+  z.string().optional()
+);
+
 const productSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   price: z.number().nonnegative(),
   type: z.nativeEnum(ProductType).optional(),
+  categoryId: toOptionalString,
   active: z.boolean().optional(),
 });
+
+async function ensureCategoryInOrganization(
+  organizationId: string,
+  categoryId: string | undefined
+) {
+  if (!categoryId) return null;
+  const category = await prisma.customCategory.findFirst({
+    where: { id: categoryId, organizationId, type: 'REVENUE' },
+    select: { id: true },
+  });
+  if (!category) return 'Catégorie introuvable ou de type incompatible';
+  return null;
+}
 
 // GET /api/products - List all products
 productsRoutes.get('/', async (req: AuthRequest, res, next) => {
@@ -29,6 +48,7 @@ productsRoutes.get('/', async (req: AuthRequest, res, next) => {
         orderBy: { name: 'asc' },
         skip,
         take: limit,
+        include: { category: { select: { id: true, name: true, type: true } } },
       }),
       prisma.product.count({ where }),
     ]);
@@ -51,6 +71,7 @@ productsRoutes.get('/active', async (req: AuthRequest, res, next) => {
     const products = await prisma.product.findMany({
       where: { active: true, organizationId: req.organizationId },
       orderBy: { name: 'asc' },
+      include: { category: { select: { id: true, name: true, type: true } } },
     });
     res.json(products);
   } catch (e) { next(e); }
@@ -60,15 +81,21 @@ productsRoutes.get('/active', async (req: AuthRequest, res, next) => {
 productsRoutes.post('/', async (req: AuthRequest, res, next) => {
   try {
     const data = productSchema.parse(req.body);
+
+    const categoryError = await ensureCategoryInOrganization(req.organizationId!, data.categoryId);
+    if (categoryError) return res.status(400).json({ error: categoryError });
+
     const product = await prisma.product.create({
       data: {
         name: data.name,
         description: data.description,
         price: data.price,
         type: data.type || 'SERVICE',
+        categoryId: data.categoryId ?? null,
         active: data.active !== undefined ? data.active : true,
         organizationId: req.organizationId!,
       },
+      include: { category: { select: { id: true, name: true, type: true } } },
     });
     res.status(201).json(product);
   } catch (e) { next(e); }
@@ -87,9 +114,18 @@ productsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
     });
     if (!existing) return res.status(404).json({ error: 'Produit introuvable' });
 
+    if (data.categoryId !== undefined) {
+      const categoryError = await ensureCategoryInOrganization(req.organizationId!, data.categoryId);
+      if (categoryError) return res.status(400).json({ error: categoryError });
+    }
+
     const product = await prisma.product.update({
       where: { id: req.params.id as string },
-      data,
+      data: {
+        ...data,
+        categoryId: data.categoryId === undefined ? undefined : (data.categoryId ?? null),
+      },
+      include: { category: { select: { id: true, name: true, type: true } } },
     });
     res.json(product);
   } catch (e) { next(e); }

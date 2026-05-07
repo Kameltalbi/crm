@@ -291,10 +291,12 @@ export function AffaireDetail() {
                   <p className="text-sm text-muted-foreground">Nom</p>
                   <p className="font-medium">{affaire.product.name}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Type</p>
-                  <p className="font-medium">{affaire.product.type === 'SERVICE' ? 'Service' : 'Produit'}</p>
-                </div>
+                {affaire.product.category?.name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Catégorie</p>
+                    <p className="font-medium">{affaire.product.category.name}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm text-muted-foreground">Prix unitaire</p>
                   <p className="font-medium">{fmtDT(Number(affaire.product.price))}</p>

@@ -32,6 +32,8 @@ export interface Product {
   description: string | null;
   price: number;
   type: ProductType;
+  categoryId: string | null;
+  category?: { id: string; name: string; type: string } | null;
   active: boolean;
   organizationId: string;
   createdAt: string;

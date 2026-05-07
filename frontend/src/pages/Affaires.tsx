@@ -168,7 +168,31 @@ export function Affaires() {
     },
     onError: (error: any) => {
       console.error('Save error:', error);
-      alert(`Erreur: ${error.response?.data?.error || error.message || 'Erreur inconnue'}`);
+      const raw = error.response?.data?.error || error.message || 'Erreur inconnue';
+      const friendlyMap: Record<string, string> = {
+        clientId: 'Client',
+        productId: 'Produit',
+        type: 'Catégorie',
+        montantHT: 'Montant HT',
+        statut: 'Statut',
+        moisPrevu: 'Mois prévu',
+        anneePrevue: 'Année',
+        probabilite: 'Probabilité',
+      };
+      let friendly = raw;
+      const match = String(raw).match(/^Validation échouée:\s*(.+)$/);
+      if (match) {
+        const issues = match[1]
+          .split(/,\s*/)
+          .map((part) => {
+            const [field] = part.split(':');
+            const label = friendlyMap[field?.trim()] || field?.trim() || 'champ';
+            return `• ${label} : champ requis ou invalide`;
+          })
+          .join('\n');
+        friendly = `Merci de compléter les champs suivants :\n${issues}`;
+      }
+      alert(friendly);
     },
   });
 
@@ -843,7 +867,14 @@ export function Affaires() {
             </div>
             <div className="space-y-1.5">
               <Label>Produit *</Label>
-              <Select value={form.productId} onValueChange={(v) => setForm({ ...form, productId: v })}>
+              <Select
+                value={form.productId}
+                onValueChange={(v) => {
+                  const picked = products.find((p) => p.id === v) as any;
+                  const autoCategory = picked?.category?.name || form.type;
+                  setForm({ ...form, productId: v, type: autoCategory as AffaireType });
+                }}
+              >
                 <SelectTrigger><SelectValue placeholder="Choisir un produit" /></SelectTrigger>
                 <SelectContent>
                   {products.filter(p => p.active).map((p) => (
@@ -864,6 +895,11 @@ export function Affaires() {
                   ))}
                 </SelectContent>
               </Select>
+              {form.productId && (
+                <p className="text-xs text-muted-foreground">
+                  Catégorie reprise automatiquement du produit sélectionné — modifiable si besoin.
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Montant HT (DT) *</Label>
@@ -993,7 +1029,10 @@ export function Affaires() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending || !form.clientId || !form.montantHT}>
+            <Button
+              onClick={() => saveMutation.mutate(form)}
+              disabled={saveMutation.isPending || !form.clientId || !form.productId || !form.type || !form.montantHT}
+            >
               💾 Enregistrer
             </Button>
           </DialogFooter>

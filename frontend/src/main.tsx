@@ -21,8 +21,31 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').catch((error) => {
-      console.error('Service worker registration failed:', error);
+    navigator.serviceWorker
+      .register('/service-worker.js', { updateViaCache: 'none' })
+      .then((registration) => {
+        // Force a check on every load; modern browsers also do this automatically.
+        registration.update().catch(() => {});
+
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
+      })
+      .catch((error) => {
+        console.error('Service worker registration failed:', error);
+      });
+
+    let reloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloading) return;
+      reloading = true;
+      window.location.reload();
     });
   });
 }

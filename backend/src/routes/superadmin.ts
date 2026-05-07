@@ -28,6 +28,7 @@ superadminRoutes.get('/organizations', async (req: AuthRequest, res, next) => {
         phone: true,
         paymentStatus: true,
         plan: true,
+        suspended: true,
         createdAt: true,
         _count: {
           select: {
@@ -147,13 +148,22 @@ superadminRoutes.put('/organizations/:id/payment-status', async (req: AuthReques
 // PUT toggle suspend
 superadminRoutes.put('/organizations/:id/suspend', async (req: AuthRequest, res, next) => {
   try {
+    const organizationId = req.params.id as string;
     const { suspended } = req.body;
-    
-    const organization = await prisma.organization.update({
-      where: { id: req.params.id as string },
-      data: { suspended },
+
+    const result = await prisma.organization.updateMany({
+      where: { id: organizationId },
+      data: { suspended: Boolean(suspended) },
     });
-    
+
+    if (result.count === 0) {
+      return res.status(404).json({ error: 'Organisation introuvable ou déjà supprimée. Rafraîchis la page.' });
+    }
+
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+
     res.json(organization);
   } catch (e) { next(e); }
 });

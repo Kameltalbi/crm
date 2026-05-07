@@ -832,16 +832,18 @@ aiAssistantRoutes.post('/draft-email', checkPlanFeature('ai'), async (req: AuthR
 
     let client, affaire;
     if (clientId) {
-      client = await prisma.client.findUnique({
-        where: { id: clientId },
+      client = await prisma.client.findFirst({
+        where: { id: clientId, organizationId: req.organizationId, deletedAt: null },
         select: { name: true, email: true, phone: true },
       });
+      if (!client) return res.status(404).json({ error: 'Client introuvable' });
     }
     if (affaireId) {
-      affaire = await prisma.affaire.findUnique({
-        where: { id: affaireId },
+      affaire = await prisma.affaire.findFirst({
+        where: { id: affaireId, organizationId: req.organizationId, deletedAt: null },
         select: { title: true, montantHT: true, statut: true, probabilite: true },
       });
+      if (!affaire) return res.status(404).json({ error: 'Affaire introuvable' });
     }
 
     const emailPrompt = type === 'followup' 
@@ -879,8 +881,8 @@ aiAssistantRoutes.post('/score-lead', checkPlanFeature('ai'), async (req: AuthRe
   try {
     const { affaireId } = req.body;
 
-    const affaire = await prisma.affaire.findUnique({
-      where: { id: affaireId },
+    const affaire = await prisma.affaire.findFirst({
+      where: { id: affaireId, organizationId: req.organizationId, deletedAt: null },
       include: { client: true },
     });
 

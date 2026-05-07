@@ -273,8 +273,14 @@ function OrganizationsTab() {
     mutationFn: (userId: string) => api.post('/superadmin/impersonate', { userId }),
     onSuccess: (data) => {
       localStorage.setItem('accessToken', data.data.accessToken);
+      localStorage.setItem('refreshToken', data.data.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
       localStorage.setItem('impersonating', 'true');
-      localStorage.setItem('originalToken', localStorage.getItem('originalToken') || data.data.originalToken);
+      useAuth.setState({
+        accessToken: data.data.accessToken,
+        refreshToken: data.data.refreshToken,
+        user: data.data.user,
+      });
       window.location.href = '/';
     },
     onError: (error: any) => {
@@ -573,7 +579,7 @@ function SubscriptionsTab() {
         <h2 className="text-2xl font-bold">Abonnements</h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => syncSubscriptionsMutation.mutate()} disabled={syncSubscriptionsMutation.isPending}>
-            {syncSubscriptionsMutation.isPending ? 'Synchronisation...' : 'Synchroniser les plans'}
+            {syncSubscriptionsMutation.isPending ? 'Synchronisation...' : 'Synchroniser entreprises'}
           </Button>
           <Button onClick={() => openDialog()}>
             <Plus size={16} className="mr-2" /> Nouvel Abonnement

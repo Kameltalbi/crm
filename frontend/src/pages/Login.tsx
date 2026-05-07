@@ -11,7 +11,6 @@ export function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const login = useAuth((s) => s.login);
-  const user = useAuth((s) => s.user);
   const [email, setEmail] = useState('admin@bilan-crm.tn');
   const [password, setPassword] = useState('changeme123');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +26,7 @@ export function Login() {
       // Wait for user data to be loaded
       setTimeout(() => {
         const currentUser = useAuth.getState().user;
-        if (currentUser?.email === 'admin@ktoptima.com') {
+        if (currentUser?.role === 'SUPERADMIN') {
           navigate('/admin');
         } else {
           navigate('/dashboard');

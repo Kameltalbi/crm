@@ -34,6 +34,30 @@ const expenseSchema = z.object({
 
 const expenseUpdateSchema = expenseSchema.partial();
 
+async function validateRelatedRecords(
+  organizationId: string,
+  relatedAffaireId?: string,
+  relatedLeadId?: string
+) {
+  if (relatedAffaireId) {
+    const affaire = await prisma.affaire.findFirst({
+      where: { id: relatedAffaireId, organizationId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!affaire) return 'Affaire introuvable';
+  }
+
+  if (relatedLeadId) {
+    const lead = await prisma.lead.findFirst({
+      where: { id: relatedLeadId, organizationId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!lead) return 'Lead introuvable';
+  }
+
+  return null;
+}
+
 // GET /expenses - List expenses with pagination
 expensesRoutes.get('/', checkPlanFeature('expenses'), async (req: AuthRequest, res, next) => {
   try {
@@ -142,6 +166,8 @@ expensesRoutes.post('/', checkPlanFeature('expenses'), async (req: AuthRequest, 
     const organizationId = (req as any).organizationId;
 
     const data = expenseSchema.parse(req.body);
+    const relationError = await validateRelatedRecords(organizationId, data.relatedAffaireId, data.relatedLeadId);
+    if (relationError) return res.status(404).json({ error: relationError });
 
     const expense = await prisma.expense.create({
       data: {
@@ -175,6 +201,8 @@ expensesRoutes.put('/:id', checkPlanFeature('expenses'), async (req: AuthRequest
     if (!existing) return res.status(404).json({ error: 'Dépense non trouvée' });
 
     const data = expenseUpdateSchema.parse(req.body);
+    const relationError = await validateRelatedRecords(organizationId, data.relatedAffaireId, data.relatedLeadId);
+    if (relationError) return res.status(404).json({ error: relationError });
 
     const expense = await prisma.expense.update({
       where: { id: req.params.id as string },

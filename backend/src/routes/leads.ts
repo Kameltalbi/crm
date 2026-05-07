@@ -107,6 +107,13 @@ leadsRoutes.post('/', checkProspectLimit, async (req: AuthRequest, res, next) =>
     const userId = req.userId;
 
     const data = leadSchema.parse(req.body);
+    if (data.clientId) {
+      const client = await prisma.client.findFirst({
+        where: { id: data.clientId, organizationId, deletedAt: null },
+        select: { id: true },
+      });
+      if (!client) return res.status(404).json({ error: 'Client not found' });
+    }
 
     const lead = await prisma.lead.create({
       data: {

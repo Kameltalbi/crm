@@ -8,6 +8,30 @@ const prisma = new PrismaClient();
 // Apply auth middleware to all routes
 calendarRoutes.use(auth);
 
+async function validateRelatedRecords(
+  organizationId: string,
+  relatedAffaireId?: string | null,
+  relatedLeadId?: string | null
+) {
+  if (relatedAffaireId && relatedAffaireId !== 'none') {
+    const affaire = await prisma.affaire.findFirst({
+      where: { id: relatedAffaireId, organizationId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!affaire) return 'Affaire introuvable';
+  }
+
+  if (relatedLeadId && relatedLeadId !== 'none') {
+    const lead = await prisma.lead.findFirst({
+      where: { id: relatedLeadId, organizationId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!lead) return 'Lead introuvable';
+  }
+
+  return null;
+}
+
 // GET /calendar - Get all calendar events for the organization
 calendarRoutes.get('/', async (req: any, res) => {
   try {
@@ -93,6 +117,9 @@ calendarRoutes.post('/', async (req: any, res) => {
       reminderMinutes,
     } = req.body;
 
+    const relationError = await validateRelatedRecords(organizationId, relatedAffaireId, relatedLeadId);
+    if (relationError) return res.status(404).json({ error: relationError });
+
     const event = await prisma.calendarEvent.create({
       data: {
         organizationId,
@@ -148,6 +175,9 @@ calendarRoutes.put('/:id', async (req: any, res) => {
     if (!existingEvent) {
       return res.status(404).json({ error: 'Calendar event not found' });
     }
+
+    const relationError = await validateRelatedRecords(organizationId, relatedAffaireId, relatedLeadId);
+    if (relationError) return res.status(404).json({ error: relationError });
 
     const event = await prisma.calendarEvent.update({
       where: { id: req.params.id },

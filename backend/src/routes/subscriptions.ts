@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import auth, { AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest, requireSuperAdmin } from '../middleware/auth.js';
 
 export const subscriptionsRoutes = Router();
 subscriptionsRoutes.use(auth);
@@ -95,7 +95,7 @@ subscriptionsRoutes.post('/', async (req: AuthRequest, res, next) => {
 });
 
 // POST /api/subscriptions/:id/confirm - Confirm payment (admin only)
-subscriptionsRoutes.post('/:id/confirm', async (req: AuthRequest, res, next) => {
+subscriptionsRoutes.post('/:id/confirm', requireSuperAdmin, async (req: AuthRequest, res, next) => {
   try {
     const subscription = await prisma.subscription.findFirst({
       where: { id: req.params.id as string },

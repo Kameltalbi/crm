@@ -24,7 +24,7 @@ usersRoutes.get('/', async (req: AuthRequest, res, next) => {
       where: { id: req.userId },
     });
 
-    if (!currentUser || currentUser.role !== 'OWNER') {
+    if (!currentUser || currentUser.role !== 'OWNER' || currentUser.organizationId !== req.organizationId) {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
@@ -109,7 +109,7 @@ usersRoutes.put('/:id', async (req: AuthRequest, res, next) => {
       where: { id: req.userId },
     });
 
-    if (!currentUser) {
+    if (!currentUser || currentUser.organizationId !== req.organizationId) {
       return res.status(401).json({ error: 'Non authentifié' });
     }
 
@@ -123,8 +123,18 @@ usersRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 
     const data = userSchema.partial().parse(req.body);
 
+    const targetUser = await prisma.user.findFirst({
+      where: { id: targetUserId, organizationId: req.organizationId },
+    });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Utilisateur introuvable' });
+    }
+
     // Only owner can change roles
     if (data.role && !isOwner) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+    if (data.role === 'SUPERADMIN') {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
@@ -159,7 +169,7 @@ usersRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
       where: { id: req.userId },
     });
 
-    if (!currentUser || currentUser.role !== 'OWNER') {
+    if (!currentUser || currentUser.role !== 'OWNER' || currentUser.organizationId !== req.organizationId) {
       return res.status(403).json({ error: 'Accès refusé' });
     }
 
@@ -168,6 +178,13 @@ usersRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
     // Prevent deleting yourself
     if (targetUserId === req.userId) {
       return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
+    }
+
+    const targetUser = await prisma.user.findFirst({
+      where: { id: targetUserId, organizationId: req.organizationId },
+    });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Utilisateur introuvable' });
     }
 
     await prisma.user.delete({

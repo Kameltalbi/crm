@@ -20,6 +20,10 @@ gmailRoutes.get('/callback', auth, async (req, res, next) => {
     if (!code || !state) return res.status(400).send('Paramètres manquants');
 
     const userId = String(state);
+    if (userId !== (req as AuthRequest).userId) {
+      return res.status(403).send('Session OAuth invalide');
+    }
+
     const tokens = await gmailService.exchangeCode(String(code));
 
     const user = await prisma.user.findUnique({
@@ -82,6 +86,14 @@ gmailRoutes.post('/send', auth, async (req: AuthRequest, res, next) => {
       where: { userId: req.userId! },
     });
     if (!token) return res.status(400).json({ error: 'Gmail non connecté' });
+
+    if (data.affaireId) {
+      const affaire = await prisma.affaire.findFirst({
+        where: { id: data.affaireId, organizationId: req.organizationId, deletedAt: null },
+        select: { id: true },
+      });
+      if (!affaire) return res.status(404).json({ error: 'Affaire introuvable' });
+    }
 
     const sent = await gmailService.sendMail(token, {
       to:       data.to,

@@ -37,6 +37,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return accessToken ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const accessToken = useAuth((s) => s.accessToken);
+  const user = useAuth((s) => s.user);
+
+  if (!accessToken) return <Navigate to="/login" replace />;
+  if (!user) return null;
+  return user.role === 'SUPERADMIN' ? <>{children}</> : <Navigate to="/dashboard" replace />;
+}
+
 export default function App() {
   const fetchMe = useAuth((s) => s.fetchMe);
 
@@ -97,9 +106,9 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <AdminRoute>
               <AdminDashboard />
-            </ProtectedRoute>
+            </AdminRoute>
           }
         />
       </Routes>

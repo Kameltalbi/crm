@@ -155,16 +155,20 @@ affairesRoutes.post('/', async (req: AuthRequest, res, next) => {
 
     // Auto-generate title if not provided
     let title = data.title;
+    const client = await prisma.client.findFirst({
+      where: { id: data.clientId, organizationId: req.organizationId!, deletedAt: null },
+      select: { id: true, name: true },
+    });
+    if (!client) return res.status(404).json({ error: 'Client introuvable' });
+
+    const product = data.productId ? await prisma.product.findFirst({
+      where: { id: data.productId, organizationId: req.organizationId!, deletedAt: null },
+      select: { id: true, name: true },
+    }) : null;
+    if (data.productId && !product) return res.status(404).json({ error: 'Produit introuvable' });
+
     if (!title) {
-      const client = await prisma.client.findUnique({
-        where: { id: data.clientId },
-        select: { name: true },
-      });
-      const product = data.productId ? await prisma.product.findUnique({
-        where: { id: data.productId },
-        select: { name: true },
-      }) : null;
-      title = product ? `${product.name} - ${client?.name || 'Client'}` : `${data.type === 'BILAN_CARBONE' ? 'Bilan Carbone' : 'Formation'} - ${client?.name || 'Client'}`;
+      title = product ? `${product.name} - ${client.name}` : `${data.type === 'BILAN_CARBONE' ? 'Bilan Carbone' : 'Formation'} - ${client.name}`;
     }
 
     // Calculate lead score based on client history
@@ -311,6 +315,12 @@ affairesRoutes.post('/:id/duplicate', async (req: AuthRequest, res, next) => {
 affairesRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
     const id = req.params.id as string;
+    const existing = await prisma.affaire.findFirst({
+      where: { id, organizationId: req.organizationId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!existing) return res.status(404).json({ error: 'Affaire introuvable' });
+
     await prisma.affaire.update({
       where: { id },
       data: { deletedAt: new Date() },
@@ -328,6 +338,12 @@ affairesRoutes.post('/:id/activites', async (req: AuthRequest, res, next) => {
       content: z.string().optional(),
     });
     const data = schema.parse(req.body);
+    const affaire = await prisma.affaire.findFirst({
+      where: { id: req.params.id as string, organizationId: req.organizationId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!affaire) return res.status(404).json({ error: 'Affaire introuvable' });
+
     const activite = await prisma.activite.create({
       data: { ...data, affaireId: req.params.id as string, organizationId: req.organizationId! },
     });

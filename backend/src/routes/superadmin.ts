@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import auth, { requireSuperAdmin, AuthRequest } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 export const superadminRoutes = Router();
 superadminRoutes.use(auth);
@@ -17,6 +17,25 @@ const updatePlanSchema = z.object({
   plan: z.enum(['FREE', 'BUSINESS', 'ENTERPRISE']),
 });
 
+const createSubscriptionSchema = z.object({
+  organizationId: z.string().min(1),
+  plan: z.string().min(1),
+  price: z.union([z.number(), z.string()]),
+  paymentMethod: z.string().min(1),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+});
+
+const updateSubscriptionSchema = z.object({
+  organizationId: z.string().optional(),
+  plan: z.string().optional(),
+  price: z.union([z.number(), z.string()]).optional(),
+  paymentMethod: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  paymentStatus: z.enum(['PENDING', 'PAID', 'REFUSED']).optional(),
+});
+
 const toOrganizationPlan = (plan: string) => {
   if (plan === 'STARTER') return 'FREE';
   if (plan === 'PRO') return 'BUSINESS';
@@ -24,6 +43,12 @@ const toOrganizationPlan = (plan: string) => {
   if (plan === 'Business') return 'BUSINESS';
   if (plan === 'Entreprise') return 'ENTERPRISE';
   return plan;
+};
+
+const toOrganizationPaymentStatus = (paymentStatus: string) => {
+  if (paymentStatus === 'PAID') return 'APPROVED';
+  if (paymentStatus === 'REFUSED') return 'REJECTED';
+  return 'PENDING';
 };
 
 // GET all organizations with payment status
@@ -51,10 +76,30 @@ superadminRoutes.get('/organizations', async (req: AuthRequest, res, next) => {
             affaires: true,
           },
         },
+        subscriptions: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            plan: true,
+            paymentStatus: true,
+            startDate: true,
+            endDate: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
-    res.json(organizations);
+    res.json(organizations.map((org) => {
+      const latestSubscription = org.subscriptions[0];
+      return {
+        ...org,
+        plan: latestSubscription ? toOrganizationPlan(latestSubscription.plan) : org.plan,
+        paymentStatus: latestSubscription ? toOrganizationPaymentStatus(latestSubscription.paymentStatus) : org.paymentStatus,
+        latestSubscription,
+        subscriptions: undefined,
+      };
+    }));
   } catch (e) { next(e); }
 });
 
@@ -256,19 +301,30 @@ superadminRoutes.put('/organizations/:id/plan', async (req: AuthRequest, res, ne
 superadminRoutes.post('/subscriptions/sync-plans', async (req: AuthRequest, res, next) => {
   try {
     const organizations = await prisma.organization.findMany({
-      select: { id: true, plan: true },
+      select: { id: true },
     });
 
     let updatedCount = 0;
     for (const org of organizations) {
-      const result = await prisma.subscription.updateMany({
+      const latestSubscription = await prisma.subscription.findFirst({
         where: { organizationId: org.id },
-        data: { plan: org.plan },
+        orderBy: { createdAt: 'desc' },
+        select: { plan: true, paymentStatus: true },
+      });
+
+      if (!latestSubscription) continue;
+
+      const result = await prisma.organization.updateMany({
+        where: { id: org.id },
+        data: {
+          plan: toOrganizationPlan(latestSubscription.plan),
+          paymentStatus: toOrganizationPaymentStatus(latestSubscription.paymentStatus),
+        },
       });
       updatedCount += result.count;
     }
     
-    res.json({ message: `Synced ${updatedCount} subscriptions`, updatedCount });
+    res.json({ message: `Synced ${updatedCount} organizations`, updatedCount });
   } catch (e) { next(e); }
 });
 
@@ -392,7 +448,14 @@ superadminRoutes.post('/payments/:id/reject', async (req: AuthRequest, res, next
 
 superadminRoutes.post('/subscriptions', async (req: AuthRequest, res, next) => {
   try {
-    const { organizationId, plan, price, paymentMethod, startDate, endDate } = req.body;
+    const { organizationId, plan, price, paymentMethod, startDate, endDate } = createSubscriptionSchema.parse(req.body);
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true },
+    });
+    if (!organization) {
+      return res.status(404).json({ error: 'Organisation introuvable' });
+    }
     
     // Map subscription plan to organization plan
     const orgPlan = plan === 'STARTER' ? 'FREE' : plan === 'PRO' ? 'BUSINESS' : 'ENTERPRISE';
@@ -412,7 +475,7 @@ superadminRoutes.post('/subscriptions', async (req: AuthRequest, res, next) => {
     // Update organization plan
     await prisma.organization.update({
       where: { id: organizationId },
-      data: { plan: orgPlan },
+      data: { plan: orgPlan, paymentStatus: 'APPROVED' },
     });
     
     res.status(201).json(subscription);
@@ -440,7 +503,7 @@ superadminRoutes.delete('/subscriptions/:id', async (req: AuthRequest, res, next
 superadminRoutes.put('/subscriptions/:id', async (req: AuthRequest, res, next) => {
   try {
     const id = req.params.id as string;
-    const { organizationId, plan, price, paymentMethod, startDate, endDate, paymentStatus } = req.body;
+    const { organizationId, plan, price, paymentMethod, startDate, endDate, paymentStatus } = updateSubscriptionSchema.parse(req.body);
 
     const existing = await prisma.subscription.findUnique({
       where: { id },
@@ -449,11 +512,13 @@ superadminRoutes.put('/subscriptions/:id', async (req: AuthRequest, res, next) =
     if (!existing) {
       return res.status(404).json({ error: 'Abonnement introuvable ou déjà supprimé. Rafraîchis la page.' });
     }
+    if (organizationId && organizationId !== existing.organizationId) {
+      return res.status(400).json({ error: 'Le changement d’organisation d’un abonnement est interdit.' });
+    }
 
     const subscription = await prisma.subscription.update({
       where: { id },
       data: {
-        organizationId: organizationId || undefined,
         plan: plan || undefined,
         price: price !== undefined && price !== '' ? Number(price) : undefined,
         paymentMethod: paymentMethod || undefined,
@@ -557,7 +622,16 @@ superadminRoutes.get('/stats', async (req: AuthRequest, res, next) => {
 superadminRoutes.get('/users', async (req: AuthRequest, res, next) => {
   try {
     const users = await prisma.user.findMany({
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        organizationId: true,
+        createdAt: true,
+        updatedAt: true,
+        failedLoginAttempts: true,
+        lockedUntil: true,
         organization: {
           select: { name: true },
         },
@@ -608,26 +682,27 @@ superadminRoutes.post('/impersonate', async (req: AuthRequest, res, next) => {
       return res.status(404).json({ error: 'Utilisateur introuvable' });
     }
     
-    // Store original token
-    const originalToken = req.headers.authorization?.replace('Bearer ', '');
-    
     // Generate new token for target user
     const accessToken = jwt.sign({ userId: targetUser.id }, process.env.JWT_SECRET!, {
       expiresIn: '15m',
     });
-    
-    const refreshToken = await prisma.refreshToken.create({
+
+    const refreshToken = jwt.sign({ userId: targetUser.id }, process.env.JWT_SECRET!, {
+      expiresIn: '30d',
+    });
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+
+    await prisma.refreshToken.create({
       data: {
-        token: crypto.randomBytes(32).toString('hex'),
+        token: refreshTokenHash,
         userId: targetUser.id,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       },
     });
     
     res.json({
       accessToken,
-      refreshToken: refreshToken.token,
-      originalToken,
+      refreshToken,
       user: {
         id: targetUser.id,
         email: targetUser.email,
@@ -668,7 +743,7 @@ superadminRoutes.put('/settings', async (req: AuthRequest, res, next) => {
       smtpHost,
       smtpPort,
       smtpUser,
-      smtpPassword,
+      smtpPasswordConfigured: Boolean(smtpPassword),
     });
   } catch (e) { next(e); }
 });

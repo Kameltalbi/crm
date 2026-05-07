@@ -1,17 +1,21 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import auth from '../middleware/auth.js';
+import auth, { AuthRequest } from '../middleware/auth.js';
 import { softfactureClient } from '../services/softfacture.js';
 
 export const softfactureRoutes = Router();
 softfactureRoutes.use(auth);
 
 // ─── Créer un DEVIS dans Softfacture à partir d'une affaire ─────
-softfactureRoutes.post('/devis/:affaireId', async (req, res, next) => {
+softfactureRoutes.post('/devis/:affaireId', async (req: AuthRequest, res, next) => {
   try {
-    const affaire = await prisma.affaire.findUnique({
-      where: { id: req.params.affaireId },
+    const affaireId = req.params.affaireId as string;
+    const affaire = await prisma.affaire.findFirst({
+      where: {
+        id: affaireId,
+        organizationId: req.organizationId,
+        deletedAt: null,
+      },
       include: { client: true },
     });
     if (!affaire) return res.status(404).json({ error: 'Affaire introuvable' });
@@ -51,10 +55,15 @@ softfactureRoutes.post('/devis/:affaireId', async (req, res, next) => {
 });
 
 // ─── Créer une FACTURE dans Softfacture ─────────────────────────
-softfactureRoutes.post('/facture/:affaireId', async (req, res, next) => {
+softfactureRoutes.post('/facture/:affaireId', async (req: AuthRequest, res, next) => {
   try {
-    const affaire = await prisma.affaire.findUnique({
-      where: { id: req.params.affaireId },
+    const affaireId = req.params.affaireId as string;
+    const affaire = await prisma.affaire.findFirst({
+      where: {
+        id: affaireId,
+        organizationId: req.organizationId,
+        deletedAt: null,
+      },
       include: { client: true },
     });
     if (!affaire) return res.status(404).json({ error: 'Affaire introuvable' });
@@ -97,11 +106,22 @@ softfactureRoutes.post('/facture/:affaireId', async (req, res, next) => {
 });
 
 // ─── Récupérer le PDF d'un document Softfacture ─────────────────
-softfactureRoutes.get('/pdf/:type/:id', async (req, res, next) => {
+softfactureRoutes.get('/pdf/:type/:id', async (req: AuthRequest, res, next) => {
   try {
-    const { type, id } = req.params;
+    const type = req.params.type as string;
+    const id = req.params.id as string;
     if (!['devis', 'facture'].includes(type))
       return res.status(400).json({ error: 'Type invalide' });
+    const affaire = await prisma.affaire.findFirst({
+      where: {
+        organizationId: req.organizationId,
+        deletedAt: null,
+        ...(type === 'devis' ? { devisId: id } : { factureId: id }),
+      },
+      select: { id: true },
+    });
+    if (!affaire) return res.status(404).json({ error: 'Document introuvable' });
+
     const pdfBuffer = await softfactureClient.getPdf(type as 'devis' | 'facture', id);
     res.setHeader('Content-Type', 'application/pdf');
     res.send(pdfBuffer);

@@ -77,6 +77,15 @@ productsRoutes.post('/', async (req: AuthRequest, res, next) => {
 productsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
   try {
     const data = productSchema.partial().parse(req.body);
+    const existing = await prisma.product.findFirst({
+      where: {
+        id: req.params.id as string,
+        organizationId: req.organizationId,
+        deletedAt: null,
+      },
+    });
+    if (!existing) return res.status(404).json({ error: 'Produit introuvable' });
+
     const product = await prisma.product.update({
       where: { id: req.params.id as string },
       data,
@@ -89,6 +98,15 @@ productsRoutes.put('/:id', async (req: AuthRequest, res, next) => {
 productsRoutes.delete('/:id', async (req: AuthRequest, res, next) => {
   try {
     const id = req.params.id as string;
+    const existing = await prisma.product.findFirst({
+      where: {
+        id,
+        organizationId: req.organizationId,
+        deletedAt: null,
+      },
+    });
+    if (!existing) return res.status(404).json({ error: 'Produit introuvable' });
+
     await prisma.product.update({
       where: { id },
       data: { deletedAt: new Date() },

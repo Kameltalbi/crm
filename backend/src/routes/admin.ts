@@ -9,8 +9,8 @@ const checkAdmin = async (req: any, res: any, next: any) => {
   try {
     const userId = req.userId;
     if (!userId) return res.status(403).json({ error: 'Access denied' });
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
-    if (user?.email !== 'admin@ktoptima.com') return res.status(403).json({ error: 'Access denied' });
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    if (user?.role !== 'SUPERADMIN') return res.status(403).json({ error: 'Access denied' });
     next();
   } catch { return res.status(500).json({ error: 'Internal error' }); }
 };

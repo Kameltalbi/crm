@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
+import { initSentry, SentryErrorBoundary } from './lib/sentry';
+
+initSentry();
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -11,11 +14,30 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <SentryErrorBoundary
+      fallback={({ resetError }) => (
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <div className="max-w-md text-center space-y-4">
+            <h1 className="text-2xl font-semibold">Une erreur est survenue</h1>
+            <p className="text-muted-foreground text-sm">
+              Le problème a été remonté à notre équipe. Vous pouvez réessayer ci-dessous.
+            </p>
+            <button
+              onClick={resetError}
+              className="px-4 py-2 rounded-md bg-leaf text-white text-sm hover:opacity-90"
+            >
+              Réessayer
+            </button>
+          </div>
+        </div>
+      )}
+    >
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </SentryErrorBoundary>
   </React.StrictMode>
 );
 

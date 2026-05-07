@@ -1,36 +1,63 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './lib/auth';
 import './i18n';
+import { Layout } from './components/Layout';
+import { PaymentGuard } from './components/PaymentGuard';
+import { PwaInstallPrompt } from './components/PwaInstallPrompt';
+
+// Public / auth pages: kept eager since they must render fast on cold load and
+// represent the first impression for new visitors.
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
-import { Layout } from './components/Layout';
-import { Dashboard } from './pages/Dashboard';
-import { Affaires } from './pages/Affaires';
-import { AffaireDetail } from './pages/AffaireDetail';
-import { Clients } from './pages/Clients';
-import { Leads } from './pages/Leads';
-import { Calendar } from './pages/Calendar';
-import { Expenses } from './pages/Expenses';
-import { Settings } from './pages/Settings';
-import { Users } from './pages/Users';
-import { Products } from './pages/Products';
-import { Activites } from './pages/Activites';
-import { Organizations } from './pages/Organizations';
 import { Landing } from './pages/Landing';
-import { LandingSales } from './pages/LandingSales';
-import { Legal } from './pages/Legal';
-import { Onboarding } from './pages/Onboarding';
-import { Pricing } from './pages/Pricing';
-import { EmailTemplates } from './pages/EmailTemplates';
-import { AIAssistant } from './pages/AIAssistant';
-import { Objectifs } from './pages/Objectifs';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { PaymentPending } from './pages/PaymentPending';
-import { PaymentGuard } from './components/PaymentGuard';
-import { PwaInstallPrompt } from './components/PwaInstallPrompt';
+
+// Heavy authenticated pages: lazy-loaded so they don't bloat the initial bundle.
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
+const Affaires = lazy(() => import('./pages/Affaires').then((m) => ({ default: m.Affaires })));
+const AffaireDetail = lazy(() =>
+  import('./pages/AffaireDetail').then((m) => ({ default: m.AffaireDetail }))
+);
+const Clients = lazy(() => import('./pages/Clients').then((m) => ({ default: m.Clients })));
+const Leads = lazy(() => import('./pages/Leads').then((m) => ({ default: m.Leads })));
+const Calendar = lazy(() => import('./pages/Calendar').then((m) => ({ default: m.Calendar })));
+const Expenses = lazy(() => import('./pages/Expenses').then((m) => ({ default: m.Expenses })));
+const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
+const Users = lazy(() => import('./pages/Users').then((m) => ({ default: m.Users })));
+const Products = lazy(() => import('./pages/Products').then((m) => ({ default: m.Products })));
+const Activites = lazy(() => import('./pages/Activites').then((m) => ({ default: m.Activites })));
+const Organizations = lazy(() =>
+  import('./pages/Organizations').then((m) => ({ default: m.Organizations }))
+);
+const LandingSales = lazy(() =>
+  import('./pages/LandingSales').then((m) => ({ default: m.LandingSales }))
+);
+const Legal = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Legal })));
+const Onboarding = lazy(() => import('./pages/Onboarding').then((m) => ({ default: m.Onboarding })));
+const Pricing = lazy(() => import('./pages/Pricing').then((m) => ({ default: m.Pricing })));
+const EmailTemplates = lazy(() =>
+  import('./pages/EmailTemplates').then((m) => ({ default: m.EmailTemplates }))
+);
+const AIAssistant = lazy(() =>
+  import('./pages/AIAssistant').then((m) => ({ default: m.AIAssistant }))
+);
+const Objectifs = lazy(() => import('./pages/Objectifs').then((m) => ({ default: m.Objectifs })));
+const AdminDashboard = lazy(() =>
+  import('./pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
+);
+const PaymentPending = lazy(() =>
+  import('./pages/PaymentPending').then((m) => ({ default: m.PaymentPending }))
+);
+
+function PageFallback() {
+  return (
+    <div className="flex items-center justify-center h-[60vh] text-muted-foreground text-sm">
+      Chargement...
+    </div>
+  );
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const accessToken = useAuth((s) => s.accessToken);
@@ -55,63 +82,67 @@ export default function App() {
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/sales" element={<LandingSales />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/legal/:type" element={<Legal />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route
-          path="/payment-pending"
-          element={
-            <ProtectedRoute>
-              <PaymentPending />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/*"
-          element={
-            <ProtectedRoute>
-              <PaymentGuard>
-                <Layout>
-                  <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/affaires" element={<Affaires />} />
-                  <Route path="/affaires/:id" element={<AffaireDetail />} />
-                  <Route path="/clients" element={<Clients />} />
-                  <Route path="/leads" element={<Leads />} />
-                  <Route path="/calendar" element={<Calendar />} />
-                  <Route path="/expenses" element={<Expenses />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/settings/organizations" element={<Organizations />} />
-                  <Route path="/users" element={<Users />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/activites" element={<Activites />} />
-                  <Route path="/email-templates" element={<EmailTemplates />} />
-                  <Route path="/ai-assistant" element={<AIAssistant />} />
-                  <Route path="/objectifs" element={<Objectifs />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Layout>
-              </PaymentGuard>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
-      </Routes>
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/sales" element={<LandingSales />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/legal/:type" element={<Legal />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route
+            path="/payment-pending"
+            element={
+              <ProtectedRoute>
+                <PaymentPending />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <PaymentGuard>
+                  <Layout>
+                    <Suspense fallback={<PageFallback />}>
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/affaires" element={<Affaires />} />
+                        <Route path="/affaires/:id" element={<AffaireDetail />} />
+                        <Route path="/clients" element={<Clients />} />
+                        <Route path="/leads" element={<Leads />} />
+                        <Route path="/calendar" element={<Calendar />} />
+                        <Route path="/expenses" element={<Expenses />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/settings/organizations" element={<Organizations />} />
+                        <Route path="/users" element={<Users />} />
+                        <Route path="/products" element={<Products />} />
+                        <Route path="/activites" element={<Activites />} />
+                        <Route path="/email-templates" element={<EmailTemplates />} />
+                        <Route path="/ai-assistant" element={<AIAssistant />} />
+                        <Route path="/objectifs" element={<Objectifs />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                      </Routes>
+                    </Suspense>
+                  </Layout>
+                </PaymentGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+        </Routes>
+      </Suspense>
       <PwaInstallPrompt />
     </>
   );

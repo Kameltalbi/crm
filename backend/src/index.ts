@@ -1,4 +1,8 @@
 import 'dotenv/config';
+// Init Sentry as early as possible so it can capture imports/init errors too.
+import { initSentry, setupExpressErrorHandler } from './lib/sentry.js';
+initSentry();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -83,8 +87,31 @@ const authLimiter = rateLimit({
 });
 
 // ─── Health check (before /api rate limit) ────────────────
-app.get('/api/health', (_, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
+import { prisma } from './db/prisma.js';
+
+app.get('/api/health', async (_req, res) => {
+  const startedAt = Date.now();
+  let dbOk = false;
+  let dbLatencyMs: number | null = null;
+  try {
+    const t0 = Date.now();
+    await prisma.$queryRaw`SELECT 1`;
+    dbLatencyMs = Date.now() - t0;
+    dbOk = true;
+  } catch {
+    dbOk = false;
+  }
+
+  const status = dbOk ? 'ok' : 'degraded';
+  res
+    .status(dbOk ? 200 : 503)
+    .json({
+      status,
+      time: new Date().toISOString(),
+      uptimeSec: Math.floor(process.uptime()),
+      db: { ok: dbOk, latencyMs: dbLatencyMs },
+      took: Date.now() - startedAt,
+    });
 });
 
 // ─── Static files for uploads (before /api rate limit) ───
@@ -131,6 +158,9 @@ app.use('/api/sales-objectives', salesObjectivesRoutes);
 app.use('/api/user-permissions', userPermissionsRoutes);
 app.use('/api/commissions', commissionsRoutes);
 app.use('/api/superadmin', superadminRoutes);
+
+// ─── Sentry request handler (no-op if SENTRY_DSN is unset) ───
+setupExpressErrorHandler(app);
 
 // ─── Error handler ───────────────────────────────────────
 app.use(errorHandler);

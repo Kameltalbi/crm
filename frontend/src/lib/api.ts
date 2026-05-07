@@ -8,10 +8,24 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+const isAuthEndpointWithoutBearer = (url?: string) =>
+  !!url && [
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/auth/logout',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+  ].some((path) => url.startsWith(path));
+
 // Injection du token JWT à chaque requête
 api.interceptors.request.use(config => {
-  const accessToken = localStorage.getItem('accessToken');
-  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+  if (!isAuthEndpointWithoutBearer(config.url)) {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+  } else if (config.headers.Authorization) {
+    delete config.headers.Authorization;
+  }
   return config;
 });
 
@@ -21,7 +35,11 @@ api.interceptors.response.use(
   async err => {
     const originalRequest = err.config;
 
-    if (err.response?.status === 401 && !originalRequest._retry) {
+    if (
+      err.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpointWithoutBearer(originalRequest.url)
+    ) {
       originalRequest._retry = true;
 
       try {

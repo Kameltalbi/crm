@@ -284,7 +284,7 @@ authRoutes.post('/login', async (req, res, next) => {
     res.json({
       accessToken,
       refreshToken,
-      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      user: { id: user.id, email: user.email, name: user.name, role: user.role, organizationId: user.organizationId },
       paymentStatus: organization?.paymentStatus,
     });
   } catch (e) {

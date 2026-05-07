@@ -14,6 +14,15 @@ interface AuthState {
   refreshAccessToken: () => Promise<void>;
 }
 
+function clearAuthStorage() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+  localStorage.removeItem('paymentStatus');
+  localStorage.removeItem('impersonating');
+  localStorage.removeItem('originalToken');
+}
+
 export const useAuth = create<AuthState>((set, get) => ({
   user: null,
   accessToken: localStorage.getItem('accessToken'),
@@ -22,6 +31,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   loading: false,
 
   login: async (email, password) => {
+    clearAuthStorage();
     set({ loading: true });
     try {
       const { data } = await api.post('/auth/login', { email, password });
@@ -31,7 +41,8 @@ export const useAuth = create<AuthState>((set, get) => ({
       localStorage.setItem('paymentStatus', data.paymentStatus || 'PENDING');
       set({ user: data.user, accessToken: data.accessToken, refreshToken: data.refreshToken, paymentStatus: data.paymentStatus || 'PENDING', loading: false });
     } catch (e) {
-      set({ loading: false });
+      clearAuthStorage();
+      set({ user: null, accessToken: null, refreshToken: null, paymentStatus: null, loading: false });
       throw e;
     }
   },
@@ -43,12 +54,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     } catch {
       // Ignore logout errors
     }
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('paymentStatus');
-    localStorage.removeItem('impersonating');
-    localStorage.removeItem('originalToken');
+    clearAuthStorage();
     set({ user: null, accessToken: null, refreshToken: null, paymentStatus: null });
   },
 
@@ -61,12 +67,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       localStorage.setItem('paymentStatus', data.paymentStatus || 'PENDING');
       set({ user: data.user, paymentStatus: data.paymentStatus || 'PENDING' });
     } catch {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('paymentStatus');
-      localStorage.removeItem('impersonating');
-      localStorage.removeItem('originalToken');
+      clearAuthStorage();
       set({ user: null, accessToken: null, refreshToken: null, paymentStatus: null });
     }
   },

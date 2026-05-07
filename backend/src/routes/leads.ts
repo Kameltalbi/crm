@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
-import auth, { AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest, requirePaymentApproved } from '../middleware/auth.js';
 import { checkProspectLimit } from '../middleware/planRestrictions.js';
 
 export const leadsRoutes = Router();
@@ -9,6 +9,7 @@ const prisma = new PrismaClient();
 
 // Apply auth middleware to all routes
 leadsRoutes.use(auth);
+leadsRoutes.use(requirePaymentApproved);
 
 const toOptionalNumber = z.preprocess(
   (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),

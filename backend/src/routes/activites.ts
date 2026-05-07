@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
-import auth, { AuthRequest } from '../middleware/auth.js';
+import auth, { AuthRequest, requirePaymentApproved } from '../middleware/auth.js';
 import { ActiviteType } from '@prisma/client';
 import { parsePagination } from '../lib/pagination.js';
 
 export const activitesRoutes = Router();
 activitesRoutes.use(auth);
+activitesRoutes.use(requirePaymentApproved);
 
 const activiteSchema = z.object({
   affaireId: z.string(),

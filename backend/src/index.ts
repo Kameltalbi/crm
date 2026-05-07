@@ -37,7 +37,6 @@ import { commissionsRoutes } from './routes/commissions.js';
 import { superadminRoutes } from './routes/superadmin.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { getUploadsDir } from './lib/uploadsDir.js';
-import auth, { requirePaymentApproved } from './middleware/auth.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 4000;
@@ -108,16 +107,16 @@ app.use(
 
 // ─── API Routes ──────────────────────────────────────────
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/clients', auth, requirePaymentApproved, clientsRoutes);
-app.use('/api/leads', auth, requirePaymentApproved, leadsRoutes);
-app.use('/api/affaires', auth, requirePaymentApproved, affairesRoutes);
+app.use('/api/clients', clientsRoutes);
+app.use('/api/leads', leadsRoutes);
+app.use('/api/affaires', affairesRoutes);
 app.use('/api/previsionnel', previsionnelRoutes);
 app.use('/api/softfacture', softfactureRoutes);
 app.use('/api/gmail', gmailRoutes);
 app.use('/api/kpis', kpisRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/products', auth, requirePaymentApproved, productsRoutes);
-app.use('/api/activites', auth, requirePaymentApproved, activitesRoutes);
+app.use('/api/products', productsRoutes);
+app.use('/api/activites', activitesRoutes);
 app.use('/api/organizations', organizationsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationsRouter);

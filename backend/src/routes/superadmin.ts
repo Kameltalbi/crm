@@ -51,6 +51,15 @@ const toOrganizationPaymentStatus = (paymentStatus: string) => {
   return 'PENDING';
 };
 
+const getAuthoritativeSubscription = <T extends { paymentStatus: string; endDate: Date; createdAt: Date }>(subscriptions: T[]) => {
+  const now = new Date();
+  return (
+    subscriptions.find((s) => s.paymentStatus === 'PAID' && s.endDate >= now) ||
+    subscriptions.find((s) => s.paymentStatus === 'PAID') ||
+    subscriptions[0]
+  );
+};
+
 // GET all organizations with payment status
 superadminRoutes.get('/organizations', async (req: AuthRequest, res, next) => {
   try {
@@ -78,20 +87,20 @@ superadminRoutes.get('/organizations', async (req: AuthRequest, res, next) => {
         },
         subscriptions: {
           orderBy: { createdAt: 'desc' },
-          take: 1,
           select: {
             id: true,
             plan: true,
             paymentStatus: true,
             startDate: true,
             endDate: true,
+            createdAt: true,
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
     res.json(organizations.map((org) => {
-      const latestSubscription = org.subscriptions[0];
+      const latestSubscription = getAuthoritativeSubscription(org.subscriptions);
       return {
         ...org,
         plan: latestSubscription ? toOrganizationPlan(latestSubscription.plan) : org.plan,
@@ -306,11 +315,12 @@ superadminRoutes.post('/subscriptions/sync-plans', async (req: AuthRequest, res,
 
     let updatedCount = 0;
     for (const org of organizations) {
-      const latestSubscription = await prisma.subscription.findFirst({
+      const subscriptions = await prisma.subscription.findMany({
         where: { organizationId: org.id },
         orderBy: { createdAt: 'desc' },
-        select: { plan: true, paymentStatus: true },
+        select: { plan: true, paymentStatus: true, endDate: true, createdAt: true },
       });
+      const latestSubscription = getAuthoritativeSubscription(subscriptions);
 
       if (!latestSubscription) continue;
 

@@ -450,6 +450,13 @@ function SubscriptionsTab() {
   const [editingSubscription, setEditingSubscription] = useState<any>(null);
   const [formData, setFormData] = useState({ organizationId: '', plan: 'FREE', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
   const queryClient = useQueryClient();
+  const refreshSubscriptions = () => {
+    queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['superadmin-payments'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['admin-organizations'], refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: ['superadmin-stats'], refetchType: 'all' });
+  };
+
   const { data: orgs } = useQuery({
     queryKey: ['admin-organizations'],
     queryFn: () => api.get('/superadmin/organizations').then(r => r.data),
@@ -464,33 +471,47 @@ function SubscriptionsTab() {
   const syncSubscriptionsMutation = useMutation({
     mutationFn: () => api.post('/superadmin/subscriptions/sync-plans'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
+      refreshSubscriptions();
       alert('Abonnements synchronisés avec succès !');
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.error || error.message || 'Impossible de synchroniser les abonnements');
     },
   });
 
   const createMutation = useMutation({
     mutationFn: (data: any) => api.post('/superadmin/subscriptions', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
+      refreshSubscriptions();
       setIsDialogOpen(false);
       setFormData({ organizationId: '', plan: 'FREE', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.error || error.message || 'Impossible de créer cet abonnement');
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => api.put(`/superadmin/subscriptions/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
+      refreshSubscriptions();
       setIsDialogOpen(false);
       setEditingSubscription(null);
+    },
+    onError: (error: any) => {
+      refreshSubscriptions();
+      alert(error.response?.data?.error || error.message || 'Impossible de modifier cet abonnement');
     },
   });
 
   const deleteSubscriptionMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/superadmin/subscriptions/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'] });
+      refreshSubscriptions();
+    },
+    onError: (error: any) => {
+      refreshSubscriptions();
+      alert(error.response?.data?.error || error.message || 'Impossible de supprimer cet abonnement');
     },
   });
 
@@ -711,6 +732,43 @@ function PaymentsTab({ queryClient }: { queryClient: any }) {
     return <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-600'}`}>{labels[status] || status}</span>;
   };
 
+  const canValidatePayment = (payment: any) =>
+    payment.paymentStatus !== 'PAID' || payment.organizationPaymentStatus !== 'APPROVED';
+
+  const paymentActions = (payment: any) => {
+    const canValidate = canValidatePayment(payment);
+    const canReject = payment.paymentStatus === 'PENDING';
+
+    if (!canValidate && !canReject) {
+      return <span className="text-xs text-muted-foreground">Aucune action</span>;
+    }
+
+    return (
+      <>
+        {canValidate && (
+          <Button
+            size="sm"
+            onClick={() => validateMutation.mutate(payment.id)}
+            disabled={validateMutation.isPending}
+          >
+            <CheckCircle size={14} className="mr-1" />
+            {payment.paymentStatus === 'PAID' ? 'Approuver accès' : 'Valider'}
+          </Button>
+        )}
+        {canReject && (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => rejectMutation.mutate(payment.id)}
+            disabled={rejectMutation.isPending}
+          >
+            <AlertTriangle size={14} className="mr-1" /> Refuser
+          </Button>
+        )}
+      </>
+    );
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Paiements</h2>
@@ -731,16 +789,9 @@ function PaymentsTab({ queryClient }: { queryClient: any }) {
                     <p>Mode: {p.paymentMethod}</p>
                     <p>Demande: {new Date(p.createdAt).toLocaleDateString('fr-FR')}</p>
                   </div>
-                  {p.paymentStatus === 'PENDING' && (
-                    <div className="flex gap-2 justify-end">
-                      <Button size="sm" onClick={() => validateMutation.mutate(p.id)} disabled={validateMutation.isPending}>
-                        <CheckCircle size={14} className="mr-1" /> Valider
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => rejectMutation.mutate(p.id)} disabled={rejectMutation.isPending}>
-                        <AlertTriangle size={14} className="mr-1" /> Refuser
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    {paymentActions(p)}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -768,17 +819,10 @@ function PaymentsTab({ queryClient }: { queryClient: any }) {
                     <td className="p-4">{p.paymentMethod}</td>
                     <td className="p-4">{statusBadge(p.paymentStatus)}</td>
                     <td className="p-4">{new Date(p.createdAt).toLocaleDateString('fr-FR')}</td>
-                    <td className="p-4 flex gap-2">
-                      {p.paymentStatus === 'PENDING' && (
-                        <>
-                          <Button size="sm" onClick={() => validateMutation.mutate(p.id)} disabled={validateMutation.isPending}>
-                            <CheckCircle size={14} className="mr-1" /> Valider
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => rejectMutation.mutate(p.id)} disabled={rejectMutation.isPending}>
-                            <AlertTriangle size={14} className="mr-1" /> Refuser
-                          </Button>
-                        </>
-                      )}
+                    <td className="p-4">
+                      <div className="flex flex-wrap gap-2">
+                        {paymentActions(p)}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -250,7 +250,7 @@ superadminRoutes.get('/payments', async (req: AuthRequest, res, next) => {
     const payments = await prisma.subscription.findMany({
       include: {
         organization: {
-          select: { name: true },
+          select: { name: true, paymentStatus: true },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -260,6 +260,7 @@ superadminRoutes.get('/payments', async (req: AuthRequest, res, next) => {
       id: payment.id,
       organizationName: payment.organization?.name || 'N/A',
       organizationId: payment.organizationId,
+      organizationPaymentStatus: payment.organization?.paymentStatus || 'PENDING',
       plan: payment.plan,
       price: payment.price,
       paymentMethod: payment.paymentMethod,
@@ -371,25 +372,72 @@ superadminRoutes.post('/subscriptions', async (req: AuthRequest, res, next) => {
 // DELETE subscription
 superadminRoutes.delete('/subscriptions/:id', async (req: AuthRequest, res, next) => {
   try {
-    await prisma.subscription.delete({
-      where: { id: req.params.id as string },
+    const id = req.params.id as string;
+    const existing = await prisma.subscription.findUnique({
+      where: { id },
+      select: { id: true },
     });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Abonnement introuvable ou déjà supprimé. Rafraîchis la page.' });
+    }
+
+    await prisma.subscription.deleteMany({ where: { id } });
     res.json({ success: true });
   } catch (e) { next(e); }
 });
 
 superadminRoutes.put('/subscriptions/:id', async (req: AuthRequest, res, next) => {
   try {
-    const { startDate, endDate, paymentStatus } = req.body;
-    
+    const id = req.params.id as string;
+    const { organizationId, plan, price, paymentMethod, startDate, endDate, paymentStatus } = req.body;
+
+    const existing = await prisma.subscription.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Abonnement introuvable ou déjà supprimé. Rafraîchis la page.' });
+    }
+
     const subscription = await prisma.subscription.update({
-      where: { id: req.params.id as string },
+      where: { id },
       data: {
+        organizationId: organizationId || undefined,
+        plan: plan || undefined,
+        price: price !== undefined && price !== '' ? Number(price) : undefined,
+        paymentMethod: paymentMethod || undefined,
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
         paymentStatus: paymentStatus || undefined,
       },
     });
+
+    const targetOrganizationId = subscription.organizationId;
+    if (paymentStatus === 'PAID') {
+      await prisma.organization.updateMany({
+        where: { id: targetOrganizationId },
+        data: {
+          paymentStatus: 'APPROVED',
+          plan: toOrganizationPlan(subscription.plan),
+        },
+      });
+    } else if (paymentStatus === 'REFUSED') {
+      await prisma.organization.updateMany({
+        where: { id: targetOrganizationId },
+        data: { paymentStatus: 'REJECTED' },
+      });
+    } else if (paymentStatus === 'PENDING') {
+      await prisma.organization.updateMany({
+        where: { id: targetOrganizationId },
+        data: { paymentStatus: 'PENDING' },
+      });
+    } else if (plan) {
+      await prisma.organization.updateMany({
+        where: { id: targetOrganizationId },
+        data: { plan: toOrganizationPlan(subscription.plan) },
+      });
+    }
     
     res.json(subscription);
   } catch (e) { next(e); }

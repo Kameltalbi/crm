@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/form-controls';
 type CustomCategory = {
   id: string;
   name: string;
-  type: 'EXPENSE' | 'REVENUE';
+  type: string;
   createdAt: string;
 };
 
@@ -18,13 +18,18 @@ export function CategoriesSettings() {
   const [newExpense, setNewExpense] = useState('');
   const [newRevenue, setNewRevenue] = useState('');
 
-  const { data: categories = [] } = useQuery<CustomCategory[]>({
+  const { data: categories = [], error } = useQuery<CustomCategory[]>({
     queryKey: ['categories'],
     queryFn: () => api.get('/categories').then((r) => r.data),
   });
 
-  const expenseCategories = categories.filter((c) => c.type === 'EXPENSE');
-  const revenueCategories = categories.filter((c) => c.type === 'REVENUE');
+  const normalizedCategories = categories.map((c) => ({
+    ...c,
+    type: String(c.type || '').toUpperCase(),
+  }));
+
+  const expenseCategories = normalizedCategories.filter((c) => c.type === 'EXPENSE');
+  const revenueCategories = normalizedCategories.filter((c) => c.type === 'REVENUE');
 
   const createMutation = useMutation({
     mutationFn: (data: { name: string; type: string }) => api.post('/categories', data),
@@ -66,6 +71,11 @@ export function CategoriesSettings() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {error && (
+            <p className="text-xs text-destructive">
+              Impossible de charger les catégories ({(error as any)?.response?.status || 'erreur réseau'})
+            </p>
+          )}
           <div className="flex gap-2">
             <Input
               value={newExpense}
@@ -116,6 +126,11 @@ export function CategoriesSettings() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {error && (
+            <p className="text-xs text-destructive">
+              Impossible de charger les catégories ({(error as any)?.response?.status || 'erreur réseau'})
+            </p>
+          )}
           <div className="flex gap-2">
             <Input
               value={newRevenue}

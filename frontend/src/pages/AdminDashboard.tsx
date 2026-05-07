@@ -181,7 +181,11 @@ function DashboardTab() {
 }
 
 function OrganizationsTab() {
-  const { data: orgs } = useQuery({ queryKey: ['admin-organizations'], queryFn: () => api.get('/superadmin/organizations').then(r => r.data) });
+  const { data: orgs } = useQuery({
+    queryKey: ['admin-organizations'],
+    queryFn: () => api.get('/superadmin/organizations').then(r => r.data),
+    refetchInterval: 15000,
+  });
   const queryClient = useQueryClient();
 
   const refreshOrganizations = () => {
@@ -451,8 +455,16 @@ function SubscriptionsTab() {
   const [editingSubscription, setEditingSubscription] = useState<any>(null);
   const [formData, setFormData] = useState({ organizationId: '', plan: 'FREE', price: '', paymentMethod: 'VIREMENT', startDate: '', endDate: '' });
   const queryClient = useQueryClient();
-  const { data: orgs } = useQuery({ queryKey: ['admin-organizations'], queryFn: () => api.get('/superadmin/organizations').then(r => r.data) });
-  const { data: subs } = useQuery({ queryKey: ['superadmin-subscriptions'], queryFn: () => api.get('/superadmin/subscriptions').then(r => r.data) });
+  const { data: orgs } = useQuery({
+    queryKey: ['admin-organizations'],
+    queryFn: () => api.get('/superadmin/organizations').then(r => r.data),
+    refetchInterval: 15000,
+  });
+  const { data: subs } = useQuery({
+    queryKey: ['superadmin-subscriptions'],
+    queryFn: () => api.get('/superadmin/subscriptions').then(r => r.data),
+    refetchInterval: 15000,
+  });
 
   const syncSubscriptionsMutation = useMutation({
     mutationFn: () => api.post('/superadmin/subscriptions/sync-plans'),
@@ -672,16 +684,30 @@ function SubscriptionsTab() {
 }
 
 function PaymentsTab({ queryClient }: { queryClient: any }) {
-  const { data: payments } = useQuery({ queryKey: ['admin-payments'], queryFn: () => api.get('/admin/payments').then(r => r.data) });
+  const { data: payments } = useQuery({
+    queryKey: ['superadmin-payments'],
+    queryFn: () => api.get('/superadmin/payments').then(r => r.data),
+    refetchInterval: 15000,
+  });
 
   const validateMutation = useMutation({
-    mutationFn: (id: string) => api.post(`/admin/payments/${id}/validate`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-payments'] }); queryClient.invalidateQueries({ queryKey: ['admin-stats'] }); },
+    mutationFn: (id: string) => api.post(`/superadmin/payments/${id}/validate`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-payments'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['admin-organizations'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['superadmin-stats'], refetchType: 'all' });
+    },
   });
 
   const rejectMutation = useMutation({
-    mutationFn: (id: string) => api.post(`/admin/payments/${id}/reject`),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-payments'] }); queryClient.invalidateQueries({ queryKey: ['admin-stats'] }); },
+    mutationFn: (id: string) => api.post(`/superadmin/payments/${id}/reject`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-payments'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['admin-organizations'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['superadmin-subscriptions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['superadmin-stats'], refetchType: 'all' });
+    },
   });
 
   const statusBadge = (status: string) => {

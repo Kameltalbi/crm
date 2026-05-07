@@ -17,6 +17,15 @@ const updatePlanSchema = z.object({
   plan: z.enum(['FREE', 'BUSINESS', 'ENTERPRISE']),
 });
 
+const toOrganizationPlan = (plan: string) => {
+  if (plan === 'STARTER') return 'FREE';
+  if (plan === 'PRO') return 'BUSINESS';
+  if (plan === 'Gratuit') return 'FREE';
+  if (plan === 'Business') return 'BUSINESS';
+  if (plan === 'Entreprise') return 'ENTERPRISE';
+  return plan;
+};
+
 // GET all organizations with payment status
 superadminRoutes.get('/organizations', async (req: AuthRequest, res, next) => {
   try {
@@ -227,6 +236,101 @@ superadminRoutes.get('/subscriptions', async (req: AuthRequest, res, next) => {
               s.paymentStatus === 'PENDING' ? 'en_attente' : 
               s.paymentStatus === 'REFUSED' ? 'refusé' : 'expiré',
     })));
+  } catch (e) { next(e); }
+});
+
+// PAYMENTS MANAGEMENT
+superadminRoutes.get('/payments', async (req: AuthRequest, res, next) => {
+  try {
+    const payments = await prisma.subscription.findMany({
+      include: {
+        organization: {
+          select: { name: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(payments.map((payment: any) => ({
+      id: payment.id,
+      organizationName: payment.organization?.name || 'N/A',
+      organizationId: payment.organizationId,
+      plan: payment.plan,
+      price: payment.price,
+      paymentMethod: payment.paymentMethod,
+      paymentStatus: payment.paymentStatus,
+      startDate: payment.startDate,
+      endDate: payment.endDate,
+      createdAt: payment.createdAt,
+      updatedAt: payment.updatedAt,
+    })));
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.post('/payments/:id/validate', async (req: AuthRequest, res, next) => {
+  try {
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
+    const subscription = await prisma.subscription.findUnique({
+      where: { id: req.params.id as string },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ error: 'Paiement introuvable' });
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const paidSubscription = await tx.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          paymentStatus: 'PAID',
+          startDate: now,
+          endDate,
+        },
+      });
+
+      await tx.organization.update({
+        where: { id: subscription.organizationId },
+        data: {
+          paymentStatus: 'APPROVED',
+          plan: toOrganizationPlan(subscription.plan),
+        },
+      });
+
+      return paidSubscription;
+    });
+
+    res.json({ message: 'Paiement validé', subscription: updated });
+  } catch (e) { next(e); }
+});
+
+superadminRoutes.post('/payments/:id/reject', async (req: AuthRequest, res, next) => {
+  try {
+    const subscription = await prisma.subscription.findUnique({
+      where: { id: req.params.id as string },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ error: 'Paiement introuvable' });
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const refusedSubscription = await tx.subscription.update({
+        where: { id: subscription.id },
+        data: { paymentStatus: 'REFUSED' },
+      });
+
+      await tx.organization.update({
+        where: { id: subscription.organizationId },
+        data: { paymentStatus: 'REJECTED' },
+      });
+
+      return refusedSubscription;
+    });
+
+    res.json({ message: 'Paiement refusé', subscription: updated });
   } catch (e) { next(e); }
 });
 

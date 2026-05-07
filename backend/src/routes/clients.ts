@@ -80,7 +80,9 @@ clientsRoutes.post('/', async (req: AuthRequest, res, next) => {
       },
     });
     if (existing) {
-      return res.status(409).json({ error: `Un client avec le nom "${data.name}" existe déjà.` });
+      return res.status(409).json({
+        error: `Un client avec la raison sociale « ${data.name} » existe déjà (même organisation, majuscules ignorées). Utilisez la recherche sur la page Clients ou ouvrez la fiche pour la modifier.`,
+      });
     }
 
     const client = await prisma.client.create({

@@ -78,10 +78,55 @@ superadminRoutes.get('/organizations/:id', async (req: AuthRequest, res, next) =
 // DELETE organization
 superadminRoutes.delete('/organizations/:id', async (req: AuthRequest, res, next) => {
   try {
-    const organization = await prisma.organization.delete({
-      where: { id: req.params.id as string },
+    const organizationId = req.params.id as string;
+
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true, name: true },
     });
-    res.json({ success: true, message: 'Organisation supprimée avec succès' });
+
+    if (!organization) {
+      return res.status(404).json({ error: 'Organisation introuvable' });
+    }
+
+    const users = await prisma.user.findMany({
+      where: { organizationId },
+      select: { id: true },
+    });
+    const userIds = users.map((user) => user.id);
+
+    await prisma.$transaction(async (tx) => {
+      // Suppression explicite pour éviter les blocages FK si une cascade manque en production.
+      await tx.leadActivite.deleteMany({ where: { organizationId } });
+      await tx.activite.deleteMany({ where: { organizationId } });
+      await tx.calendarEvent.deleteMany({ where: { organizationId } });
+      await tx.expense.deleteMany({ where: { organizationId } });
+      await tx.email.deleteMany({ where: { organizationId } });
+      await tx.notification.deleteMany({ where: { organizationId } });
+      await tx.gmailToken.deleteMany({ where: { organizationId } });
+      if (userIds.length > 0) {
+        await tx.refreshToken.deleteMany({ where: { userId: { in: userIds } } });
+      }
+      await tx.auditLog.deleteMany({ where: { organizationId } });
+      await tx.userPermission.deleteMany({ where: { organizationId } });
+      await tx.salesObjective.deleteMany({ where: { organizationId } });
+      await tx.commissionConfig.deleteMany({ where: { organizationId } });
+      await tx.emailTemplate.deleteMany({ where: { organizationId } });
+      await tx.customCategory.deleteMany({ where: { organizationId } });
+      await tx.previsionMois.deleteMany({ where: { organizationId } });
+      await tx.subscription.deleteMany({ where: { organizationId } });
+      await tx.affaire.deleteMany({ where: { organizationId } });
+      await tx.lead.deleteMany({ where: { organizationId } });
+      await tx.client.deleteMany({ where: { organizationId } });
+      await tx.product.deleteMany({ where: { organizationId } });
+      await tx.user.deleteMany({ where: { organizationId } });
+      await tx.organization.delete({ where: { id: organizationId } });
+    });
+
+    res.json({
+      success: true,
+      message: `Organisation "${organization.name}" supprimée avec succès`,
+    });
   } catch (e) { next(e); }
 });
 

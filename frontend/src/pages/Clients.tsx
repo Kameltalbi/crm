@@ -24,21 +24,31 @@ export function Clients() {
 
   const [page, setPage] = useState(1);
 
-  const { data: clientsData } = useQuery<{ data: Client[], pagination: any }>({
+  const {
+    data: clientsData,
+    error: clientsError,
+    isError: clientsQueryError,
+    isFetching: clientsFetching,
+    refetch: refetchClients,
+  } = useQuery<{ data: Client[], pagination: any }>({
     queryKey: ['clients', page],
     queryFn: () => api.get('/clients', { params: { page, limit: 50 } }).then((r) => r.data),
   });
   const clients = clientsData?.data || [];
   const pagination = clientsData?.pagination;
 
-  const filteredClients = clients.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.contactName && c.contactName.toLowerCase().includes(search.toLowerCase())) ||
-    (c.email && c.email.toLowerCase().includes(search.toLowerCase()))
-  );
+  const q = search.trim().toLowerCase();
+  const filteredClients = clients.filter((c) => {
+    const name = (c.name ?? '').toLowerCase();
+    const contact = (c.contactName ?? '').toLowerCase();
+    const email = (c.email ?? '').toLowerCase();
+    return !q || name.includes(q) || contact.includes(q) || email.includes(q);
+  });
 
-  const totalAffaires = clients.reduce((sum, c) => sum + (c._count?.affaires || 0), 0);
-  const avgAffairesPerClient = clients.length > 0 ? (totalAffaires / clients.length).toFixed(1) : 0;
+  const totalListed = pagination?.total ?? clients.length;
+  const totalAffairesOnPage = clients.reduce((sum, c) => sum + (c._count?.affaires || 0), 0);
+  const avgAffairesPerClient =
+    clients.length > 0 ? (totalAffairesOnPage / clients.length).toFixed(1) : '0';
 
   const saveMutation = useMutation({
     mutationFn: (data: typeof EMPTY) => {
@@ -46,25 +56,44 @@ export function Clients() {
       delete (payload as any).id;
       return data.id ? api.put(`/clients/${data.id}`, payload) : api.post('/clients', payload);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['clients'] });
+    onSuccess: async (_data, variables) => {
+      // Nouveau client : page 1 + recherche vide ; invalidation « all » pour recharger même la page inactive (sinon ancienne page gardée en cache).
+      if (!variables.id) {
+        setPage(1);
+        setSearch('');
+      }
+      await qc.invalidateQueries({ queryKey: ['clients'], refetchType: 'all' });
       setOpen(false);
     },
-    onError: (error: any) => {
+    onError: (error: any, variables) => {
+      const status = error.response?.status;
       const msg = error.response?.data?.error || error.message || 'Erreur inconnue';
+      if (status === 409 && variables && !variables.id) {
+        const name = variables.name?.trim();
+        setPage(1);
+        if (name) setSearch(name);
+        void qc.invalidateQueries({ queryKey: ['clients'], refetchType: 'all' });
+        setOpen(false);
+        alert(
+          `${msg}\n\nLa liste a été rafraîchie : recherche remplie avec ce nom (page 1) pour retrouver la fiche.`
+        );
+        return;
+      }
       alert(msg);
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/clients/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['clients'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['clients'], refetchType: 'all' }),
   });
 
   const importMutation = useMutation({
     mutationFn: (clients: Omit<typeof EMPTY, 'id'>[]) => api.post('/clients/import', { clients }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['clients'] });
+    onSuccess: async () => {
+      setPage(1);
+      setSearch('');
+      await qc.invalidateQueries({ queryKey: ['clients'], refetchType: 'all' });
       setImportOpen(false);
       setImportFile(null);
     },
@@ -126,7 +155,7 @@ export function Clients() {
           <Button onClick={() => setImportOpen(true)} variant="outline" className="w-full sm:w-auto">
             <Upload size={16} />{t('common.import')} Excel
           </Button>
-          <Button onClick={() => { console.log('Opening form'); setForm(EMPTY); setOpen(true); console.log('Form should be open'); }} className="w-full sm:w-auto">
+          <Button onClick={() => { setForm(EMPTY); setOpen(true); }} className="w-full sm:w-auto">
             <Plus size={16} />{t('clients.addClient')}
           </Button>
         </div>
@@ -142,7 +171,7 @@ export function Clients() {
               </div>
               <div>
                 <p className="text-[9px] md:text-[10px] text-muted-foreground">{t('clients.totalClients')}</p>
-                <p className="text-sm md:text-lg font-bold">{clients.length}</p>
+                <p className="text-sm md:text-lg font-bold">{totalListed}</p>
               </div>
             </div>
           </CardContent>
@@ -155,7 +184,7 @@ export function Clients() {
               </div>
               <div>
                 <p className="text-[9px] md:text-[10px] text-muted-foreground">{t('clients.totalAffaires')}</p>
-                <p className="text-sm md:text-lg font-bold text-emerald-600">{totalAffaires}</p>
+                <p className="text-sm md:text-lg font-bold text-emerald-600">{totalAffairesOnPage}</p>
               </div>
             </div>
           </CardContent>
@@ -175,6 +204,20 @@ export function Clients() {
         </Card>
       </div>
 
+      {clientsQueryError && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="flex flex-col gap-2 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-destructive">
+              {(clientsError as { response?: { data?: { error?: string } } })?.response?.data?.error
+                ?? 'Impossible de charger la liste des clients (réseau ou droits d’accès).'}
+            </p>
+            <Button type="button" variant="outline" size="sm" onClick={() => refetchClients()}>
+              Réessayer
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Search */}
       <Card>
         <CardContent className="p-3">
@@ -186,6 +229,9 @@ export function Clients() {
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
             />
+            {clientsFetching && !clientsQueryError && (
+              <p className="mt-2 text-xs text-muted-foreground">Mise à jour de la liste…</p>
+            )}
           </div>
         </CardContent>
       </Card>

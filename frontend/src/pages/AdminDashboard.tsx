@@ -206,7 +206,10 @@ function OrganizationsTab() {
     mutationFn: (id: string) => api.delete(`/superadmin/organizations/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['superadmin-stats'] });
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.error || error.message || 'Impossible de supprimer cette organisation');
     },
   });
 
@@ -215,7 +218,10 @@ function OrganizationsTab() {
       api.put(`/superadmin/organizations/${id}/suspend`, { suspended: !suspended }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-organizations'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['superadmin-stats'] });
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.error || error.message || 'Impossible de suspendre cette organisation');
     },
   });
 
@@ -314,7 +320,15 @@ function OrganizationsTab() {
                           {org.suspended ? <UserCheck size={14} className="mr-2" /> : <UserX size={14} className="mr-2" />}
                           {org.suspended ? 'Réactiver' : 'Suspendre'}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => deleteMutation.mutate(org.id)} disabled={deleteMutation.isPending} className="text-red-600">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            if (confirm(`Supprimer définitivement l'organisation "${org.name}" et toutes ses données ?`)) {
+                              deleteMutation.mutate(org.id);
+                            }
+                          }}
+                          disabled={deleteMutation.isPending}
+                          className="text-red-600"
+                        >
                           <Trash2 size={14} className="mr-2" /> Supprimer
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -396,7 +410,15 @@ function OrganizationsTab() {
                             {org.suspended ? <UserCheck size={14} className="mr-2" /> : <UserX size={14} className="mr-2" />}
                             {org.suspended ? 'Réactiver' : 'Suspendre'}
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => deleteMutation.mutate(org.id)} disabled={deleteMutation.isPending} className="text-red-600">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (confirm(`Supprimer définitivement l'organisation "${org.name}" et toutes ses données ?`)) {
+                                deleteMutation.mutate(org.id);
+                              }
+                            }}
+                            disabled={deleteMutation.isPending}
+                            className="text-red-600"
+                          >
                             <Trash2 size={14} className="mr-2" /> Supprimer
                           </DropdownMenuItem>
                         </DropdownMenuContent>

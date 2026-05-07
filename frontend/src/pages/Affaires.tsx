@@ -116,8 +116,8 @@ export function Affaires() {
     return 0;
   });
   const { data: clientsData } = useQuery<{ data: Client[], pagination: any }>({
-    queryKey: ['clients'],
-    queryFn: () => api.get('/clients').then((r) => r.data),
+    queryKey: ['clients', 'all'],
+    queryFn: () => api.get('/clients', { params: { limit: 9999 } }).then((r) => r.data),
   });
   const clients = clientsData?.data || [];
   const filteredClients = clients.filter(c =>
@@ -125,14 +125,14 @@ export function Affaires() {
     (c.contactName && c.contactName.toLowerCase().includes(clientSearch.toLowerCase()))
   );
   const { data: productsData } = useQuery<{ data: Product[], pagination: any }>({
-    queryKey: ['products'],
-    queryFn: () => api.get('/products').then((r) => r.data),
+    queryKey: ['products', 'all'],
+    queryFn: () => api.get('/products', { params: { limit: 9999 } }).then((r) => r.data),
   });
   const products = productsData?.data || [];
 
   const { data: usersData } = useQuery<{ data: User[], pagination: any }>({
-    queryKey: ['users'],
-    queryFn: () => api.get('/users').then((r) => r.data),
+    queryKey: ['users', 'all'],
+    queryFn: () => api.get('/users', { params: { limit: 9999 } }).then((r) => r.data),
   });
   const users = usersData?.data || [];
   const { data: revenueCategories = [] } = useQuery<any[]>({

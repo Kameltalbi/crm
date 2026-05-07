@@ -17,16 +17,12 @@ self.addEventListener('activate', (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
+      // clients.claim() makes this SW take control of currently open tabs,
+      // which fires `controllerchange` in those tabs - main.tsx listens for that
+      // event and reloads the page with the latest bundle. No navigate() here:
+      // the browser refuses to navigate same-origin URLs in some cases (e.g. /login)
+      // and we don't want unhandled rejections.
       await self.clients.claim();
-      // Reload any open tabs so they pick up the new bundle immediately.
-      const clients = await self.clients.matchAll({ type: 'window' });
-      clients.forEach((client) => {
-        try {
-          client.navigate(client.url);
-        } catch (_) {
-          // ignore - cross-origin or detached clients
-        }
-      });
     })()
   );
 });

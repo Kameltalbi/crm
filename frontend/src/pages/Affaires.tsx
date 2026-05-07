@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertical, Search, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, Receipt, Mail, Eye, Upload, MoreVertical, Search, Copy, SlidersHorizontal, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { cn, fmtDT, MOIS } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, DropdownMenu, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItemStyled } from '@/components/ui/form-controls';
+import { Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, DropdownMenu, DropdownMenuTrigger, DropdownMenuTriggerButton, DropdownMenuContentWrapper, DropdownMenuItemStyled } from '@/components/ui/form-controls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { StatutBadge } from './Dashboard';
 import type { Affaire, Client, Product, AffaireType, StatutAffaire, User } from '@/types';
@@ -411,76 +411,166 @@ export function Affaires() {
         </Card>
       </div>
 
-      {/* Shared Filters */}
-      <Card>
-        <CardContent className="pt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2 items-center">
-            <div className="relative sm:col-span-2 lg:col-span-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Rechercher..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 h-8 w-full text-xs"
-              />
-            </div>
-            <Select value={filters.statut || 'all'} onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Tous statuts" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous statuts</SelectItem>
-                <SelectItem value="PROSPECT">🟡 Prospect</SelectItem>
-                <SelectItem value="QUALIFIE">🔵 Qualifié</SelectItem>
-                <SelectItem value="PROPOSITION">🟠 Proposition</SelectItem>
-                <SelectItem value="NEGOCIATION">🟣 Négociation</SelectItem>
-                <SelectItem value="GAGNE">✅ Gagné</SelectItem>
-                <SelectItem value="PERDU">❌ Perdu</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.type || 'all'} onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Catégorie" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes catégories</SelectItem>
-                {revenueCategories.map((cat: any) => (
-                  <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filters.viaPartenaire || 'all'} onValueChange={(v) => setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Apport" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous apports</SelectItem>
-                <SelectItem value="true">🤝 Partenaire</SelectItem>
-                <SelectItem value="false">👤 Direct</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.mois || 'all'} onValueChange={(v) => setFilters({ ...filters, mois: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Mois" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous mois</SelectItem>
-                {MOIS.map((label, idx) => (
-                  <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filters.sortBy || 'score'} onValueChange={(v) => setFilters({ ...filters, sortBy: v })}>
-              <SelectTrigger className="h-8 w-full text-xs"><SelectValue placeholder="Trier par" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="score">📊 Score ↓</SelectItem>
-                <SelectItem value="montant">💰 Montant ↓</SelectItem>
-                <SelectItem value="date">📅 Date ↓</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
-              <SelectTrigger className="h-8 w-full text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2026">2026</SelectItem>
-                <SelectItem value="2027">2027</SelectItem>
-                <SelectItem value="2028">2028</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Toolbar de filtres */}
+      {(() => {
+        const advancedActiveCount =
+          (filters.type ? 1 : 0) +
+          (filters.viaPartenaire ? 1 : 0) +
+          (filters.mois ? 1 : 0) +
+          (filters.sortBy && filters.sortBy !== 'score' ? 1 : 0);
+        const resetAdvanced = () =>
+          setFilters({ ...filters, type: '', viaPartenaire: '', mois: '', sortBy: 'score' });
+
+        return (
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Rechercher..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9 h-8 w-full text-xs"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={filters.statut || 'all'}
+                    onValueChange={(v) => setFilters({ ...filters, statut: v === 'all' ? '' : v })}
+                  >
+                    <SelectTrigger className="h-8 w-[150px] text-xs">
+                      <SelectValue placeholder="Tous statuts" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous statuts</SelectItem>
+                      <SelectItem value="PROSPECT">🟡 Prospect</SelectItem>
+                      <SelectItem value="QUALIFIE">🔵 Qualifié</SelectItem>
+                      <SelectItem value="PROPOSITION">🟠 Proposition</SelectItem>
+                      <SelectItem value="NEGOCIATION">🟣 Négociation</SelectItem>
+                      <SelectItem value="GAGNE">✅ Gagné</SelectItem>
+                      <SelectItem value="PERDU">❌ Perdu</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={filters.annee} onValueChange={(v) => setFilters({ ...filters, annee: v })}>
+                    <SelectTrigger className="h-8 w-[100px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2026">2026</SelectItem>
+                      <SelectItem value="2027">2027</SelectItem>
+                      <SelectItem value="2028">2028</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                        <SlidersHorizontal size={14} />
+                        Filtres
+                        {advancedActiveCount > 0 && (
+                          <span className="ml-1 inline-flex items-center justify-center rounded-full bg-leaf text-white text-[10px] h-4 min-w-[16px] px-1">
+                            {advancedActiveCount}
+                          </span>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContentWrapper align="end" className="w-72 p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Filtres avancés
+                        </p>
+                        {advancedActiveCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={resetAdvanced}
+                            className="text-xs text-leaf hover:underline inline-flex items-center gap-1"
+                          >
+                            <X size={12} />
+                            Réinitialiser
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Catégorie</Label>
+                        <Select
+                          value={filters.type || 'all'}
+                          onValueChange={(v) => setFilters({ ...filters, type: v === 'all' ? '' : v })}
+                        >
+                          <SelectTrigger className="h-8 w-full text-xs">
+                            <SelectValue placeholder="Toutes catégories" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Toutes catégories</SelectItem>
+                            {revenueCategories.map((cat: any) => (
+                              <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Mois</Label>
+                        <Select
+                          value={filters.mois || 'all'}
+                          onValueChange={(v) => setFilters({ ...filters, mois: v === 'all' ? '' : v })}
+                        >
+                          <SelectTrigger className="h-8 w-full text-xs">
+                            <SelectValue placeholder="Tous mois" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Tous mois</SelectItem>
+                            {MOIS.map((label, idx) => (
+                              <SelectItem key={idx} value={String(idx + 1)}>{label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Apport</Label>
+                        <Select
+                          value={filters.viaPartenaire || 'all'}
+                          onValueChange={(v) =>
+                            setFilters({ ...filters, viaPartenaire: v === 'all' ? '' : v })
+                          }
+                        >
+                          <SelectTrigger className="h-8 w-full text-xs">
+                            <SelectValue placeholder="Tous apports" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Tous apports</SelectItem>
+                            <SelectItem value="true">🤝 Partenaire</SelectItem>
+                            <SelectItem value="false">👤 Direct</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Trier par</Label>
+                        <Select
+                          value={filters.sortBy || 'score'}
+                          onValueChange={(v) => setFilters({ ...filters, sortBy: v })}
+                        >
+                          <SelectTrigger className="h-8 w-full text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="score">📊 Score ↓</SelectItem>
+                            <SelectItem value="montant">💰 Montant ↓</SelectItem>
+                            <SelectItem value="date">📅 Date ↓</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </DropdownMenuContentWrapper>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Table View */}
       {view === 'table' && (
